@@ -27,7 +27,7 @@ Before clicking "Deploy", you need to attach a real production database.
 1. On the Vercel Import screen, switch to the **"Storage"** tab (this can be opened in a new window to not lose your place).
 2. Click **"Create Database"** and select **"Postgres"**.
 3. Name it (e.g., `world-cup-db`) and click "Create".
-4. Vercel will automatically inject the `DATABASE_URL` environment variable back into your project! 
+4. Vercel will automatically inject multiple environment variables (like `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING`) back into your project! 
    *(You can verify this by checking the project's Environment Variables page).*
 
 ## Step 4: Configure the Build Command
@@ -49,7 +49,7 @@ Expand the **Environment Variables** section and add the keys your project needs
 | `SYNC_SECRET` | `wc2026-sync-secret` | For securely triggering syncs |
 | `JWT_SECRET` | *(Random String)* | Used for secure sessions. Create a new secure random string for production. |
 
-*(Note: `DATABASE_URL` will already be present from Step 3).*
+*(Note: `POSTGRES_...` variables will already be present from Step 3).*
 
 ## Step 6: Deploy!
 1. Click the big **"Deploy"** button.
