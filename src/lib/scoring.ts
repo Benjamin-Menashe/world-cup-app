@@ -204,7 +204,7 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
 
     let actualRanking: string[] | null = null
     if (resultMap[`Group_${groupLetter}`] && Array.isArray(resultMap[`Group_${groupLetter}`])) {
-      actualRanking = resultMap[`Group_${groupLetter}`]
+      actualRanking = resultMap[`Group_${groupLetter}`] as string[]
     } else {
       actualRanking = await deriveGroupStandings(groupLetter)
     }
