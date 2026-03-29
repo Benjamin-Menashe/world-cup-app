@@ -27,6 +27,7 @@ export async function registerAction(formData: FormData) {
   const name = formData.get("name") as string
   const email = formData.get("email") as string
   const password = formData.get("password") as string
+  const inviteCode = formData.get("inviteCode") as string | null
 
   if (!name || !email || !password) return { error: "Missing fields" }
 
@@ -38,6 +39,15 @@ export async function registerAction(formData: FormData) {
   const user = await prisma.user.create({
     data: { name, email, password: hashedPassword }
   })
+
+  if (inviteCode) {
+    const group = await prisma.group.findUnique({ where: { inviteCode } })
+    if (group) {
+      await prisma.member.create({
+        data: { userId: user.id, groupId: group.id }
+      })
+    }
+  }
 
   const token = await signToken(user.id)
   await setSessionCookie(token)

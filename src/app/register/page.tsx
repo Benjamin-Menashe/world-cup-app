@@ -4,9 +4,21 @@ import { registerAction } from "@/app/actions/auth"
 import Link from "next/link"
 import { useState } from "react"
 import { Trophy } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', marginTop: '4rem' }}>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
+  )
+}
+
+function RegisterForm() {
   const [error, setError] = useState("")
+  const searchParams = useSearchParams()
+  const inviteCode = searchParams.get("inviteCode") || ""
 
   async function handleSubmit(formData: FormData) {
     const res = await registerAction(formData)
@@ -29,9 +41,12 @@ export default function RegisterPage() {
         )}
 
         <form action={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {inviteCode && (
+            <input type="hidden" name="inviteCode" value={inviteCode} />
+          )}
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Full Name</label>
-            <input name="name" type="text" required className="input-field" placeholder="John Doe" />
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Nickname</label>
+            <input name="name" type="text" required className="input-field" placeholder="Your nickname" />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>

@@ -19,7 +19,7 @@ export default function ShareBreakdownButton({ breakdown, total, userName }: { b
     .map(([name, pts]) => `  ${name}: ${pts} pts`)
     .join('\n')
 
-  const text = `⚽ World Cup 2026 — ${userName}'s Points\n\n📊 Total: ${total} pts\n${lines}\n\nJoin me on World Cup 2026 Bet with Friends!`
+  const text = `⚽ World Cup 2026 — ${userName}'s Points\n\n📊 Total: ${total} pts\n${lines}\n\nJoin me on World Cup 2026 Bet with Friends!\nhttps://world-cup-app-2026.vercel.app`
 
   return <CopyButton text={text} label="Share" size={13} />
 }

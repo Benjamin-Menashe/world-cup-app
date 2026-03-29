@@ -7,7 +7,8 @@ export default function ShareInviteButton({ inviteCode }: { inviteCode: string }
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    const message = `⚽ Join my World Cup 2026 betting league!\n\n🔑 Invite Code: ${inviteCode}\n\n1. Sign up at the app\n2. Go to Friends → Join Friend Group\n3. Paste the code above\n\nLet's go! 🏆`
+    const inviteUrl = `https://world-cup-app-2026.vercel.app/register?inviteCode=${inviteCode}`
+    const message = `⚽ Join my World Cup 2026 betting league!\n\n🔑 Invite Code: ${inviteCode}\n\nClick here to join directly:\n${inviteUrl}\n\nLet's go! 🏆`
     navigator.clipboard.writeText(message)
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
