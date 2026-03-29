@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
-import { signToken, setSessionCookie, clearSessionCookie } from "@/lib/auth"
+import { signToken, setSessionCookie, clearSessionCookie, getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 export async function loginAction(formData: FormData) {
@@ -58,4 +58,18 @@ export async function registerAction(formData: FormData) {
 export async function logoutAction() {
   await clearSessionCookie()
   redirect("/login")
+}
+
+export async function deleteAccountAction() {
+  const userId = await getSession()
+  if (!userId) return { error: "Not authenticated" }
+
+  try {
+    await prisma.user.delete({ where: { id: userId } })
+  } catch (err: any) {
+    return { error: "Failed to delete account" }
+  }
+
+  await clearSessionCookie()
+  redirect("/register")
 }

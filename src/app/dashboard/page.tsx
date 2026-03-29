@@ -7,6 +7,7 @@ import Link from "next/link"
 import PointsBreakdownCard from "@/components/PointsBreakdownCard"
 import { getGroupStageLockTime } from "@/lib/lockTime"
 import ShareBreakdownButton from "@/components/ShareBreakdownButton"
+import DeleteAccountButton from "./DeleteAccountButton"
 
 export default async function DashboardPage() {
   const userId = await getSession()
@@ -55,6 +56,8 @@ export default async function DashboardPage() {
         </h2>
         <PointsBreakdownCard breakdown={breakdown} total={total} />
       </div>
+
+      <DeleteAccountButton />
     </div>
   )
 }
