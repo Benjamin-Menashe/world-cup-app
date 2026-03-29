@@ -34,7 +34,7 @@ Before clicking "Deploy", you need to attach a real production database.
 To ensure the new database tables and schemas are created, update the build command.
 1. Under **"Build and Output Settings"** on the Vercel deployment page, override the default "Build Command".
 2. Enter the following exact command:
-   ```bash
+   ```
    npx prisma db push && next build
    ```
    *(Note: Client generation is now handled automatically by the `postinstall` script).*
