@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships       Member[]
+  groupRankingBets  GroupRankingBet[]
+  championBets      ChampionBet[]
+  topScorerBets     TopScorerBet[]
+  winnerLoserBets   WinnerLoserBet[]
+  gameBets          GameBet[]
+}
+
+model Group {
+  id         String   @id @default(uuid())
+  name       String
+  inviteCode String   @unique
+  createdAt  DateTime @default(now())
+
+  members Member[]
+}
+
+model Member {
+  id      String @id @default(uuid())
+  userId  String
+  groupId String
+
+  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+}
+
+model Team {
+  id      String @id @default(uuid())
+  name    String
+  flagUrl String
+  group   String // A, B, C, ..., L
+
+  players Player[]
+  
+  homeGames Game[] @relation("HomeTeam")
+  awayGames Game[] @relation("AwayTeam")
+
+  championBets         ChampionBet[]
+  winnerBets           WinnerLoserBet[] @relation("WinnerPick")
+  loserBets            WinnerLoserBet[] @relation("LoserPick")
+}
+
+model Player {
+  id          String @id @default(uuid())
+  name        String
+  teamId      String
+  goalsScored Int    @default(0)
+
+  team Team @relation(fields: [teamId], references: [id])
+
+  topScorerBets TopScorerBet[]
+}
+
+model Game {
+  id          String    @id @default(uuid())
+  stage       String    // Group, R32, R16, QF, SF, 3rd, Final
+  kickoffTime DateTime
+  homeTeamId  String
+  awayTeamId  String
+  homeScore   Int?
+  awayScore   Int?
+  isFinished  Boolean   @default(false)
+
+  homeTeam Team @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam Team @relation("AwayTeam", fields: [awayTeamId], references: [id])
+
+  bets GameBet[]
+}
+
+model GroupRankingBet {
+  id            String @id @default(uuid())
+  userId        String
+  group         String // A, B, C, ..., L
+  rankedTeamIds String // JSON array of team IDs: ["team1", "team2", "team3", "team4"]
+  
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, group])
+}
+
+model ChampionBet {
+  id     String @id @default(uuid())
+  userId String @unique
+  teamId String
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+}
+
+model TopScorerBet {
+  id       String @id @default(uuid())
+  userId   String @unique
+  playerId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+}
+
+model WinnerLoserBet {
+  id           String @id @default(uuid())
+  userId       String @unique
+  winnerTeamId String
+  loserTeamId  String
+
+  user       User @relation(fields: [userId], references: [id])
+  winnerTeam Team @relation("WinnerPick", fields: [winnerTeamId], references: [id])
+  loserTeam  Team @relation("LoserPick", fields: [loserTeamId], references: [id])
+}
+
+model GameBet {
+  id        String @id @default(uuid())
+  userId    String
+  gameId    String
+  homeScore Int
+  awayScore Int
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
+
+model TournamentResult {
+  id    String @id @default(uuid())
+  key   String @unique 
+  value String
+}
