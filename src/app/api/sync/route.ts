@@ -27,13 +27,7 @@ interface ApiScorer {
   statistics: Array<{ goals: { total: number | null } }>
 }
 
-export async function POST(req: NextRequest) {
-  // Simple secret-based auth
-  const secret = req.headers.get("x-sync-secret")
-  if (secret !== SYNC_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
+async function runSync() {
   const headers = { "x-apisports-key": API_KEY }
   const summary = {
     gamesChecked: 0,
@@ -147,4 +141,22 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, summary })
+}
+
+export async function POST(req: NextRequest) {
+  // Simple secret-based auth for manual trigger
+  const secret = req.headers.get("x-sync-secret")
+  if (secret !== SYNC_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  return await runSync()
+}
+
+export async function GET(req: NextRequest) {
+  // Vercel Cron automatically sends Authorization: Bearer <CRON_SECRET>
+  const authHeader = req.headers.get("authorization")
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized cron endpoint" }, { status: 401 })
+  }
+  return await runSync()
 }
