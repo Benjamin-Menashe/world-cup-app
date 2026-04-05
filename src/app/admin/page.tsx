@@ -5,6 +5,7 @@ import { Settings, Zap, FlaskConical } from "lucide-react"
 
 import SyncButton from "./SyncButton"
 import SyncPlayersButton from "./SyncPlayersButton"
+import InitTournamentButton from "./InitTournamentButton"
 import SimulationTimeline from "./SimulationTimeline"
 
 export default async function AdminDashboardPage() {
@@ -61,14 +62,19 @@ export default async function AdminDashboardPage() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <div>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>Match Scores & Top Scorers (Daily/Cron)</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetches finished matches and active top scorers. Uses 2 API calls.</p>
-              <SyncButton />
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem', color: 'var(--red)' }}>Step 1: One-Time Initialization</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetch all 48 teams and the 104-match schedule from the API to start a completely blank database.</p>
+              <InitTournamentButton />
             </div>
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>Player Rosters (One-Time)</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Deep scans recent tournament squads to populate the Golden Boot dropdown. Uses ~50 API calls!</p>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>Step 2: Player Rosters (One-Time)</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Deep scans tournament squads to populate the Golden Boot dropdown. Uses ~50 API calls!</p>
               <SyncPlayersButton />
+            </div>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>Step 3: Match Scores & Top Scorers (Daily/Cron)</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetches finished matches and active top scorers. Uses 2 API calls.</p>
+              <SyncButton />
             </div>
           </div>
         </section>
