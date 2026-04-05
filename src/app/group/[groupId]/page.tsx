@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { getUserRankingsInGroup } from "@/lib/scoring"
 import { redirect } from "next/navigation"
-import { Trophy, ClipboardList, Edit3, BarChart2, Share2, ChevronDown } from "lucide-react"
+import { Trophy, ClipboardList, Edit3, BarChart2, Share2 } from "lucide-react"
 import Link from "next/link"
 import LeaveGroupButton from "./LeaveGroupButton"
 import GroupForms from "../GroupForms"
@@ -23,7 +23,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
   const group = memberships.find(m => m.groupId === groupId)?.group
   if (!group) redirect("/group")
 
-  const timings = await prisma.game.findMany({ where: { stage: 'Group' }})
+
   const tournamentChampion = await prisma.tournamentResult.findUnique({ where: { key: 'Champion' } })
   const isTournamentFinished = !!tournamentChampion
 

@@ -16,10 +16,8 @@ export default async function DashboardPage() {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   const { total, breakdown } = await calculateUserPoints(userId)
 
-  const memberships = await prisma.member.findMany({
-    where: { userId },
-    include: { group: true }
-  })
+
+
 
   // Lock derived from first group game kickoff - 1 hour
   const lockTime = await getGroupStageLockTime()

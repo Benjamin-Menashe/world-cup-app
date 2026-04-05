@@ -2,10 +2,10 @@ import { getSession } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { calculateUserPoints } from "@/lib/scoring"
 import { redirect } from "next/navigation"
-import { User as UserIcon, Lock, Unlock, Eye, Activity, ChevronLeft } from "lucide-react"
+import { User as UserIcon, Activity, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import PointsBreakdownCard from "@/components/PointsBreakdownCard"
-import { getGroupStageLockTime } from "@/lib/lockTime"
+
 
 export default async function TopScorerDetail({ params }: { params: { groupId: string, userId: string } }) {
   const currentUserId = await getSession()
@@ -31,21 +31,6 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
   // Fetch points & breakdown
   const pointsData = await calculateUserPoints(userId, currentUserId)
 
-  // Fetch their raw bets to show what they picked
-  const targetBets = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      groupRankingBets: true,
-      championBets: { include: { team: true } },
-      topScorerBets: { include: { player: { include: { team: true } } } },
-      winnerLoserBets: { include: { winnerTeam: true, loserTeam: true } },
-      gameBets: { include: { game: { include: { homeTeam: true, awayTeam: true } } } }
-    }
-  })
-
-  // Lock is derived from first group game kickoff — 1 hour
-  const lockTime = await getGroupStageLockTime()
-  const isGroupStageLocked = lockTime ? new Date() >= lockTime : false
 
   return (
     <div style={{ maxWidth: '900px', margin: '2rem auto' }}>

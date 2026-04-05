@@ -15,7 +15,7 @@ export default function ShareBreakdownButton({ breakdown, total, userName }: { b
   }
 
   const lines = Object.entries(sections)
-    .filter(([_, pts]) => pts > 0)
+    .filter(([, pts]) => pts > 0)
     .map(([name, pts]) => `  ${name}: ${pts} pts`)
     .join('\n')
 

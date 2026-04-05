@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
+import { useEffect } from "react"
 
 /**
  * Warns users before navigating away when they have unsaved changes.

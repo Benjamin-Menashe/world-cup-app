@@ -1,4 +1,4 @@
-import { BookOpen, Trophy, Swords, Target, Calculator, Info } from "lucide-react"
+import { BookOpen, Swords, Calculator, Info } from "lucide-react"
 
 export default function RulesPage() {
   return (

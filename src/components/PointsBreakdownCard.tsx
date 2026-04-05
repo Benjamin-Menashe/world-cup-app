@@ -122,7 +122,7 @@ export default function PointsBreakdownCard({ breakdown, total }: { breakdown: P
 
   return (
     <div>
-      {SECTIONS.filter(s => grouped[s.key]?.length).map((s, idx) => (
+      {SECTIONS.filter(s => grouped[s.key]?.length).map((s) => (
         <SectionSubtotal key={s.key} items={grouped[s.key]} config={s} defaultOpen={false} />
       ))}
 

@@ -21,7 +21,7 @@ export default function DeleteAccountButton() {
         setError(result.error)
         setLoading(false)
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.")
       setLoading(false)
     }

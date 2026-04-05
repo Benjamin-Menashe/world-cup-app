@@ -131,7 +131,7 @@ async function createSimBetsForGames(gameIds: string[], adminId?: string) {
     { home: 0, away: 2 }, // Eve    – away wins (wrong)
   ]
   
-  const allTargetUsers = [...simUsers];
+  
   
   for (const gameId of gameIds) {
     // Admin bet (Alice's pattern)

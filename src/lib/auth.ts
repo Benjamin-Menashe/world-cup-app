@@ -10,7 +10,7 @@ export async function signToken(userId: string) {
 export async function verifyToken(token: string) {
   try {
     return jwt.verify(token, JWT_SECRET) as { userId: string }
-  } catch (error) {
+  } catch {
     return null
   }
 }

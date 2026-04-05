@@ -3,6 +3,64 @@
 import { useState } from "react"
 import { saveGroupStageBetsAction } from "@/app/actions/bets"
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges"
+import Select from "react-select"
+
+function getTeamAbbreviation(teamName: string) {
+  const overrides: Record<string, string> = {
+    "United States": "USA",
+    "Saudi Arabia": "KSA",
+    "South Korea": "KOR",
+    "Costa Rica": "CRC",
+    "New Zealand": "NZL",
+    "Ivory Coast": "CIV",
+    "South Africa": "RSA",
+    "United Arab Emirates": "UAE"
+  }
+  return overrides[teamName] || teamName.substring(0, 3).toUpperCase()
+}
+
+const customStyles = {
+  control: (base: Record<string, unknown>, state: { isFocused: boolean; isDisabled: boolean }) => ({
+    ...base,
+    background: 'var(--bg-primary)',
+    borderColor: state.isFocused ? 'var(--accent)' : 'var(--border-subtle)',
+    boxShadow: state.isFocused ? '0 0 0 1px var(--accent)' : 'none',
+    color: 'var(--text-primary)',
+    borderRadius: '8px',
+    padding: '0.2rem',
+    cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+    minHeight: '42px',
+    opacity: state.isDisabled ? 0.7 : 1,
+  }),
+  menu: (base: Record<string, unknown>) => ({
+    ...base,
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: '8px',
+    zIndex: 100,
+  }),
+  option: (base: Record<string, unknown>, state: { isFocused: boolean }) => ({
+    ...base,
+    backgroundColor: state.isFocused ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+    color: 'var(--text-primary)',
+    cursor: 'pointer',
+    '&:active': {
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    }
+  }),
+  singleValue: (base: Record<string, unknown>) => ({
+    ...base,
+    color: 'var(--text-primary)',
+  }),
+  input: (base: Record<string, unknown>) => ({
+    ...base,
+    color: 'var(--text-primary)'
+  }),
+  placeholder: (base: Record<string, unknown>) => ({
+    ...base,
+    color: 'var(--text-secondary)'
+  }),
+}
 
 type Team = { id: string, name: string, group: string, flagUrl: string }
 type Player = { id: string, name: string, team: { name: string } }
@@ -68,6 +126,12 @@ export default function GroupStageForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    
+    if (!champion || !topScorer || !winnerTeam || !loserTeam) {
+      alert("Please ensure all Main Picks and Bonus Picks are selected.")
+      return
+    }
+
     const formData = new FormData()
     formData.append("groupRankings", JSON.stringify(rankings))
     formData.append("championId", champion)
@@ -102,17 +166,27 @@ export default function GroupStageForm({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>🏆 Tournament Champion</label>
-            <select className="input-field" value={champion} onChange={e => { setChampion(e.target.value); setIsDirty(true) }} required>
-              <option value="">Select Team...</option>
-              {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            <Select 
+              options={teams.map(t => ({ value: t.id, label: t.name }))}
+              value={teams.find(t => t.id === champion) ? { value: champion, label: teams.find(t => t.id === champion)?.name } : null}
+              onChange={(val) => { setChampion(val?.value || ""); setIsDirty(true) }}
+              isDisabled={isLocked}
+              styles={customStyles}
+              placeholder="Select Team..."
+              isSearchable
+            />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>👟 Golden Boot</label>
-            <select className="input-field" value={topScorer} onChange={e => { setTopScorer(e.target.value); setIsDirty(true) }} required>
-              <option value="">Select Player...</option>
-              {players.map(p => <option key={p.id} value={p.id}>{p.name} ({p.team.name})</option>)}
-            </select>
+            <Select 
+              options={players.map(p => ({ value: p.id, label: `${p.name} - ${getTeamAbbreviation(p.team.name)}` }))}
+              value={players.find(p => p.id === topScorer) ? { value: topScorer, label: `${players.find(p => p.id === topScorer)?.name} - ${getTeamAbbreviation(players.find(p => p.id === topScorer)?.team.name || "")}` } : null}
+              onChange={(val) => { setTopScorer(val?.value || ""); setIsDirty(true) }}
+              isDisabled={isLocked}
+              styles={customStyles}
+              placeholder="Select Player..."
+              isSearchable
+            />
           </div>
         </div>
       </section>
@@ -194,17 +268,27 @@ export default function GroupStageForm({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>🔥 Undefeated Team (3 group wins)</label>
-            <select className="input-field" value={winnerTeam} onChange={e => { setWinnerTeam(e.target.value); setIsDirty(true) }} required>
-              <option value="">Select Team...</option>
-              {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            <Select 
+              options={teams.map(t => ({ value: t.id, label: t.name }))}
+              value={teams.find(t => t.id === winnerTeam) ? { value: winnerTeam, label: teams.find(t => t.id === winnerTeam)?.name } : null}
+              onChange={(val) => { setWinnerTeam(val?.value || ""); setIsDirty(true) }}
+              isDisabled={isLocked}
+              styles={customStyles}
+              placeholder="Select Team..."
+              isSearchable
+            />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>❄️ Winless Team (3 group losses)</label>
-            <select className="input-field" value={loserTeam} onChange={e => { setLoserTeam(e.target.value); setIsDirty(true) }} required>
-              <option value="">Select Team...</option>
-              {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            <Select 
+              options={teams.map(t => ({ value: t.id, label: t.name }))}
+              value={teams.find(t => t.id === loserTeam) ? { value: loserTeam, label: teams.find(t => t.id === loserTeam)?.name } : null}
+              onChange={(val) => { setLoserTeam(val?.value || ""); setIsDirty(true) }}
+              isDisabled={isLocked}
+              styles={customStyles}
+              placeholder="Select Team..."
+              isSearchable
+            />
           </div>
         </div>
       </section>

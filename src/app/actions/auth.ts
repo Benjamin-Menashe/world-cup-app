@@ -66,7 +66,7 @@ export async function deleteAccountAction() {
 
   try {
     await prisma.user.delete({ where: { id: userId } })
-  } catch (err: any) {
+  } catch {
     return { error: "Failed to delete account" }
   }
 

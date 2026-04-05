@@ -2,8 +2,9 @@ import { getSession } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Settings, Zap, FlaskConical } from "lucide-react"
-import { setTournamentResultAction, setGroupRankingAction } from "@/app/actions/admin"
+
 import SyncButton from "./SyncButton"
+import SyncPlayersButton from "./SyncPlayersButton"
 import SimulationTimeline from "./SimulationTimeline"
 
 export default async function AdminDashboardPage() {
@@ -35,8 +36,7 @@ export default async function AdminDashboardPage() {
       teamRecord[game.homeTeamId].losses++
     }
   }
-  const derivedWinner = Object.values(teamRecord).find(r => r.wins >= 3)
-  const derivedLoser = Object.values(teamRecord).find(r => r.losses >= 3)
+
 
   return (
     <div style={{ maxWidth: '1000px', margin: '2rem auto' }}>
@@ -57,9 +57,20 @@ export default async function AdminDashboardPage() {
             <Zap size={20} color="var(--accent)" /> API Sync
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-            Fetches finished match scores and top scorer goals from API-Sports and updates the database automatically. Uses up to 2 API calls per click — stay within the 100/day limit.
+            Automate score updates and player rosters from API-Football. Choose your sync type below.
           </p>
-          <SyncButton />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>Match Scores & Top Scorers (Daily/Cron)</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetches finished matches and active top scorers. Uses 2 API calls.</p>
+              <SyncButton />
+            </div>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>Player Rosters (One-Time)</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Deep scans recent tournament squads to populate the Golden Boot dropdown. Uses ~50 API calls!</p>
+              <SyncPlayersButton />
+            </div>
+          </div>
         </section>
 
         <section className="glass-panel" style={{ padding: '2rem' }}>
