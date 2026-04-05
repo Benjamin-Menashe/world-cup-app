@@ -33,7 +33,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={lang} dir={lang === 'he' ? 'rtl' : 'ltr'}>
+    <html lang={lang}>
       <body className={inter.className}>
         <nav className="navbar">
           <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -46,7 +46,7 @@ export default async function RootLayout({
           </div>
         </nav>
 
-        <main style={{ padding: '2rem' }}>
+        <main style={{ padding: '2rem' }} dir={lang === 'he' ? 'rtl' : 'ltr'}>
           {children}
         </main>
       </body>
