@@ -103,35 +103,30 @@ export default async function Home() {
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '50%', boxShadow: '0 0 30px rgba(239, 68, 68, 0.15)' }}>
           <Trophy size={40} color="var(--red)" />
         </div>
-        <h1 style={{ fontSize: '3rem', lineHeight: 1.1, fontWeight: 800 }}>
-          World Cup 2026<br />
-          <span style={{ color: 'var(--blue)' }}>Bet with friends!</span>
-        </h1>
+        {!wonGroup && (
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center' }}>
+            {user ? `Welcome back, ${user.name}! ⚽` : "Ready for World Cup 2026? 🏆"}
+          </h1>
+        )}
 
         {wonGroup && (
           <div style={{ 
-            background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%)', 
-            border: '1px solid rgba(245,158,11,0.3)', 
-            borderRadius: '16px', 
-            padding: '1.25rem 2rem', 
-            marginTop: '0.5rem',
-            textAlign: 'center',
-            boxShadow: '0 4px 15px rgba(245,158,11,0.1)'
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(245,158,11,0.02) 100%)', 
+            border: '1px solid rgba(245,158,11,0.2)', 
+            borderRadius: '12px', 
+            padding: '1rem', 
+            textAlign: 'center'
           }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>🏆🎉</div>
-            <h2 style={{ color: '#d97706', margin: 0, fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase' }}>
-              Champion of {wonGroup.name}!
+            <h2 style={{ color: '#d97706', margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>
+              🏆 CHAMPION of {wonGroup.name}!
             </h2>
-            <p style={{ color: 'var(--text-primary)', marginTop: '0.25rem', fontSize: '0.95rem' }}>
-              Congratulations! You took 1st place overall.
-            </p>
           </div>
         )}
 
-        {!wonGroup && (
-          <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '550px' }}>
-            {user ? `Welcome back, ${user.name}! ⚽` : "Create groups, place your bracket predictions, and compete with friends for ultimate glory. 🏆"}
-          </p>
+        {!user && !wonGroup && (
+           <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', maxWidth: '550px', marginTop: '-0.5rem' }}>
+             Create groups, place your predictions, and compete with friends.
+           </p>
         )}
 
         {!userId && (
