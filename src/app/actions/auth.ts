@@ -14,6 +14,11 @@ export async function loginAction(formData: FormData) {
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) return { error: "Invalid credentials" }
 
+  // Google-only account — no password set
+  if (!user.password) {
+    return { error: "This account uses Google sign-in. Please click the \"Sign in with Google\" button below." }
+  }
+
   const isValid = await bcrypt.compare(password, user.password)
   if (!isValid) return { error: "Invalid credentials" }
 
