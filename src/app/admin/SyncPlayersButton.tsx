@@ -1,13 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Users, CheckCircle, AlertCircle, Loader } from "lucide-react"
+import { ShieldAlert, CheckCircle, AlertCircle, Loader } from "lucide-react"
 
 export default function SyncPlayersButton() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
 
   async function handleSync() {
+    if (!confirm("WARNING: This will consume around 50 API calls to deep scan the rosters of all 48 teams. Are you sure?")) return;
+
     setStatus("loading")
     setMessage("")
     try {
@@ -39,14 +41,14 @@ export default function SyncPlayersButton() {
         onClick={handleSync}
         disabled={status === "loading"}
         className="primary-btn"
-        style={{ display: "flex", alignItems: "center", gap: "0.5rem", maxWidth: "280px", background: "var(--accent)" }}
+        style={{ display: "flex", alignItems: "center", gap: "0.5rem", maxWidth: "320px", background: "var(--red)" }}
       >
         {status === "loading" ? (
           <Loader size={16} className="spin" />
         ) : (
-          <Users size={16} />
+          <ShieldAlert size={16} />
         )}
-        {status === "loading" ? "Fetching Rosters..." : "Sync Player Rosters (One-time)"}
+        {status === "loading" ? "Fetching Rosters..." : "Step 2: Sync Player Rosters"}
       </button>
 
       {message && (
