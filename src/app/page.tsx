@@ -4,11 +4,13 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { calculateUserPoints, getUserRankingsInGroup } from "@/lib/scoring";
 import { isGroupStageLocked, deriveGroupStandings } from "@/lib/lockTime";
+import { getDictionary } from "@/lib/i18n";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const userId = await getSession();
+  const dict = await getDictionary();
 
   let user = null;
   let points = 0;
@@ -105,7 +107,7 @@ export default async function Home() {
         </div>
         {!wonGroup && (
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center' }}>
-            {user ? `Welcome back, ${user.name}! ⚽` : "Ready for World Cup 2026? 🏆"}
+            {user ? dict.home.welcomeBack.replace("{name}", user.name) : dict.home.readyFor}
           </h1>
         )}
 
@@ -118,21 +120,21 @@ export default async function Home() {
             textAlign: 'center'
           }}>
             <h2 style={{ color: '#d97706', margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>
-              🏆 CHAMPION of {wonGroup.name}!
+              {dict.home.championOf.replace("{groupName}", wonGroup.name)}
             </h2>
           </div>
         )}
 
         {!user && !wonGroup && (
            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', maxWidth: '550px', marginTop: '-0.5rem' }}>
-             Create groups, place your predictions, and compete with friends.
+             {dict.home.createGroups}
            </p>
         )}
 
         {!userId && (
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
             <Link href="/login" className="primary-btn" style={{ padding: '14px 28px', fontSize: '1rem' }}>
-              Get Started
+              {dict.home.getStarted}
             </Link>
           </div>
         )}
@@ -145,7 +147,7 @@ export default async function Home() {
         <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.3rem' }}>
-              <Activity color="var(--accent)" size={20} /> Your Points
+              <Activity color="var(--accent)" size={20} /> {dict.home.yourPoints}
             </h2>
             {userId ? (
               <Link href="/dashboard" title="View breakdown" className="hover-scale" style={{ 
@@ -162,7 +164,7 @@ export default async function Home() {
           </div>
 
           {!userId ? (
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Sign in to track your performance!</p>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{dict.home.signInToTrack}</p>
           ) : user && (
             <div style={{ marginTop: '1rem' }}>
               <Link href={isLocked ? "/bets/knockout" : "/bets/group-stage"} className="secondary-btn" style={{ 
@@ -176,7 +178,7 @@ export default async function Home() {
                 padding: '0.6rem',
                 fontSize: '0.9rem'
               }}>
-                <Edit3 size={14} /> Edit My Bets
+                <Edit3 size={14} /> {dict.home.editMyBets}
               </Link>
               
               {/* Condensed Personal Insights - 1 Line */}
@@ -192,15 +194,15 @@ export default async function Home() {
                 color: 'var(--text-secondary)'
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  🏆 <strong style={{ color: 'var(--text-primary)' }}>{user.championBets[0]?.team.name ?? 'None'}</strong>
+                  🏆 <strong style={{ color: 'var(--text-primary)' }}>{user.championBets[0]?.team.name ?? dict.home.none}</strong>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  👟 <strong style={{ color: 'var(--text-primary)' }}>{user.topScorerBets[0]?.player.name ?? 'None'}</strong>
+                  👟 <strong style={{ color: 'var(--text-primary)' }}>{user.topScorerBets[0]?.player.name ?? dict.home.none}</strong>
                 </span>
                 {isLocked && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    🎯 <span style={{ marginRight: '0.2rem' }}>exact picks:</span>
-                    <strong style={{ color: 'var(--text-primary)' }}>{perfectGroupsCount}</strong> groups · <strong style={{ color: 'var(--text-primary)' }}>{exactScoresCount}</strong> scores
+                    🎯 <span style={{ marginRight: '0.2rem' }}>{dict.home.exactPicks}</span>
+                    <strong style={{ color: 'var(--text-primary)' }}>{perfectGroupsCount}</strong> {dict.home.groups} · <strong style={{ color: 'var(--text-primary)' }}>{exactScoresCount}</strong> {dict.home.scores}
                   </span>
                 )}
               </div>
@@ -213,11 +215,11 @@ export default async function Home() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.3rem' }}>
               <Users color="var(--success)" size={20} />
-              {singleGroup ? singleGroup.group.name : 'Active Groups'}
+              {singleGroup ? singleGroup.group.name : dict.home.activeGroups}
             </h2>
             {memberships.length > 1 && (
               <Link href="/group" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', fontSize: '0.85rem' }}>
-                View all <ChevronRight size={14} />
+                {dict.home.viewAll} <ChevronRight size={14} />
               </Link>
             )}
           </div>
@@ -247,11 +249,11 @@ export default async function Home() {
                                 #{member.rank}
                               </span>
                               <span style={{ fontWeight: isMe ? 700 : 500, fontSize: '0.95rem' }}>
-                                {member.name}{isMe && ' (You)'}
+                                {member.name}{isMe && ` (${dict.home.you})`}
                               </span>
                             </div>
                             <span style={{ fontWeight: 700, fontSize: '0.95rem', color: isMe ? 'var(--accent)' : 'inherit' }}>
-                              {member.points} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)' }}>pts</span>
+                              {member.points} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)' }}>{dict.home.pts}</span>
                             </span>
                           </div>
                         </Link>
@@ -273,11 +275,11 @@ export default async function Home() {
                                 #{myRankInSingle}
                               </span>
                               <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-                                {me.name} (You)
+                                {me.name} ({dict.home.you})
                               </span>
                             </div>
                             <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--accent)' }}>
-                              {me.points} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)' }}>pts</span>
+                              {me.points} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)' }}>{dict.home.pts}</span>
                             </span>
                           </div>
                         </Link>
@@ -287,13 +289,13 @@ export default async function Home() {
                 );
               })()}
               <Link href={`/group/${singleGroup.groupId}`} style={{ textAlign: 'center', color: 'var(--accent)', fontSize: '0.85rem', padding: '0.4rem', marginTop: '0.4rem' }}>
-                View Full Standings →
+                {dict.home.viewFullStandings}
               </Link>
             </div>
           ) : !userId ? (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>You are not logged in.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{dict.home.notLoggedIn}</p>
           ) : memberships.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>You haven&apos;t joined any groups yet.</p>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>{dict.home.noGroupsYet}</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {memberships.slice(0, 4).map((m: { id: string; groupId: string; group: { name: string } }) => {
@@ -306,12 +308,12 @@ export default async function Home() {
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{m.group.name}</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                           Rank <strong style={{ color: 'var(--accent)' }}>#{myRank}</strong> / {rankings.length}
+                           {dict.home.rank} <strong style={{ color: 'var(--accent)' }}>#{myRank}</strong> / {rankings.length}
                         </span>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{me?.points ?? 0}</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginLeft: '2px' }}>pts</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginLeft: '2px' }}>{dict.home.pts}</span>
                       </div>
                     </div>
                   </Link>
@@ -322,7 +324,7 @@ export default async function Home() {
 
           {userId && memberships.length === 0 && (
             <Link href="/group" className="secondary-btn" style={{ display: 'inline-block', marginTop: '1rem', width: '100%', textAlign: 'center', fontSize: '0.85rem', padding: '0.5rem' }}>
-              Join or Create a Group
+              {dict.home.joinOrCreate}
             </Link>
           )}
         </div>

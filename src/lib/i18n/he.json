@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "home": "ראשי",
+    "myPoints": "הנקודות שלי",
+    "groupPicks": "ניחושי שלב הבתים",
+    "knockoutPicks": "ניחושי נוקאאוט",
+    "friends": "חברים",
+    "rules": "חוקים",
+    "adminPanel": "פאנל ניהול",
+    "signOut": "התנתק",
+    "signIn": "התחבר"
+  },
+  "brand": {
+    "worldCup": "מונדיאל 2026",
+    "betWithFriends": "תתערבו עם חברים!"
+  },
+  "home": {
+    "welcomeBack": "ברוך שובך, {name}! ⚽",
+    "readyFor": "מוכנים למונדיאל 2026? 🏆",
+    "championOf": "🏆 אלוף {groupName}!",
+    "createGroups": "הקימו קבוצות, הכניסו ניחושים והתחרו מול חברים.",
+    "getStarted": "התחילו",
+    "yourPoints": "הנקודות שלך",
+    "signInToTrack": "התחברו כדי לעקוב אחר הביצועים!",
+    "editMyBets": "ערוך ניחושים",
+    "none": "אין",
+    "exactPicks": "ניחושים מדויקים:",
+    "groups": "בתים",
+    "scores": "תוצאות",
+    "activeGroups": "קבוצות פעילות",
+    "viewAll": "הצג הכל",
+    "you": "אתה",
+    "pts": "נק'",
+    "viewFullStandings": "צפה בטבלה המלאה ←",
+    "notLoggedIn": "אינך מחובר.",
+    "noGroupsYet": "טרם הצטרפת לקבוצות כלשהן.",
+    "rank": "דירוג",
+    "joinOrCreate": "הצטרף או צור קבוצה"
+  }
+}

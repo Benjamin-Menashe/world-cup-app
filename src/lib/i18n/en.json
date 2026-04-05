@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "home": "Home",
+    "myPoints": "My Points",
+    "groupPicks": "Group Picks",
+    "knockoutPicks": "Knockout Picks",
+    "friends": "Friends",
+    "rules": "Rules",
+    "adminPanel": "Admin Panel",
+    "signOut": "Sign Out",
+    "signIn": "Sign In"
+  },
+  "brand": {
+    "worldCup": "World Cup 2026",
+    "betWithFriends": "Bet with friends!"
+  },
+  "home": {
+    "welcomeBack": "Welcome back, {name}! ⚽",
+    "readyFor": "Ready for World Cup 2026? 🏆",
+    "championOf": "🏆 CHAMPION of {groupName}!",
+    "createGroups": "Create groups, place your predictions, and compete with friends.",
+    "getStarted": "Get Started",
+    "yourPoints": "Your Points",
+    "signInToTrack": "Sign in to track your performance!",
+    "editMyBets": "Edit My Bets",
+    "none": "None",
+    "exactPicks": "exact picks:",
+    "groups": "groups",
+    "scores": "scores",
+    "activeGroups": "Active Groups",
+    "viewAll": "View all",
+    "you": "You",
+    "pts": "pts",
+    "viewFullStandings": "View Full Standings →",
+    "notLoggedIn": "You are not logged in.",
+    "noGroupsYet": "You haven't joined any groups yet.",
+    "rank": "Rank",
+    "joinOrCreate": "Join or Create a Group"
+  }
+}
