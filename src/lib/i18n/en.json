@@ -120,5 +120,32 @@
     "returnToFriends": "Return to Friends List",
     "profile": "{name}'s Profile",
     "detailedPicks": "Detailed Picks & Performance"
+  },
+  "rules": {
+    "pageTitle": "Official Rulebook",
+    "pageDesc": "Welcome to the World Cup 2026 Prediction App. This guide breaks down exactly how to play, how points are scored, and when matches lock. Please review these rules to maximize your score!",
+    "section1Title": "Section 1: Group Stage Predictions",
+    "s1InstructionsTitle": "User Instructions",
+    "s1Instructions": "Before the tournament begins, navigate to the <strong>Group Stage</strong> section. For every group (A-L), drag and drop the four teams to predict their exact final group standing (1st through 4th).",
+    "s1ScoringTitle": "1.1 Scoring Mechanism",
+    "s1Scoring1": "Rankings are scored using the <strong>Normalized Kendall-Tau Distance</strong>.",
+    "s1Scoring2": "A perfectly predicted group awards a maximum of <strong>6 points</strong>. For example, predicting A, B, C, D when the true result is A, B, C, D yields 6 points.",
+    "s1Scoring3": "Partial correlations yield fewer points. For example, predicting A, C, B, D (swapping B and C) yields <strong>5 points</strong>. An exactly reversed prediction yields <strong>0 points</strong>.",
+    "s1BonusTitle": "1.2 Main & Bonus Picks",
+    "s1BonusChamp": "<strong>Tournament Champion:</strong> Correctly predicting the ultimate winner awards <strong>8 points</strong>.",
+    "s1BonusBoot": "<strong>Golden Boot:</strong> Selecting the top goalscorer awards <strong>1 point</strong> for every goal they score in the tournament, plus an extra <strong>+1 bonus point</strong> if they officially win the Golden Boot.",
+    "s1BonusUndefeated": "<strong>Undefeated Team:</strong> Predicting a team that wins all 3 of their group matches (finishing with 9 points) awards <strong>3 points</strong>.",
+    "s1BonusWinless": "<strong>Winless Team:</strong> Predicting a team that loses all 3 of their group matches (finishing with 0 points) awards <strong>3 points</strong>.",
+    "section2Title": "Section 2: Knockout Stage Matches",
+    "s2InstructionsTitle": "User Instructions",
+    "s2Instructions1": "Once the group stage concludes, matchups will appear in the <strong>Knockout Stage</strong> section. For each match, predict the exact score at the end of regular time (90 minutes).",
+    "s2Instructions2": "<em>Submissions lock precisely 1 hour before each individual match's kickoff.</em> <strong>Friends' predictions are strictly hidden until a match locks</strong> to prevent copying.",
+    "s2Instructions3": "Because predictions rely on the 90-minute mark, <strong>draws are completely valid</strong> in the knockout stage (e.g., predicting 1-1 before extra time or penalties). Note: If you leave a prediction blank, it defaults to <strong>0-0</strong>.",
+    "s2ScoringTitle": "2.1 Match Scoring",
+    "s2Scoring1": "<strong>Directional Winner:</strong> Correctly predicting the outcome (Home Win, Away Win, or Draw) awards <strong>2 points</strong>.",
+    "s2Scoring2": "<strong>Exact Score:</strong> Perfectly predicting a specific team's exact goals awards <strong>1 point</strong> per team.",
+    "s2Example": "<em>Example:</em> If you predict 2-1 and the match finishes 3-1:<br/>• 2 points for guessing the correct winner.<br/>• 1 point for guessing the Away team's exactly 1 goal.<br/>• Total = 3 points.",
+    "s2BonusTitle": "2.2 Knockout Bonuses",
+    "s2BonusFinal": "<strong>The Final Match:</strong> All algorithmic points earned on the World Cup Final match are automatically <strong>Multiplied by 2</strong>!"
   }
 }
