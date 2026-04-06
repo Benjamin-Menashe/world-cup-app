@@ -100,11 +100,11 @@ function SectionSubtotal({ items, config, defaultOpen = true }: { items: PointBr
   )
 }
 
-export default function PointsBreakdownCard({ breakdown, total }: { breakdown: PointBreakdown[], total: number }) {
+export default function PointsBreakdownCard({ breakdown, total, dict }: { breakdown: PointBreakdown[], total: number, dict?: any }) {
   if (breakdown.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-        No points yet — scores update as matches finish.
+        {dict?.noPointsYet || "No points yet — scores update as matches finish."}
       </div>
     )
   }
@@ -143,7 +143,7 @@ export default function PointsBreakdownCard({ breakdown, total }: { breakdown: P
         borderRadius: '12px', background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.02))',
         border: '1px solid rgba(245,158,11,0.2)',
       }}>
-        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>Total Score</span>
+        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>{dict?.totalScore || "Total Score"}</span>
         <span style={{ fontWeight: 900, fontSize: '1.75rem', color: 'var(--accent)' }}>{total} pts</span>
       </div>
     </div>

@@ -57,7 +57,7 @@ export default function MobileNav({ userId, isAdmin, logoutAction, dict }: Mobil
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', marginTop: '0.5rem' }}>
               {userId ? (
                 <form action={logoutAction}>
-                  <button type="submit" className="secondary-btn" style={{ width: '100%', padding: '10px', fontSize: '0.95rem' }} onClick={() => setOpen(false)}>{dict.signOut}</button>
+                  <button type="submit" className="secondary-btn" style={{ width: '100%', padding: '10px', fontSize: '0.95rem' }}>{dict.signOut}</button>
                 </form>
               ) : (
                 <Link href="/login" onClick={() => setOpen(false)} className="primary-btn" style={{ display: 'block', textAlign: 'center', padding: '10px', fontSize: '0.95rem' }}>{dict.signIn}</Link>

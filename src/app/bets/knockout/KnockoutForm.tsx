@@ -16,11 +16,11 @@ type Game = {
 
 const STAGE_ORDER = ['R32', 'R16', 'QF', 'SF', 'Final']
 const STAGE_LABELS: Record<string, string> = {
-  R32: 'Round of 32',
-  R16: 'Round of 16',
-  QF: 'Quarter Finals',
-  SF: 'Semi Finals',
-  Final: '⚽ Final',
+  R32: 'R32',
+  R16: 'R16',
+  QF: 'QF',
+  SF: 'SF',
+  Final: 'Final',
 }
 
 function isGameLocked(kickoffTime: Date): boolean {
@@ -30,9 +30,11 @@ function isGameLocked(kickoffTime: Date): boolean {
 export default function KnockoutForm({
   games,
   existingBets,
+  dict,
 }: {
   games: Game[]
   existingBets: Record<string, { home: number; away: number }>
+  dict: Record<string, any>
 }) {
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>(() => {
     const init: Record<string, { home: string; away: string }> = {}
@@ -118,9 +120,9 @@ export default function KnockoutForm({
     return (
       <div style={{ textAlign: 'center', padding: '4rem', background: 'rgba(0,0,0,0.02)', borderRadius: '16px', border: '1px dashed var(--card-border)' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
-        <h2 style={{ marginBottom: '1rem' }}>Knockout Stage Not Yet Open</h2>
+        <h2 style={{ marginBottom: '1rem' }}>{dict.notOpen}</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '500px', margin: '0 auto' }}>
-          Knockout matches will appear here round by round as the admin adds them after the group stage concludes.
+          {dict.notOpenDesc}
         </p>
       </div>
     )
@@ -149,14 +151,14 @@ export default function KnockoutForm({
             >
               <h2 style={{ fontSize: '1.5rem', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
                 {isExpanded ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
-                {STAGE_LABELS[stage] ?? stage}
+                {dict.stages[STAGE_LABELS[stage]] ?? dict.stages[stage] ?? stage}
               </h2>
               {allLocked ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  <Lock size={14} /> All matches locked
+                  <Lock size={14} /> {dict.allLocked}
                 </span>
               ) : (
-                <span style={{ fontSize: '0.85rem', color: 'var(--success)' }}>Open for predictions</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--success)' }}>{dict.openForPredictions}</span>
               )}
             </button>
 
@@ -171,7 +173,7 @@ export default function KnockoutForm({
                       disabled={isSaving} 
                       style={{ padding: '0.75rem 2rem' }}
                     >
-                      {isSaving ? "Saving..." : `Save ${STAGE_LABELS[stage] ?? stage} Picks`}
+                      {isSaving ? dict.saving : dict.savePicks.replace('{stage}', dict.stages[STAGE_LABELS[stage]] ?? dict.stages[stage] ?? stage)}
                     </button>
                   </div>
                 )}
@@ -189,7 +191,7 @@ export default function KnockoutForm({
                     <div style={{ flex: 1, minWidth: '160px' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                         {isMounted ? kickoff.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "---"}
-                        {locked && <span style={{ marginLeft: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> Locked</span>}
+                        {locked && <span style={{ marginLeft: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> {dict.locked}</span>}
                       </div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>
                         <Link href={`/team/${game.homeTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
@@ -240,7 +242,7 @@ export default function KnockoutForm({
               <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', padding: '0 2rem 2rem 2rem' }}>
                 {isSaved && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--success)', fontWeight: 600 }}>
-                    <CheckCircle size={16} /> Saved!
+                    <CheckCircle size={16} /> {dict.saved}
                   </span>
                 )}
                 <button
@@ -250,7 +252,7 @@ export default function KnockoutForm({
                   disabled={isSaving}
                   style={{ padding: '0.75rem 2rem' }}
                 >
-                  {isSaving ? "Saving..." : `Save ${STAGE_LABELS[stage] ?? stage} Picks`}
+                  {isSaving ? dict.saving : dict.savePicks.replace('{stage}', dict.stages[STAGE_LABELS[stage]] ?? dict.stages[stage] ?? stage)}
                 </button>
               </div>
             )}

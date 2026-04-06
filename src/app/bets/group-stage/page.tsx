@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import GroupStageForm from "./GroupStageForm"
 import { LayoutList } from "lucide-react"
 import { getGroupStageLockTime } from "@/lib/lockTime"
+import { getDictionary } from "@/lib/i18n"
 
 export default async function GroupStageBetsPage() {
   const userId = await getSession()
@@ -34,23 +35,26 @@ export default async function GroupStageBetsPage() {
     }
   })
 
+  const dict = await getDictionary()
+  const d = dict.groupStage
+
   return (
     <div style={{ maxWidth: '1000px', margin: '2rem auto' }}>
       <div style={{ marginBottom: '3rem' }}>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-          <LayoutList color="var(--accent)" /> Group Stage Predictions
+          <LayoutList color="var(--accent)" /> {d.pageTitle}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '1rem' }}>
-          Place your bets before the first match kicks off. Once saved, they are locked when the tournament begins.
+          {d.pageDesc}
         </p>
         <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1rem', borderRadius: '8px', color: 'var(--warning)' }}>
           {isLocked
-            ? <><strong>🔒 Locked.</strong> Group stage bets are now closed.</>  
-            : <><strong>Deadline:</strong> Bets lock at <strong>{lockDeadline}</strong> (1 hour before first kick-off). Save early!</>}
+            ? <>{d.lockedMsg}</>  
+            : <span dangerouslySetInnerHTML={{ __html: d.deadlineMsg.replace('{deadline}', `<strong>${lockDeadline === 'TBD (no games scheduled yet)' ? d.noDeadline : lockDeadline}</strong>`) }} />}
         </div>
       </div>
 
-      <GroupStageForm teams={teams} players={players} existingBets={existingBets} isLocked={isLocked} />
+      <GroupStageForm teams={teams} players={players} existingBets={existingBets} isLocked={isLocked} dict={d} />
     </div>
   )
 }

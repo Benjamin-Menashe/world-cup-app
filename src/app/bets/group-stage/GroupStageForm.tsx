@@ -76,11 +76,13 @@ export default function GroupStageForm({
   players,
   existingBets,
   isLocked = false,
+  dict,
 }: {
   teams: Team[]
   players: Player[]
   existingBets: ExistingBets
   isLocked?: boolean
+  dict: any
 }) {
   const groupsAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 
@@ -128,7 +130,7 @@ export default function GroupStageForm({
     e.preventDefault()
     
     if (!champion || !topScorer || !winnerTeam || !loserTeam) {
-      alert("Please ensure all Main Picks and Bonus Picks are selected.")
+      alert(dict.ensurePicks)
       return
     }
 
@@ -154,37 +156,37 @@ export default function GroupStageForm({
         {!isLocked && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '3rem' }}>
             <button type="submit" className="primary-btn" disabled={isSubmitting} style={{ padding: '0.75rem 2rem' }}>
-              {isSubmitting ? "Saving..." : "Save Predictions"}
+              {isSubmitting ? dict.saving : dict.savePredictions}
             </button>
           </div>
         )}
 
       <section>
         <h2 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '0.5rem' }}>
-          Main Picks
+          {dict.mainPicks}
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>🏆 Tournament Champion</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.champion}</label>
             <Select 
               options={teams.map(t => ({ value: t.id, label: t.name }))}
               value={teams.find(t => t.id === champion) ? { value: champion, label: teams.find(t => t.id === champion)?.name } : null}
               onChange={(val) => { setChampion(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
-              placeholder="Select Team..."
+              placeholder={dict.selectTeam}
               isSearchable
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>👟 Golden Boot</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.goldenBoot}</label>
             <Select 
               options={players.map(p => ({ value: p.id, label: `${p.name} - ${getTeamAbbreviation(p.team.name)}` }))}
               value={players.find(p => p.id === topScorer) ? { value: topScorer, label: `${players.find(p => p.id === topScorer)?.name} - ${getTeamAbbreviation(players.find(p => p.id === topScorer)?.team.name || "")}` } : null}
               onChange={(val) => { setTopScorer(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
-              placeholder="Select Player..."
+              placeholder={dict.selectPlayer}
               isSearchable
             />
           </div>
@@ -193,16 +195,16 @@ export default function GroupStageForm({
 
       <section>
         <h2 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '0.5rem' }}>
-          Group Rankings
+          {dict.groupRankings}
         </h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-          Drag or use arrow buttons to rank teams 1st–4th in each group. Scored via Kendall-Tau distance.
+          {dict.rankingsDesc}
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
           {groupsAlphabet.map(group => (
             <div key={group} className="glass-panel" style={{ padding: '1.5rem' }}>
-              <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Group {group}</h3>
+              <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>{dict.groupInfo.replace('{group}', group)}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {rankings[group].map((teamId, index) => {
                   const team = teams.find(t => t.id === teamId)
@@ -263,30 +265,30 @@ export default function GroupStageForm({
 
       <section>
         <h2 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '0.5rem' }}>
-          Bonus Picks
+          {dict.bonusPicks}
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>🔥 Undefeated Team (3 group wins)</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.undefeated}</label>
             <Select 
               options={teams.map(t => ({ value: t.id, label: t.name }))}
               value={teams.find(t => t.id === winnerTeam) ? { value: winnerTeam, label: teams.find(t => t.id === winnerTeam)?.name } : null}
               onChange={(val) => { setWinnerTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
-              placeholder="Select Team..."
+              placeholder={dict.selectTeam}
               isSearchable
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>❄️ Winless Team (3 group losses)</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.winless}</label>
             <Select 
               options={teams.map(t => ({ value: t.id, label: t.name }))}
               value={teams.find(t => t.id === loserTeam) ? { value: loserTeam, label: teams.find(t => t.id === loserTeam)?.name } : null}
               onChange={(val) => { setLoserTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
-              placeholder="Select Team..."
+              placeholder={dict.selectTeam}
               isSearchable
             />
           </div>
@@ -295,14 +297,14 @@ export default function GroupStageForm({
 
       {saved && (
         <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', padding: '1rem', borderRadius: '8px', color: 'var(--success)', fontWeight: 600 }}>
-          ✅ Predictions saved successfully! You can edit them any time before the deadline.
+          {dict.savedSuccess}
         </div>
       )}
 
       {!isLocked && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '3rem' }}>
           <button type="submit" className="primary-btn" disabled={isSubmitting} style={{ padding: '0.75rem 2.5rem', fontSize: '1.1rem' }}>
-            {isSubmitting ? "Saving..." : "Save Predictions"}
+            {isSubmitting ? dict.saving : dict.savePredictions}
           </button>
         </div>
       )}

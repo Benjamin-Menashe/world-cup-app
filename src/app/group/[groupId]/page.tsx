@@ -8,6 +8,7 @@ import LeaveGroupButton from "./LeaveGroupButton"
 import GroupForms from "../GroupForms"
 import ShareInviteButton from "./ShareInviteButton"
 import ShareRankingButton from "./ShareRankingButton"
+import { getDictionary } from "@/lib/i18n"
 
 export default async function GroupDetailPage({ params }: { params: { groupId: string } }) {
   const userId = await getSession()
@@ -80,6 +81,9 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
     return null
   }
 
+  const dict = await getDictionary()
+  const d = dict.group
+
   return (
     <div style={{ maxWidth: '900px', margin: '2rem auto' }}>
 
@@ -115,10 +119,10 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
       <div style={{ marginBottom: '2rem' }}>
         <details style={{ background: 'rgba(0,0,0,0.02)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <summary style={{ padding: '0.8rem 1.25rem', cursor: 'pointer', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>+</span> Join or Create Friend League
+            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>+</span> {d.joinCreateLeague}
           </summary>
           <div style={{ padding: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
-            <GroupForms />
+            <GroupForms dict={d} />
           </div>
         </details>
       </div>
@@ -127,11 +131,10 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
         <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.05) 100%)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '12px', padding: '1.5rem', marginBottom: '2rem', textAlign: 'center', boxShadow: '0 4px 15px rgba(245,158,11,0.1)' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🏆🎉</div>
           <h2 style={{ color: 'var(--warning)', margin: 0, fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Champion of the League!
+            {d.championOfLeague}
           </h2>
-          <p style={{ color: 'var(--text-primary)', marginTop: '0.5rem', fontSize: '1.05rem' }}>
-            Congratulations <strong>{rankings[0].userId === userId ? "you" : rankings[0].name}</strong>! You scored {myPoints} points and took 1st place overall.
-          </p>
+          <p style={{ color: 'var(--text-primary)', marginTop: '0.5rem', fontSize: '1.05rem' }} 
+             dangerouslySetInnerHTML={{ __html: d.championDetails.replace('{name}', rankings[0].userId === userId ? dict.home.you.toLowerCase() : rankings[0].name).replace('{points}', String(myPoints)) }} />
         </div>
       )}
 
@@ -143,15 +146,15 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
             <Share2 size={14} />
-            Invite code: <ShareInviteButton inviteCode={group.inviteCode} />
+            {d.inviteCodeLabel} <ShareInviteButton inviteCode={group.inviteCode} />
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <Link href="/bets/group-stage" className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', padding: '0.6rem 1.25rem' }}>
-            <Edit3 size={14} /> Edit Bets
+            <Edit3 size={14} /> {d.editBets}
           </Link>
           <Link href="/dashboard" className="primary-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', padding: '0.6rem 1.25rem' }}>
-            <BarChart2 size={14} /> My Breakdown
+            <BarChart2 size={14} /> {d.myBreakdown}
           </Link>
           <LeaveGroupButton groupId={groupId} />
           <ShareRankingButton groupName={group.name} rank={myRank} points={myPoints} totalPlayers={rankings.length} />
@@ -162,26 +165,26 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', fontWeight: 800 }}>{rankMedal(myRank) ?? `#${myRank}`}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Your Rank</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{d.yourRank}</div>
         </div>
         <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', fontWeight: 800 }}>{myPoints}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Your Points</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{d.yourPoints}</div>
         </div>
         <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', fontWeight: 800 }}>{gap === 0 ? '—' : `+${gap}`}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{gap === 0 ? "You're leading!" : 'Behind leader'}</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{gap === 0 ? d.leadingLeague : d.behindLeader}</div>
         </div>
         <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', fontWeight: 800 }}>{rankings.length}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Total Players</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{d.totalPlayers}</div>
         </div>
       </div>
 
       {/* Leaderboard */}
       <div className="glass-panel" style={{ padding: '2rem' }}>
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '1rem' }}>
-          <ClipboardList color="var(--success)" /> Friends Ranking
+          <ClipboardList color="var(--success)" /> {d.friendsRanking}
         </h2>
 
         {latestRelevantGame && (() => {
@@ -237,12 +240,12 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
 
                   {/* Champ */}
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Champion Pick">
-                    🏆 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.championName ?? 'Hidden'}</span>
+                    🏆 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.championName ?? d.hidden}</span>
                   </span>
 
                   {/* Golden Boot */}
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Golden Boot Pick">
-                    👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.goldenBootName ?? 'Hidden'}</span>
+                    👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.goldenBootName ?? d.hidden}</span>
                   </span>
 
                   {/* Current/Next Match Bet */}
@@ -268,7 +271,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
                     <span style={{ fontSize: '1.2rem', fontWeight: 800, color: index === 0 ? 'var(--warning)' : 'inherit' }}>
                       {member.points}
                     </span>
-                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600 }}>pts</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{dict.home.pts}</span>
                   </div>
                 </div>
               </Link>

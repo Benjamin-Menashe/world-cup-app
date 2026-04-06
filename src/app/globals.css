@@ -162,9 +162,23 @@ input[type="number"] {
 /* Nav links container */
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: center;
   font-weight: 500;
+}
+
+/* Fix desktop nav items to a uniform width so they don't shift when changing language */
+.desktop-nav a, 
+.desktop-nav form, 
+.desktop-nav .primary-btn, 
+.desktop-nav .secondary-btn {
+  width: 140px;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+.desktop-nav form button {
+  width: 100%;
 }
 
 /* Mobile Navigation */
@@ -228,11 +242,33 @@ input[type="number"] {
   to { transform: translateX(0); }
 }
 
+.brand-text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.brand-subtitle {
+  color: var(--red);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .mobile-menu-btn { display: block; }
   .desktop-nav { display: none !important; }
   .navbar { padding: 0.75rem 1rem; }
-  .brand-text { font-size: 1rem !important; }
+  
+  .brand-text { 
+    font-size: 1.2rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0 !important;
+    line-height: 1.1 !important;
+  }
+  .brand-subtitle {
+    font-size: 0.9rem !important;
+  }
+  
   main { padding: 1rem !important; }
 }

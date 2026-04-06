@@ -4,12 +4,16 @@ import { useState } from "react"
 import { deleteAccountAction } from "@/app/actions/auth"
 import { AlertTriangle, Trash2 } from "lucide-react"
 
-export default function DeleteAccountButton() {
+interface Props {
+  dict: Record<string, string>
+}
+
+export default function DeleteAccountButton({ dict }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   const handleDelete = async () => {
-    const confirm1 = window.confirm("Are you sure you want to delete? all your bets will be deleted forever")
+    const confirm1 = window.confirm(dict.deleteConfirm)
     if (!confirm1) return
 
     setLoading(true)
@@ -22,7 +26,7 @@ export default function DeleteAccountButton() {
         setLoading(false)
       }
     } catch {
-      setError("An unexpected error occurred.")
+      setError(dict.deleteError)
       setLoading(false)
     }
   }
@@ -31,11 +35,11 @@ export default function DeleteAccountButton() {
     <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '2rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
         <AlertTriangle color="var(--error)" />
-        <h3 style={{ margin: 0, color: 'var(--error)' }}>Danger Zone</h3>
+        <h3 style={{ margin: 0, color: 'var(--error)' }}>{dict.dangerZone}</h3>
       </div>
       
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '600px' }}>
-        Once you delete your account, there is no going back. Please be certain. All your bets, memberships, and points will be permanently erased.
+        {dict.deleteWarning}
       </p>
 
       {error && (
@@ -65,7 +69,7 @@ export default function DeleteAccountButton() {
         onMouseOut={(e) => { if (!loading) e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)' }}
       >
         <Trash2 size={18} />
-        {loading ? "Deleting..." : "Delete My Account"}
+        {loading ? dict.deleting : dict.deleteAccount}
       </button>
     </div>
   )

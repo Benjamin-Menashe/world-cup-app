@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import KnockoutForm from "./KnockoutForm"
 import { Swords } from "lucide-react"
+import { getDictionary } from "@/lib/i18n"
 
 export default async function KnockoutBetsPage() {
   const userId = await getSession()
@@ -25,18 +26,21 @@ export default async function KnockoutBetsPage() {
     existingBetsMap[bet.gameId] = { home: bet.homeScore, away: bet.awayScore }
   }
 
+  const dict = await getDictionary()
+  const d = dict.knockout
+
   return (
     <div style={{ maxWidth: '1000px', margin: '2rem auto' }}>
       <div style={{ marginBottom: '3rem' }}>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-          <Swords color="var(--success)" /> Knockout Stage Predictions
+          <Swords color="var(--success)" /> {d.pageTitle}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-          Predict the exact score at the end of 90 minutes for each match. Each match locks 1 hour before kickoff.
+          {d.pageDesc}
         </p>
       </div>
 
-      <KnockoutForm games={games} existingBets={existingBetsMap} />
+      <KnockoutForm games={games} existingBets={existingBetsMap} dict={d} />
     </div>
   )
 }

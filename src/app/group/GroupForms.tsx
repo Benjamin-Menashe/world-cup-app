@@ -4,7 +4,7 @@ import { useState } from "react"
 import { createGroupAction, joinGroupAction } from "@/app/actions/group"
 import { Plus, KeyRound } from "lucide-react"
 
-export default function GroupForms() {
+export default function GroupForms({ dict }: { dict: Record<string, string> }) {
   const [joinError, setJoinError] = useState("")
   const [createError, setCreateError] = useState("")
 
@@ -24,22 +24,22 @@ export default function GroupForms() {
         
         <div style={{ flex: '1 1 300px' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '1.05rem' }}>
-            <KeyRound size={16} color="var(--success)" /> Join Friend Group
+            <KeyRound size={16} color="var(--success)" /> {dict.joinTitle}
           </h2>
           <form action={handleJoin} style={{ display: 'flex', gap: '0.5rem' }}>
-            <input name="inviteCode" type="text" placeholder="Invite Code" required className="input-field" style={{ textTransform: 'uppercase', flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.9rem' }} />
-            <button type="submit" className="primary-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Join</button>
+            <input name="inviteCode" type="text" placeholder={dict.inviteCode} required className="input-field" style={{ textTransform: 'uppercase', flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.9rem' }} />
+            <button type="submit" className="primary-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>{dict.joinBtn}</button>
           </form>
           {joinError && <div style={{ color: 'var(--error)', marginTop: '0.5rem', fontSize: '0.8rem' }}>{joinError}</div>}
         </div>
 
         <div style={{ flex: '1 1 300px' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '1.05rem' }}>
-            <Plus size={16} color="var(--accent)" /> Create Friend Group
+            <Plus size={16} color="var(--accent)" /> {dict.createTitle}
           </h2>
           <form action={handleCreate} style={{ display: 'flex', gap: '0.5rem' }}>
-            <input name="name" type="text" placeholder="League Name" required className="input-field" style={{ flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.9rem' }} />
-            <button type="submit" className="secondary-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Create</button>
+            <input name="name" type="text" placeholder={dict.leagueName} required className="input-field" style={{ flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.9rem' }} />
+            <button type="submit" className="secondary-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>{dict.createBtn}</button>
           </form>
           {createError && <div style={{ color: 'var(--error)', marginTop: '0.5rem', fontSize: '0.8rem' }}>{createError}</div>}
         </div>

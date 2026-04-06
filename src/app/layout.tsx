@@ -38,7 +38,10 @@ export default async function RootLayout({
         <nav className="navbar">
           <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span style={{ fontSize: '1.8rem' }}>⚽</span>
-            <span className="brand-text">{dict.brand.worldCup} <span style={{ color: 'var(--red)' }}>{dict.brand.betWithFriends}</span></span>
+            <span className="brand-text">
+              <span>{dict.brand.worldCup}</span>
+              <span className="brand-subtitle">{dict.brand.betWithFriends}</span>
+            </span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
             <LanguageToggle currentLang={lang} />

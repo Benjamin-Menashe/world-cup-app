@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import GroupForms from "./GroupForms"
 import { Users } from "lucide-react"
+import { getDictionary } from "@/lib/i18n"
 
 export default async function GroupPage() {
   const userId = await getSession()
@@ -18,18 +19,20 @@ export default async function GroupPage() {
     redirect(`/group/${memberships[0].groupId}`)
   }
 
+  const dict = await getDictionary()
+
   return (
     <div style={{ maxWidth: '800px', margin: '2rem auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
-      <GroupForms />
+      <GroupForms dict={dict.group} />
 
       <section>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          <Users color="var(--accent)" /> My Friend Groups
+          <Users color="var(--accent)" /> {dict.group.myFriendGroups}
         </h1>
         
         <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          You haven&apos;t joined any friend leagues yet. Join or create one above!
+          {dict.group.noLeagues}
         </div>
       </section>
 

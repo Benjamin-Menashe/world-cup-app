@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { User as UserIcon, Activity, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import PointsBreakdownCard from "@/components/PointsBreakdownCard"
-
+import { getDictionary } from "@/lib/i18n"
 
 export default async function TopScorerDetail({ params }: { params: { groupId: string, userId: string } }) {
   const currentUserId = await getSession()
@@ -31,24 +31,25 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
   // Fetch points & breakdown
   const pointsData = await calculateUserPoints(userId, currentUserId)
 
+  const dict = await getDictionary()
 
   return (
     <div style={{ maxWidth: '900px', margin: '2rem auto' }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <Link href={`/group/${groupId}`} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, fontSize: '0.95rem' }}>
-          <ChevronLeft size={18} /> Return to Friends List
+          <ChevronLeft size={18} /> {dict.group.returnToFriends}
         </Link>
       </div>
 
       <div style={{ marginBottom: '3rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-            <UserIcon color="var(--accent)" /> {targetUser.name}&apos;s Profile
+            <UserIcon color="var(--accent)" /> {dict.group.profile.replace('{name}', targetUser.name)}
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Detailed Picks & Performance</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>{dict.group.detailedPicks}</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Total Points</div>
+          <div style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{dict.dashboard.totalPoints}</div>
           <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent)', lineHeight: 1 }}>{pointsData.total}</div>
         </div>
       </div>
@@ -58,9 +59,9 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
         {/* Points Breakdown Table */}
         <section className="glass-panel" style={{ padding: '2rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--success)' }}>
-            <Activity /> Points Breakdown
+            <Activity /> {dict.dashboard.pointsBreakdown}
           </h2>
-          <PointsBreakdownCard breakdown={pointsData.breakdown} total={pointsData.total} />
+          <PointsBreakdownCard breakdown={pointsData.breakdown} total={pointsData.total} dict={dict.dashboard} />
         </section>
       </div>
     </div>
