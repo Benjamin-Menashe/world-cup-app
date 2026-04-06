@@ -167,18 +167,12 @@ input[type="number"] {
   font-weight: 500;
 }
 
-/* Fix desktop nav items to a uniform width so they don't shift when changing language */
+/* Fix desktop nav items to not wrap */
 .desktop-nav a, 
 .desktop-nav form, 
 .desktop-nav .primary-btn, 
 .desktop-nav .secondary-btn {
-  width: 140px;
-  display: flex;
-  justify-content: center;
-  text-align: center;
-}
-.desktop-nav form button {
-  width: 100%;
+  white-space: nowrap;
 }
 
 /* Mobile Navigation */
@@ -244,13 +238,16 @@ input[type="number"] {
 
 .brand-text {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.3rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  line-height: 1.1;
 }
 
 .brand-subtitle {
   color: var(--red);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 /* Responsive */
@@ -260,14 +257,10 @@ input[type="number"] {
   .navbar { padding: 0.75rem 1rem; }
   
   .brand-text { 
-    font-size: 1.2rem !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0 !important;
-    line-height: 1.1 !important;
+    font-size: 1.2rem;
   }
   .brand-subtitle {
-    font-size: 0.9rem !important;
+    font-size: 0.85rem;
   }
   
   main { padding: 1rem !important; }
