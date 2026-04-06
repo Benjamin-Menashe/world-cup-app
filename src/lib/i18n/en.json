@@ -126,7 +126,7 @@
     "pageDesc": "Welcome to the World Cup 2026 Prediction App. This guide breaks down exactly how to play, how points are scored, and when matches lock. Please review these rules to maximize your score!",
     "section1Title": "Section 1: Group Stage Predictions",
     "s1InstructionsTitle": "User Instructions",
-    "s1Instructions": "Before the tournament begins, navigate to the <strong>Group Stage</strong> section. For every group (A-L), drag and drop the four teams to predict their exact final group standing (1st through 4th).",
+    "s1Instructions": "Before the tournament begins, navigate to the <strong>Group Stage</strong> section. Here you will make your <strong>Main & Bonus Picks</strong> (Tournament Champion, Golden Boot winner, Undefeated Team, and Winless Team). Then, for every group (A-L), drag and drop the four teams to predict their exact final group standing (1st through 4th).",
     "s1ScoringTitle": "1.1 Scoring Mechanism",
     "s1Scoring1": "Rankings are scored using the <strong>Normalized Kendall-Tau Distance</strong>.",
     "s1Scoring2": "A perfectly predicted group awards a maximum of <strong>6 points</strong>. For example, predicting A, B, C, D when the true result is A, B, C, D yields 6 points.",
