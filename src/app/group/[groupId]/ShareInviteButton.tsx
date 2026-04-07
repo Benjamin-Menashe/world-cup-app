@@ -3,12 +3,13 @@
 import { useState } from "react"
 import { Copy, CheckCircle } from "lucide-react"
 
-export default function ShareInviteButton({ inviteCode }: { inviteCode: string }) {
+export default function ShareInviteButton({ inviteCode, dict }: { inviteCode: string; dict?: any }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
     const inviteUrl = `https://world-cup-app-2026.vercel.app/register?inviteCode=${inviteCode}`
-    const message = `⚽ Join my World Cup 2026 betting league!\n\n🔑 Invite Code: ${inviteCode}\n\nClick here to join directly:\n${inviteUrl}\n\nLet's go! 🏆`
+    const defaultMessage = `⚽ Join my World Cup 2026 betting league!\n\n🔑 Invite Code: ${inviteCode}\n\nClick here to join directly:\n${inviteUrl}\n\nLet's go! 🏆`
+    const message = dict ? dict.inviteMessage.replace('{inviteCode}', inviteCode).replace('{inviteUrl}', inviteUrl) : defaultMessage
     navigator.clipboard.writeText(message)
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
@@ -17,7 +18,7 @@ export default function ShareInviteButton({ inviteCode }: { inviteCode: string }
   return (
     <button 
       onClick={handleCopy}
-      title={copied ? "Copied invite message!" : "Copy invite message to clipboard"}
+      title={copied ? (dict?.copiedInviteMsg || "Copied invite message!") : (dict?.copyInviteMsg || "Copy invite message to clipboard")}
       style={{ 
         display: 'flex', alignItems: 'center', gap: '0.4rem', 
         background: 'rgba(0,0,0,0.04)', border: '1px solid var(--border-subtle)', 

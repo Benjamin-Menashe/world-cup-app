@@ -6,11 +6,12 @@ import { Share2, Check } from "lucide-react"
 interface CopyButtonProps {
   text: string
   label?: string
+  copiedLabel?: string
   size?: number
   style?: React.CSSProperties
 }
 
-export default function CopyButton({ text, label, size = 14, style }: CopyButtonProps) {
+export default function CopyButton({ text, label, copiedLabel = "Copied!", size = 14, style }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
@@ -22,7 +23,7 @@ export default function CopyButton({ text, label, size = 14, style }: CopyButton
   return (
     <button
       onClick={handleCopy}
-      title={copied ? "Copied!" : (label || "Copy to clipboard")}
+      title={copied ? copiedLabel : (label || "Copy to clipboard")}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
         background: 'none', border: 'none', cursor: 'pointer',
@@ -35,7 +36,7 @@ export default function CopyButton({ text, label, size = 14, style }: CopyButton
       onMouseOut={(e) => { e.currentTarget.style.background = 'none' }}
     >
       {copied ? <Check size={size} /> : <Share2 size={size} />}
-      {label && <span>{copied ? "Copied!" : label}</span>}
+      {label && <span>{copied ? copiedLabel : label}</span>}
     </button>
   )
 }

@@ -146,7 +146,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
             <Share2 size={14} />
-            {d.inviteCodeLabel} <ShareInviteButton inviteCode={group.inviteCode} />
+            {d.inviteCodeLabel} <ShareInviteButton inviteCode={group.inviteCode} dict={d} />
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -157,7 +157,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
             <BarChart2 size={14} /> {d.myBreakdown}
           </Link>
           <LeaveGroupButton groupId={groupId} />
-          <ShareRankingButton groupName={group.name} rank={myRank} points={myPoints} totalPlayers={rankings.length} />
+          <ShareRankingButton groupName={group.name} rank={myRank} points={myPoints} totalPlayers={rankings.length} dict={d} />
         </div>
       </div>
 

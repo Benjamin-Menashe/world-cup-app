@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <Link href={isLocked ? "/bets/knockout" : "/bets/group-stage"} className="primary-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Edit3 size={15} /> {dict.dashboard.editPicks}
         </Link>
-        <ShareBreakdownButton breakdown={breakdown} total={total} userName={user?.name || 'Player'} />
+        <ShareBreakdownButton breakdown={breakdown} total={total} userName={user?.name || 'Player'} dict={dict.dashboard} />
       </div>
 
       {/* Points Breakdown */}

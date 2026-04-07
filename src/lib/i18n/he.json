@@ -50,7 +50,13 @@
     "deleteAccount": "מחק את החשבון שלי",
     "deleteError": "אירעה שגיאה לא צפויה.",
     "noPointsYet": "אין עדיין ניקוד — הניקוד מתעדכן בסיום משחקים.",
-    "totalScore": "סך הנקודות"
+    "totalScore": "סך הנקודות",
+    "shareBreakdown": "⚽ מונדיאל 2026 — הניקוד של {userName}\n\n📊 סך הכל: {total} נק'\n{lines}\n\nהצטרפו אלי לליגת החברים של מונדיאל 2026!\nhttps://world-cup-app-2026.vercel.app",
+    "bonusPicks": "הימורי בונוס",
+    "groupStage": "שלב הבתים",
+    "share": "שתף",
+    "copied": "הועתק!",
+    "copyToClipboard": "העתק ללוח"
   },
   "groupStage": {
     "ensurePicks": "אנא ודא כי בחרת את כל ההימורים הראשיים והימורי הבונוס.",
@@ -119,7 +125,14 @@
     "inviteCodeLabel": "קוד הזמנה:",
     "returnToFriends": "חזור לרשימת החברים",
     "profile": "הפרופיל של {name}",
-    "detailedPicks": "פירוט הימורים וביצועים"
+    "detailedPicks": "פירוט הימורים וביצועים",
+    "share": "שתף",
+    "copied": "הועתק!",
+    "copyToClipboard": "העתק ללוח",
+    "copiedInviteMsg": "ההזמנה הועתקה ללוח!",
+    "copyInviteMsg": "העתק הודעת הזמנה ללוח",
+    "inviteMessage": "⚽ בואו לשחק איתי באפליקציית מונדיאל 2026!\n\n🔑 קוד הזמנה: {inviteCode}\n\nלחצו כאן כדי להצטרף ישירות:\n{inviteUrl}\n\nיאללה בלאגן! 🏆",
+    "shareRankHtml": "🏆 {groupName} — מונדיאל 2026\n📊 דירוג: #{rank} מתוך {totalPlayers}\n⚡ נקודות: {points}\n\nהצטרפו אלי לליגת החברים של מונדיאל 2026!\nhttps://world-cup-app-2026.vercel.app"
   },
   "rules": {
     "pageTitle": "ספר חוקים רשמי",

@@ -50,7 +50,13 @@
     "deleteAccount": "Delete My Account",
     "deleteError": "An unexpected error occurred.",
     "noPointsYet": "No points yet — scores update as matches finish.",
-    "totalScore": "Total Score"
+    "totalScore": "Total Score",
+    "shareBreakdown": "⚽ World Cup 2026 — {userName}'s Points\n\n📊 Total: {total} pts\n{lines}\n\nJoin me on World Cup 2026 Bet with Friends!\nhttps://world-cup-app-2026.vercel.app",
+    "bonusPicks": "Bonus Picks",
+    "groupStage": "Group Stage",
+    "share": "Share",
+    "copied": "Copied!",
+    "copyToClipboard": "Copy to clipboard"
   },
   "groupStage": {
     "ensurePicks": "Please ensure all Main Picks and Bonus Picks are selected.",
@@ -119,7 +125,14 @@
     "inviteCodeLabel": "Invite code:",
     "returnToFriends": "Return to Friends List",
     "profile": "{name}'s Profile",
-    "detailedPicks": "Detailed Picks & Performance"
+    "detailedPicks": "Detailed Picks & Performance",
+    "share": "Share",
+    "copied": "Copied!",
+    "copyToClipboard": "Copy to clipboard",
+    "copiedInviteMsg": "Copied invite message!",
+    "copyInviteMsg": "Copy invite message to clipboard",
+    "inviteMessage": "⚽ Join my World Cup 2026 betting league!\n\n🔑 Invite Code: {inviteCode}\n\nClick here to join directly:\n{inviteUrl}\n\nLet's go! 🏆",
+    "shareRankHtml": "🏆 {groupName} — World Cup 2026\n📊 Rank: #{rank} out of {totalPlayers}\n⚡ Points: {points}\n\nJoin me on World Cup 2026 Bet with Friends!\nhttps://world-cup-app-2026.vercel.app"
   },
   "rules": {
     "pageTitle": "Official Rulebook",
