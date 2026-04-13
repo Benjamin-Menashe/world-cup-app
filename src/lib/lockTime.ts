@@ -18,6 +18,17 @@ export async function getEffectiveNow(): Promise<Date> {
   return new Date()
 }
 
+export async function getKnockoutLockOverride(): Promise<"Locked" | "Unlocked" | "Auto"> {
+  try {
+    const override = await prisma.tournamentResult.findUnique({ where: { key: 'KnockoutLockOverride' } })
+    if (override?.value === '"Locked"') return "Locked"
+    if (override?.value === '"Unlocked"') return "Unlocked"
+  } catch {
+    // ignore
+  }
+  return "Auto"
+}
+
 /**
  * Returns the group stage lock time: earliest group game kickoff minus 1 hour.
  */

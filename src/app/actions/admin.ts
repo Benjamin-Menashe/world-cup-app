@@ -121,9 +121,13 @@ export async function deleteGameAction(formData: FormData) {
 
 export async function createTeamAction(formData: FormData) {
   await verifyAdmin()
-  const name = formData.get("name") as string
+  const enName = formData.get("enName") as string
+  const heName = formData.get("heName") as string
   const group = formData.get("group") as string
   const flagUrl = formData.get("flagUrl") as string || ""
+
+  let name = enName
+  if (enName && heName) name = `${enName} (${heName})`
 
   if (name && group) {
     await prisma.team.create({ data: { name, group, flagUrl } })
@@ -223,6 +227,18 @@ async function upsertResult(key: string, value: unknown) {
     update: { value: JSON.stringify(value) },
     create: { key, value: JSON.stringify(value) },
   })
+}
+
+export async function setKnockoutLockOverrideAction(formData: FormData) {
+  await verifyAdmin()
+  const status = formData.get("status") as string // "Locked", "Unlocked", or "Auto"
+  if (status === "Auto") {
+    await prisma.tournamentResult.deleteMany({ where: { key: 'KnockoutLockOverride' } })
+  } else if (status) {
+    await upsertResult('KnockoutLockOverride', status)
+  }
+  revalidatePath("/admin")
+  revalidatePath("/bets/knockout")
 }
 
 export async function setChampionAction(formData: FormData) {

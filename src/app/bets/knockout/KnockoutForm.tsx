@@ -23,17 +23,16 @@ const STAGE_LABELS: Record<string, string> = {
   Final: 'Final',
 }
 
-function isGameLocked(kickoffTime: Date): boolean {
-  return new Date() >= new Date(kickoffTime.getTime() - 60 * 60 * 1000)
-}
 
 export default function KnockoutForm({
   games,
   existingBets,
+  lockedGames,
   dict,
 }: {
   games: Game[]
   existingBets: Record<string, { home: number; away: number }>
+  lockedGames: Record<string, boolean>
   dict: Record<string, any>
 }) {
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>(() => {
@@ -47,12 +46,6 @@ export default function KnockoutForm({
     }
     return init
   })
-
-  const [isMounted, setIsMounted] = useState(false)
-  useEffect(() => {
-    const t = setTimeout(() => setIsMounted(true), 0)
-    return () => clearTimeout(t)
-  }, [])
 
   const [savedRounds, setSavedRounds] = useState<Record<string, boolean>>({})
   const [isSaving, setIsSaving] = useState(false)
@@ -76,7 +69,7 @@ export default function KnockoutForm({
     const parsedScores: Record<string, { home: number; away: number }> = {}
     for (const game of stageGames) {
       const s = scores[game.id]
-      if (!isGameLocked(game.kickoffTime)) {
+      if (!lockedGames[game.id]) {
         parsedScores[game.id] = { 
           home: parseInt(s.home === "" ? "0" : s.home, 10), 
           away: parseInt(s.away === "" ? "0" : s.away, 10) 
@@ -102,7 +95,7 @@ export default function KnockoutForm({
   const presentStages = STAGE_ORDER.filter(s => gamesByStage[s]?.length > 0)
 
   // Auto-collapse logic
-  const firstOpenStage = presentStages.find(stage => !gamesByStage[stage].every(g => isGameLocked(g.kickoffTime)))
+  const firstOpenStage = presentStages.find(stage => !gamesByStage[stage].every(g => lockedGames[g.id]))
   
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {}
@@ -132,8 +125,8 @@ export default function KnockoutForm({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
       {presentStages.map(stage => {
         const stageGames = gamesByStage[stage]
-        const allLocked = stageGames.every(g => isGameLocked(g.kickoffTime))
-        const anyUnlocked = stageGames.some(g => !isGameLocked(g.kickoffTime))
+        const allLocked = stageGames.every(g => lockedGames[g.id])
+        const anyUnlocked = stageGames.some(g => !lockedGames[g.id])
         const isSaved = savedRounds[stage]
         const isExpanded = expandedStages[stage]
 
@@ -179,7 +172,7 @@ export default function KnockoutForm({
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: anyUnlocked ? '1.5rem' : '0' }}>
               {stageGames.map(game => {
-                const locked = isMounted ? isGameLocked(game.kickoffTime) : false
+                const locked = lockedGames[game.id]
                 const kickoff = new Date(game.kickoffTime)
                 return (
                   <div key={game.id} style={{
@@ -190,7 +183,7 @@ export default function KnockoutForm({
                   }}>
                     <div style={{ flex: 1, minWidth: '160px' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                        {isMounted ? kickoff.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "---"}
+                        {kickoff.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         {locked && <span style={{ marginLeft: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> {dict.locked}</span>}
                       </div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>

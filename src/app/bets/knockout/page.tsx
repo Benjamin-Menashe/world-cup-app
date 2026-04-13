@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import KnockoutForm from "./KnockoutForm"
 import { Swords } from "lucide-react"
 import { getDictionary } from "@/lib/i18n"
+import { getEffectiveNow, getKnockoutLockOverride } from "@/lib/lockTime"
 
 export default async function KnockoutBetsPage() {
   const userId = await getSession()
@@ -29,6 +30,16 @@ export default async function KnockoutBetsPage() {
   const dict = await getDictionary()
   const d = dict.knockout
 
+  const now = await getEffectiveNow()
+  const override = await getKnockoutLockOverride()
+  
+  const lockedGamesMap: Record<string, boolean> = {}
+  for (const g of games) {
+    if (override === "Locked") lockedGamesMap[g.id] = true
+    else if (override === "Unlocked") lockedGamesMap[g.id] = false
+    else lockedGamesMap[g.id] = now >= new Date(g.kickoffTime.getTime() - 60 * 60 * 1000)
+  }
+
   return (
     <div style={{ maxWidth: '1000px', margin: '2rem auto' }}>
       <div style={{ marginBottom: '3rem' }}>
@@ -40,7 +51,7 @@ export default async function KnockoutBetsPage() {
         </p>
       </div>
 
-      <KnockoutForm games={games} existingBets={existingBetsMap} dict={d} />
+      <KnockoutForm games={games} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} />
     </div>
   )
 }

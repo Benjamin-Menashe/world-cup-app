@@ -15,12 +15,14 @@ import {
   updateGameScoreAction,
   updateGameKickoffAction,
   addKnockoutGameAction,
+  deleteGameAction,
   updatePlayerGoalsAction,
   createPlayerAction,
   renamePlayerAction,
   deletePlayerAction,
   createTeamAction,
   renameTeamAction,
+  deleteTeamAction,
   updateTeamGroupAction,
   setChampionAction,
   clearChampionAction,
@@ -30,6 +32,7 @@ import {
   clearWinlessTeamAction,
   setGroupRankingAction,
   clearGroupRankingAction,
+  setKnockoutLockOverrideAction,
 } from "@/app/actions/admin"
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
@@ -77,6 +80,7 @@ export default async function AdminDashboardPage() {
     (typeof resultMap['Undefeated'] === 'string' ? [resultMap['Undefeated']] : [])  // back-compat with old single-string format
   const winlessIds: string[] = Array.isArray(resultMap['Winless']) ? (resultMap['Winless'] as string[]) :
     (typeof resultMap['Winless'] === 'string' ? [resultMap['Winless']] : [])
+  const knockoutLockOverride = resultMap['KnockoutLockOverride'] ?? 'Auto'
 
   const gamesByStage: Record<string, typeof games> = {}
   for (const g of games) {
@@ -127,10 +131,23 @@ export default async function AdminDashboardPage() {
         <section className="glass-panel" style={panelStyle}>
           <SectionHeader
             icon={<Clock size={20} color="#f59e0b" />}
-            title="Time Override"
-            subtitle="Freeze the app clock at any moment to test lock logic, bet visibility, and points — without touching game data."
+            title="Global Locks & Time Override"
+            subtitle="Freeze the app clock or instantly lock the knockout predictions for all users."
           />
           <TimeOverridePanel currentOverride={timeOverride} />
+          
+          <div style={{ ...subPanelStyle, marginTop: '2rem' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.05rem', color: 'var(--red)' }}>Knockout Predictions Lock</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Override the knockout predictions lock regardless of game kickoff times.</p>
+            <form action={setKnockoutLockOverrideAction} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <select name="status" defaultValue={knockoutLockOverride} className="input-field" style={{ width: '200px' }}>
+                <option value="Auto">Auto (Depends on Kickoff Time)</option>
+                <option value="Locked">Locked (Closed)</option>
+                <option value="Unlocked">Unlocked (Open)</option>
+              </select>
+              <button type="submit" className="primary-btn">Set Override</button>
+            </form>
+          </div>
         </section>
 
         {/* ── 2. Match Scores (all stages) ─────────────────────────────────── */}
@@ -151,57 +168,62 @@ export default async function AdminDashboardPage() {
                 {stageGames.length === 0 ? (
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No {STAGE_LABELS[stage]} games yet.</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: stage === 'Group' ? '300px' : undefined, overflowY: stage === 'Group' ? 'auto' : undefined, paddingRight: stage === 'Group' ? '0.25rem' : undefined }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: stage === 'Group' ? '400px' : undefined, overflowY: stage === 'Group' ? 'auto' : undefined, paddingRight: stage === 'Group' ? '0.25rem' : undefined }}>
                     {stageGames.map(game => {
                       return (
-                        <form key={game.id} action={updateGameScoreAction}
-                          style={{ ...rowStyle, gridTemplateColumns: '1fr auto auto auto 1fr auto auto' }}>
-                          <input type="hidden" name="gameId" value={game.id} />
-                          <span style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.88rem' }}>{game.homeTeam.name}</span>
-                          <input type="number" name="homeScore" defaultValue={game.homeScore ?? ''} min="0" style={smallInput} />
-                          <span style={{ color: 'var(--text-secondary)' }}>–</span>
-                          <input type="number" name="awayScore" defaultValue={game.awayScore ?? ''} min="0" style={smallInput} />
-                          <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{game.awayTeam.name}</span>
-                          {/* Hidden: pass current isFinished, toggled by button label */}
-                          <select name="isFinished" defaultValue={game.isFinished ? "true" : "false"} style={{ ...selectStyle, width: '95px' }}>
-                            <option value="true">Finished</option>
-                            <option value="false">Live/Future</option>
-                          </select>
-                          <button type="submit" className="secondary-btn" style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}>Save</button>
-                        </form>
+                        <div key={game.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <form action={updateGameScoreAction}
+                            style={{ ...rowStyle, gridTemplateColumns: '1fr auto auto auto 1fr auto auto', flex: 1, margin: 0 }}>
+                            <input type="hidden" name="gameId" value={game.id} />
+                            <span style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.88rem' }}>{game.homeTeam.name}</span>
+                            <input type="number" name="homeScore" defaultValue={game.homeScore ?? ''} min="0" style={smallInput} />
+                            <span style={{ color: 'var(--text-secondary)' }}>–</span>
+                            <input type="number" name="awayScore" defaultValue={game.awayScore ?? ''} min="0" style={smallInput} />
+                            <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{game.awayTeam.name}</span>
+                            <select name="isFinished" defaultValue={game.isFinished ? "true" : "false"} style={{ ...selectStyle, width: '100px' }}>
+                              <option value="true">Finished</option>
+                              <option value="false">Live/Future</option>
+                            </select>
+                            <button type="submit" className="secondary-btn" style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}>Save</button>
+                          </form>
+                          <form action={deleteGameAction}>
+                            <input type="hidden" name="gameId" value={game.id} />
+                            <button type="submit" className="secondary-btn" style={{ padding: '0.35rem 0.5rem', color: 'var(--red)', borderColor: 'var(--red)' }} title="Delete Match">
+                              🗑
+                            </button>
+                          </form>
+                        </div>
                       )
                     })}
                   </div>
                 )}
 
-                {/* Add knockout game */}
-                {stage !== 'Group' && (
-                  <details style={{ marginTop: '0.75rem' }}>
-                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', userSelect: 'none' }}>
-                      + Add {STAGE_LABELS[stage]} game
-                    </summary>
-                    <form action={addKnockoutGameAction} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem', alignItems: 'flex-end' }}>
-                      <input type="hidden" name="stage" value={stage} />
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Home Team</label>
-                        <select name="homeTeamId" required style={selectStyle}>
-                          {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Away Team</label>
-                        <select name="awayTeamId" required style={selectStyle}>
-                          {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Kickoff</label>
-                        <input type="datetime-local" name="kickoffTime" required className="input-field" style={{ fontSize: '0.85rem', padding: '0.3rem 0.5rem' }} />
-                      </div>
-                      <button type="submit" className="primary-btn" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>Add Game</button>
-                    </form>
-                  </details>
-                )}
+                {/* Add game */}
+                <details style={{ marginTop: '0.75rem' }}>
+                  <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)', userSelect: 'none' }}>
+                    + Add {STAGE_LABELS[stage]} game
+                  </summary>
+                  <form action={addKnockoutGameAction} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem', alignItems: 'flex-end' }}>
+                    <input type="hidden" name="stage" value={stage} />
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Home Team</label>
+                      <select name="homeTeamId" required style={selectStyle}>
+                        {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Away Team</label>
+                      <select name="awayTeamId" required style={selectStyle}>
+                        {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Kickoff</label>
+                      <input type="datetime-local" name="kickoffTime" required className="input-field" style={{ fontSize: '0.85rem', padding: '0.3rem 0.5rem' }} />
+                    </div>
+                    <button type="submit" className="primary-btn" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>Add Game</button>
+                  </form>
+                </details>
               </div>
             )
           })}
@@ -520,8 +542,12 @@ export default async function AdminDashboardPage() {
                   {(teamsByGroup[g] ?? []).length === 0
                     ? <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>No teams</p>
                     : (teamsByGroup[g] ?? []).map(t => (
-                        <div key={t.id} style={{ fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                          {t.name}
+                        <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                          <span>{t.name}</span>
+                          <form action={deleteTeamAction} onSubmit={(e) => { if (!confirm(`Delete team ${t.name}? This will delete their players and bets too.`)) e.preventDefault() }}>
+                            <input type="hidden" name="teamId" value={t.id} />
+                            <button type="submit" style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', opacity: 0.6 }} title="Delete Team">🗑</button>
+                          </form>
                         </div>
                       ))
                   }
@@ -536,17 +562,21 @@ export default async function AdminDashboardPage() {
               + Add a new team
             </summary>
             <form action={createTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-              <div style={{ flex: 2 }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team Name</label>
-                <input type="text" name="name" required className="input-field" placeholder="e.g. France" />
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>English Name</label>
+                <input type="text" name="enName" required className="input-field" placeholder="e.g. France" />
               </div>
-              <div style={{ flex: 1, minWidth: '80px' }}>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hebrew Name (optional)</label>
+                <input type="text" name="heName" className="input-field" placeholder="e.g. צרפת" />
+              </div>
+              <div style={{ width: '80px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Group</label>
                 <select name="group" required className="input-field">
                   {GROUPS.map(g => <option key={g} value={g}>Group {g}</option>)}
                 </select>
               </div>
-              <div style={{ flex: 2 }}>
+              <div style={{ flex: 1, minWidth: '120px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Flag URL (optional)</label>
                 <input type="url" name="flagUrl" className="input-field" placeholder="https://..." />
               </div>
