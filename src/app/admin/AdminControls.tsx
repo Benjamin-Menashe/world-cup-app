@@ -85,7 +85,7 @@ export function MasterResetButton() {
 
   async function handleReset() {
     if (!confirm(
-      "⚠️ MASTER RESET\n\nThis will:\n• Delete all sim users & their bets\n• Clear all tournament result overrides\n• Clear all match scores & knockout games\n• Reset all player goal counts\n• Run a live API sync\n\nAre you sure?"
+      "⚠️ MASTER RESET\n\nThis will:\n• Delete ALL Teams & Players\n• Delete ALL Games & Schedules\n• Delete ALL User Predictions & Bets\n• Delete ALL Tournament Results\n\nAre you sure you want to completely wipe the tournament database? Users will not be deleted."
     )) return
 
     setLoading(true)
@@ -107,7 +107,7 @@ export function MasterResetButton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: 0 }}>
-        Undoes all manual admin changes: removes sim users, clears scores, tournament results, and re-syncs live data from the API. Use this when you want to return to a clean slate.
+        Wipes the entire database including all teams, players, matches, and bets. Use this when you want to return to a clean slate before fetching real API data.
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
         <button

@@ -145,6 +145,8 @@ export async function updateTeamGroupAction(formData: FormData) {
   revalidatePath("/admin")
 }
 
+
+
 export async function renameTeamAction(formData: FormData) {
   await verifyAdmin()
   const teamId = formData.get("teamId") as string
