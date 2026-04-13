@@ -9,7 +9,7 @@ import {
 import SyncButton from "./SyncButton"
 import SyncPlayersButton from "./SyncPlayersButton"
 import InitTournamentButton from "./InitTournamentButton"
-import { TimeOverridePanel, MasterResetButton } from "./AdminControls"
+import { TimeOverridePanel, MasterResetButton, DeleteFormWithConfirm } from "./AdminControls"
 
 import {
   updateGameScoreAction,
@@ -186,12 +186,13 @@ export default async function AdminDashboardPage() {
                             </select>
                             <button type="submit" className="secondary-btn" style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}>Save</button>
                           </form>
-                          <form action={deleteGameAction}>
-                            <input type="hidden" name="gameId" value={game.id} />
-                            <button type="submit" className="secondary-btn" style={{ padding: '0.35rem 0.5rem', color: 'var(--red)', borderColor: 'var(--red)' }} title="Delete Match">
-                              🗑
-                            </button>
-                          </form>
+                          <DeleteFormWithConfirm
+                            action={deleteGameAction}
+                            hiddenName="gameId"
+                            hiddenValue={game.id}
+                            itemLabel="Match"
+                            confirmMessage="Delete this match?"
+                          />
                         </div>
                       )
                     })}
@@ -544,10 +545,13 @@ export default async function AdminDashboardPage() {
                     : (teamsByGroup[g] ?? []).map(t => (
                         <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
                           <span>{t.name}</span>
-                          <form action={deleteTeamAction} onSubmit={(e) => { if (!confirm(`Delete team ${t.name}? This will delete their players and bets too.`)) e.preventDefault() }}>
-                            <input type="hidden" name="teamId" value={t.id} />
-                            <button type="submit" style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', opacity: 0.6 }} title="Delete Team">🗑</button>
-                          </form>
+                          <DeleteFormWithConfirm
+                            action={deleteTeamAction}
+                            hiddenName="teamId"
+                            hiddenValue={t.id}
+                            itemLabel={t.name}
+                            confirmMessage={`Delete team ${t.name}? This will delete their players and bets too.`}
+                          />
                         </div>
                       ))
                   }

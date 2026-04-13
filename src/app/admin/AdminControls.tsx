@@ -137,3 +137,14 @@ export function MasterResetButton() {
     </div>
   )
 }
+
+export function DeleteFormWithConfirm({ action, hiddenValue, hiddenName, itemLabel, confirmMessage }: { action: any, hiddenValue: string, hiddenName: string, itemLabel: string, confirmMessage: string }) {
+  return (
+    <form action={action} onSubmit={(e) => { if (!confirm(confirmMessage)) e.preventDefault() }}>
+      <input type="hidden" name={hiddenName} value={hiddenValue} />
+      <button type="submit" style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', opacity: 0.6 }} title={`Delete ${itemLabel}`}>
+        🗑
+      </button>
+    </form>
+  )
+}
