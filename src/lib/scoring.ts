@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma"
-import { deriveGroupStandings, isGroupStageLocked } from "@/lib/lockTime"
+import { deriveGroupStandings, isGroupStageLocked, getEffectiveNow } from "@/lib/lockTime"
 
 // Kendall-Tau distance for 2 arrays of the same elements
 function kendallTauDistance(arr1: string[], arr2: string[]): number {
@@ -81,6 +81,9 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
     include: { homeTeam: true, awayTeam: true }
   })
 
+  // Determine effective "now" once for all per-match lock checks
+  const effectiveNow = await getEffectiveNow()
+
   for (const game of allKnockouts) {
     const bet = user.gameBets.find(b => b.gameId === game.id)
     const betHome = bet ? bet.homeScore : 0
@@ -88,7 +91,7 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
     
     let gamePoints = 0
     const lockTime = new Date(game.kickoffTime.getTime() - 60 * 60 * 1000)
-    const isMatchLocked = new Date() >= lockTime
+    const isMatchLocked = effectiveNow >= lockTime
     const canViewMatch = isMatchLocked || userId === currentUserId
     
     const homeAbbr = game.homeTeam.name.substring(0, 3).toUpperCase()

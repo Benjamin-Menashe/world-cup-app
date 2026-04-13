@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 
 async function verifyAdmin() {
   const userId = await getSession()
@@ -12,17 +13,81 @@ async function verifyAdmin() {
   if (!user || user.isAdmin !== true) {
     redirect("/")
   }
+  return user
 }
 
-export async function setTournamentResultAction(key: string, value: unknown) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Time Override
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function setTimeOverrideAction(formData: FormData) {
+  await verifyAdmin()
+  const isoString = formData.get("timeOverride") as string
+  if (!isoString) return
+
+  await prisma.tournamentResult.upsert({
+    where: { key: 'TimeOverride' },
+    update: { value: JSON.stringify(isoString) },
+    create: { key: 'TimeOverride', value: JSON.stringify(isoString) },
+  })
+  revalidatePath("/admin")
+}
+
+export async function clearTimeOverrideAction() {
+  await verifyAdmin()
+  await prisma.tournamentResult.deleteMany({ where: { key: 'TimeOverride' } })
+  revalidatePath("/admin")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Match Scores & Status
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function updateGameScoreAction(formData: FormData) {
   await verifyAdmin()
   
-  await prisma.tournamentResult.upsert({
-    where: { key },
-    update: { value: JSON.stringify(value) },
-    create: { key, value: JSON.stringify(value) }
-  })
+  const gameId = formData.get("gameId") as string
+  const homeScore = parseInt(formData.get("homeScore") as string, 10)
+  const awayScore = parseInt(formData.get("awayScore") as string, 10)
+  const isFinished = formData.get("isFinished") === "true"
+
+  if (gameId && !isNaN(homeScore) && !isNaN(awayScore)) {
+    await prisma.game.update({
+      where: { id: gameId },
+      data: { homeScore, awayScore, isFinished }
+    })
+  }
+  revalidatePath("/admin")
 }
+
+export async function updateGameKickoffAction(formData: FormData) {
+  await verifyAdmin()
+  const gameId = formData.get("gameId") as string
+  const kickoffTime = formData.get("kickoffTime") as string
+  if (gameId && kickoffTime) {
+    await prisma.game.update({
+      where: { id: gameId },
+      data: { kickoffTime: new Date(kickoffTime) }
+    })
+  }
+  revalidatePath("/admin")
+}
+
+export async function clearGameScoreAction(formData: FormData) {
+  await verifyAdmin()
+  const gameId = formData.get("gameId") as string
+  if (gameId) {
+    await prisma.game.update({
+      where: { id: gameId },
+      data: { homeScore: null, awayScore: null, isFinished: false }
+    })
+  }
+  revalidatePath("/admin")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Knockout Game Management
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function addKnockoutGameAction(formData: FormData) {
   await verifyAdmin()
@@ -34,48 +99,25 @@ export async function addKnockoutGameAction(formData: FormData) {
 
   if (stage && homeTeamId && awayTeamId && kickoffTime) {
     await prisma.game.create({
-      data: {
-        stage,
-        homeTeamId,
-        awayTeamId,
-        kickoffTime: new Date(kickoffTime)
-      }
+      data: { stage, homeTeamId, awayTeamId, kickoffTime: new Date(kickoffTime) }
     })
   }
+  revalidatePath("/admin")
 }
 
-export async function updateGameScoreAction(formData: FormData) {
+export async function deleteGameAction(formData: FormData) {
   await verifyAdmin()
-  
   const gameId = formData.get("gameId") as string
-  const homeScore = parseInt(formData.get("homeScore") as string, 10)
-  const awayScore = parseInt(formData.get("awayScore") as string, 10)
-
-  if (gameId && !isNaN(homeScore) && !isNaN(awayScore)) {
-    await prisma.game.update({
-      where: { id: gameId },
-      data: {
-        homeScore,
-        awayScore,
-        isFinished: true
-      }
-    })
+  if (gameId) {
+    await prisma.gameBet.deleteMany({ where: { gameId } })
+    await prisma.game.delete({ where: { id: gameId } })
   }
+  revalidatePath("/admin")
 }
 
-export async function updatePlayerGoalsAction(formData: FormData) {
-  await verifyAdmin()
-
-  const playerId = formData.get("playerId") as string
-  const goalsScored = parseInt(formData.get("goalsScored") as string, 10)
-
-  if (playerId && !isNaN(goalsScored)) {
-    await prisma.player.update({
-      where: { id: playerId },
-      data: { goalsScored }
-    })
-  }
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Team Management
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function createTeamAction(formData: FormData) {
   await verifyAdmin()
@@ -84,22 +126,100 @@ export async function createTeamAction(formData: FormData) {
   const flagUrl = formData.get("flagUrl") as string || ""
 
   if (name && group) {
-    await prisma.team.create({
-      data: { name, group, flagUrl }
-    })
+    await prisma.team.create({ data: { name, group, flagUrl } })
   }
+  revalidatePath("/admin")
+}
+
+export async function updateTeamGroupAction(formData: FormData) {
+  await verifyAdmin()
+  const teamId = formData.get("teamId") as string
+  const group = formData.get("group") as string
+  if (teamId && group) {
+    await prisma.team.update({ where: { id: teamId }, data: { group } })
+  }
+  revalidatePath("/admin")
+}
+
+export async function deleteTeamAction(formData: FormData) {
+  await verifyAdmin()
+  const teamId = formData.get("teamId") as string
+  if (!teamId) return
+
+  // Cascade: delete bets referencing this team, then games, then team
+  await prisma.championBet.deleteMany({ where: { teamId } })
+  await prisma.winnerLoserBet.deleteMany({ where: { OR: [{ winnerTeamId: teamId }, { loserTeamId: teamId }] } })
+  const teamGames = await prisma.game.findMany({ where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] } })
+  for (const g of teamGames) {
+    await prisma.gameBet.deleteMany({ where: { gameId: g.id } })
+    await prisma.game.delete({ where: { id: g.id } })
+  }
+  await prisma.player.deleteMany({ where: { teamId } })
+  await prisma.team.delete({ where: { id: teamId } })
+  revalidatePath("/admin")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Player / Golden Boot
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function updatePlayerGoalsAction(formData: FormData) {
+  await verifyAdmin()
+  const playerId = formData.get("playerId") as string
+  const goalsScored = parseInt(formData.get("goalsScored") as string, 10)
+  if (playerId && !isNaN(goalsScored)) {
+    await prisma.player.update({ where: { id: playerId }, data: { goalsScored } })
+  }
+  revalidatePath("/admin")
 }
 
 export async function createPlayerAction(formData: FormData) {
   await verifyAdmin()
   const name = formData.get("name") as string
   const teamId = formData.get("teamId") as string
-
   if (name && teamId) {
-    await prisma.player.create({
-      data: { name, teamId, goalsScored: 0 }
-    })
+    await prisma.player.create({ data: { name, teamId, goalsScored: 0 } })
   }
+  revalidatePath("/admin")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tournament Results (Champion / Undefeated / Winless / Group Rankings)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function upsertResult(key: string, value: unknown) {
+  await prisma.tournamentResult.upsert({
+    where: { key },
+    update: { value: JSON.stringify(value) },
+    create: { key, value: JSON.stringify(value) },
+  })
+}
+
+export async function setChampionAction(formData: FormData) {
+  await verifyAdmin()
+  const teamId = formData.get("teamId") as string
+  if (teamId) await upsertResult('Champion', teamId)
+  revalidatePath("/admin")
+}
+
+export async function clearChampionAction() {
+  await verifyAdmin()
+  await prisma.tournamentResult.deleteMany({ where: { key: 'Champion' } })
+  revalidatePath("/admin")
+}
+
+export async function setUndefeatedTeamAction(formData: FormData) {
+  await verifyAdmin()
+  const teamId = formData.get("teamId") as string
+  if (teamId) await upsertResult('Undefeated', teamId)
+  revalidatePath("/admin")
+}
+
+export async function setWinlessTeamAction(formData: FormData) {
+  await verifyAdmin()
+  const teamId = formData.get("teamId") as string
+  if (teamId) await upsertResult('Winless', teamId)
+  revalidatePath("/admin")
 }
 
 export async function setGroupRankingAction(formData: FormData) {
@@ -111,11 +231,22 @@ export async function setGroupRankingAction(formData: FormData) {
   const rank4 = formData.get("rank4") as string
 
   if (group && rank1 && rank2 && rank3 && rank4) {
-    const value = [rank1, rank2, rank3, rank4]
-    await prisma.tournamentResult.upsert({
-      where: { key: `Group_${group}` },
-      update: { value: JSON.stringify(value) },
-      create: { key: `Group_${group}`, value: JSON.stringify(value) }
-    })
+    await upsertResult(`Group_${group}`, [rank1, rank2, rank3, rank4])
   }
+  revalidatePath("/admin")
+}
+
+export async function clearGroupRankingAction(formData: FormData) {
+  await verifyAdmin()
+  const group = formData.get("group") as string
+  if (group) {
+    await prisma.tournamentResult.deleteMany({ where: { key: `Group_${group}` } })
+  }
+  revalidatePath("/admin")
+}
+
+export async function setTournamentResultAction(key: string, value: unknown) {
+  await verifyAdmin()
+  await upsertResult(key, value)
+  revalidatePath("/admin")
 }

@@ -1,6 +1,24 @@
 import prisma from "@/lib/prisma"
 
 /**
+ * Returns the "effective now" — if the admin has set a TimeOverride in TournamentResult,
+ * that date is used instead of the real wall clock. This allows the admin to freeze time
+ * at any tournament moment (e.g. "59 minutes before kick-off") without touching game data.
+ */
+export async function getEffectiveNow(): Promise<Date> {
+  try {
+    const override = await prisma.tournamentResult.findUnique({ where: { key: 'TimeOverride' } })
+    if (override?.value) {
+      const d = new Date(JSON.parse(override.value) as string)
+      if (!isNaN(d.getTime())) return d
+    }
+  } catch {
+    // silently fall through to real time
+  }
+  return new Date()
+}
+
+/**
  * Returns the group stage lock time: earliest group game kickoff minus 1 hour.
  */
 export async function getGroupStageLockTime(): Promise<Date | null> {
@@ -17,7 +35,8 @@ export async function getGroupStageLockTime(): Promise<Date | null> {
 export async function isGroupStageLocked(): Promise<boolean> {
   const lockTime = await getGroupStageLockTime()
   if (!lockTime) return false
-  return new Date() >= lockTime
+  const now = await getEffectiveNow()
+  return now >= lockTime
 }
 
 /**
