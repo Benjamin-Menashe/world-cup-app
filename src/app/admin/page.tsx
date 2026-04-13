@@ -13,10 +13,8 @@ import { TimeOverridePanel, MasterResetButton } from "./AdminControls"
 
 import {
   updateGameScoreAction,
-  clearGameScoreAction,
   updateGameKickoffAction,
   addKnockoutGameAction,
-  deleteGameAction,
   updatePlayerGoalsAction,
   createPlayerAction,
   renamePlayerAction,
@@ -155,7 +153,6 @@ export default async function AdminDashboardPage() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: stage === 'Group' ? '300px' : undefined, overflowY: stage === 'Group' ? 'auto' : undefined, paddingRight: stage === 'Group' ? '0.25rem' : undefined }}>
                     {stageGames.map(game => {
-                      const kickoffLocal = game.kickoffTime.toISOString().slice(0, 16)
                       return (
                         <form key={game.id} action={updateGameScoreAction}
                           style={{ ...rowStyle, gridTemplateColumns: '1fr auto auto auto 1fr auto auto' }}>
@@ -339,9 +336,6 @@ export default async function AdminDashboardPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
               {GROUPS.map(g => {
                 const gTeams = teamsByGroup[g] ?? []
-                const existingRanking: string[] = (() => {
-                  try { return JSON.parse(JSON.stringify(resultMap[`Group_${g}`] ?? null)) ?? [] } catch { return [] }
-                })()
                 const currentRanking = Array.isArray(resultMap[`Group_${g}`]) ? resultMap[`Group_${g}`] as unknown as string[] : null
 
                 return (
