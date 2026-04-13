@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { calculateUserPoints, getUserRankingsInGroup } from "@/lib/scoring";
 import { isGroupStageLocked, deriveGroupStandings } from "@/lib/lockTime";
 import { getDictionary } from "@/lib/i18n";
+import MatchCenter from "@/components/MatchCenter";
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,55 @@ export default async function Home() {
       }
     }
   }
+
+  // ─── Match Center data ───
+  const now = new Date();
+  const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+  
+  // Fetch knockout games that are relevant:
+  // 1) Finished in the last 12 hours
+  // 2) Currently live (kickoff <= now, not finished, within ~105 min)
+  // 3) Upcoming and locked (kickoff within next 1 hour)
+  const matchCenterGames = await prisma.game.findMany({
+    where: {
+      stage: { not: 'Group' },
+      OR: [
+        // Finished recently (last 12 hours) — we'll back-filter by kickoff+105min
+        { isFinished: true, kickoffTime: { gte: twelveHoursAgo } },
+        // Locked and not finished (upcoming or live)
+        { 
+          isFinished: false, 
+          kickoffTime: { 
+            lte: new Date(now.getTime() + 60 * 60 * 1000) // locked = within 1 hour
+          } 
+        }
+      ]
+    },
+    orderBy: { kickoffTime: 'asc' },
+    include: { homeTeam: true, awayTeam: true }
+  });
+
+  const gamesForClient = matchCenterGames.map(g => {
+    const kickoff = g.kickoffTime.getTime();
+    const isLive = !g.isFinished && kickoff <= now.getTime() && now.getTime() < kickoff + 105 * 60 * 1000;
+    const isUpcoming = !g.isFinished && kickoff > now.getTime();
+    
+    let status: 'live' | 'upcoming' | 'finished' = 'finished';
+    if (isLive) status = 'live';
+    else if (isUpcoming) status = 'upcoming';
+
+    return {
+      id: g.id,
+      stage: g.stage,
+      kickoffTime: g.kickoffTime.toISOString(),
+      homeTeam: { name: g.homeTeam.name, flagUrl: g.homeTeam.flagUrl },
+      awayTeam: { name: g.awayTeam.name, flagUrl: g.awayTeam.flagUrl },
+      homeScore: g.homeScore,
+      awayScore: g.awayScore,
+      isFinished: g.isFinished,
+      status
+    };
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -328,6 +378,15 @@ export default async function Home() {
             </Link>
           )}
         </div>
+      </section>
+
+      {/* Match Center */}
+      <section>
+        <MatchCenter 
+          games={gamesForClient} 
+          dict={dict} 
+          isLoggedIn={!!userId} 
+        />
       </section>
     </div>
   );

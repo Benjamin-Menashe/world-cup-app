@@ -35,7 +35,19 @@
     "notLoggedIn": "אינך מחובר.",
     "noGroupsYet": "טרם הצטרפת לקבוצות כלשהן.",
     "rank": "דירוג",
-    "joinOrCreate": "הצטרף או צור קבוצה"
+    "joinOrCreate": "הצטרף או צור קבוצה",
+    "matchCenter": "מרכז המשחקים",
+    "live": "שידור חי",
+    "finished": "סיום",
+    "upcoming": "קרוב",
+    "noGamesAvailable": "אין עדיין משחקי נוקאאוט להצגה.",
+    "predictions": "הימורים",
+    "selectGame": "בחרו משחק למעלה כדי לראות הימורים",
+    "predicted": "הימור",
+    "actual": "תוצאה",
+    "pointsEarned": "נק'",
+    "noPrediction": "ללא הימור",
+    "kicksOff": "בעיטת פתיחה"
   },
   "dashboard": {
     "myPoints": "הנקודות שלי",

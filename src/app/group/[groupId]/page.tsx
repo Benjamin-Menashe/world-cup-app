@@ -24,47 +24,10 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
   const group = memberships.find(m => m.groupId === groupId)?.group
   if (!group) redirect("/group")
 
-
   const tournamentChampion = await prisma.tournamentResult.findUnique({ where: { key: 'Champion' } })
   const isTournamentFinished = !!tournamentChampion
 
-  const now = new Date()
-  // 1. Try to find the "Active" match: Locked but not yet 105m past kickoff (the current or next game)
-  let latestRelevantGame = await prisma.game.findFirst({
-    where: { 
-      stage: { not: 'Group' },
-      kickoffTime: { 
-        gte: new Date(now.getTime() - 105 * 60 * 1000), // Not "expired" (over 105m old)
-        lte: new Date(now.getTime() + 60 * 60 * 1000)   // Is locked (within 1h)
-      } 
-    },
-    orderBy: { kickoffTime: 'asc' }, // Get the EARLIEST in this window (the one happening NOW or next)
-    include: { homeTeam: true, awayTeam: true }
-  })
-
-  // 2. Fallback: If no match is currently active/upcoming, show the most recent match that finished
-  if (!latestRelevantGame) {
-    latestRelevantGame = await prisma.game.findFirst({
-      where: { 
-        stage: { not: 'Group' },
-        kickoffTime: { lte: now } // Must be in the past
-      },
-      orderBy: { kickoffTime: 'desc' }, // Get the LATEST one
-      include: { homeTeam: true, awayTeam: true }
-    })
-  }
-
   const rankings = await getUserRankingsInGroup(groupId, userId)
-  
-  const nextGameBets: Record<string, { home: number | null, away: number | null }> = {}
-  if (latestRelevantGame) {
-    const bets = await prisma.gameBet.findMany({
-      where: { gameId: latestRelevantGame.id, userId: { in: rankings.map(r => r.userId) } }
-    })
-    for (const b of bets) {
-      nextGameBets[b.userId] = { home: b.homeScore, away: b.awayScore }
-    }
-  }
   
   const isMember = rankings.some(r => r.userId === userId)
   if (!isMember) redirect("/group")
@@ -187,33 +150,6 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
           <ClipboardList color="var(--success)" /> {d.friendsRanking}
         </h2>
 
-        {latestRelevantGame && (() => {
-          // A match is "Last Match" once finished or after ~105 mins (90 play + halftime/stoppage) IF we have scores
-          const isPastPlayTime = now.getTime() >= (latestRelevantGame.kickoffTime.getTime() + 105 * 60 * 1000)
-          const isLastGame = latestRelevantGame.isFinished || (isPastPlayTime && latestRelevantGame.homeScore !== null)
-          return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '8px', marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '1.2rem' }}>⚡</span>
-              <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {isLastGame ? "Last Game" : "Upcoming Game"}
-                </div>
-                <div style={{ fontWeight: 700 }}>
-                  <img src={latestRelevantGame.homeTeam.flagUrl} alt="" style={{ width: 16, borderRadius: 2, marginRight: 4, display: 'inline' }} /> {latestRelevantGame.homeTeam.name}
-                  {isLastGame ? (
-                    <span style={{ margin: '0 8px', fontFamily: 'monospace', fontSize: '1.1rem' }}>
-                      {latestRelevantGame.homeScore ?? '?'} - {latestRelevantGame.awayScore ?? '?'}
-                    </span>
-                  ) : (
-                    <span style={{ color: 'var(--text-secondary)', margin: '0 6px' }}>vs</span>
-                  )}
-                  <img src={latestRelevantGame.awayTeam.flagUrl} alt="" style={{ width: 16, borderRadius: 2, marginRight: 4, display: 'inline' }} /> {latestRelevantGame.awayTeam.name}
-                </div>
-              </div>
-            </div>
-          )
-        })()}
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
           {rankings.map((member, index) => {
             const isMe = member.userId === userId
@@ -221,7 +157,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
             return (
               <Link key={member.userId} href={`/group/${groupId}/user/${member.userId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{
-                  display: 'grid', gridTemplateColumns: '40px 140px minmax(130px,1fr) minmax(130px,1fr) minmax(160px,1.2fr) 60px',
+                  display: 'grid', gridTemplateColumns: '40px 1fr minmax(110px,0.8fr) minmax(110px,0.8fr) 60px',
                   alignItems: 'center', gap: '1rem',
                   padding: '0.8rem 1.25rem', borderRadius: '12px',
                   background: isMe ? 'rgba(59,130,246,0.12)' : index === 0 ? 'rgba(245,158,11,0.05)' : 'rgba(0,0,0,0.02)',
@@ -247,24 +183,6 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Golden Boot Pick">
                     👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.goldenBootName ?? d.hidden}</span>
                   </span>
-
-                  {/* Current/Next Match Bet */}
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {latestRelevantGame ? (() => {
-                      const isPastPlayTime = now.getTime() >= (latestRelevantGame.kickoffTime.getTime() + 105 * 60 * 1000)
-                      const isLastGame = latestRelevantGame.isFinished || (isPastPlayTime && latestRelevantGame.homeScore !== null)
-                      return (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent)', background: 'rgba(59, 130, 246, 0.05)', padding: '2px 6px', borderRadius: '6px', border: '1px solid rgba(59,130,246,0.1)', whiteSpace: 'nowrap', fontSize: '0.7rem' }} title={isLastGame ? "Bet for last active match" : "Bet for upcoming active match"}>
-                          ⚔️ 
-                          <span style={{ fontWeight: 700 }}>{latestRelevantGame.homeTeam.name.substring(0,3).toUpperCase()}</span>
-                          <span style={{ background: 'white', color: 'black', padding: '0px 4px', borderRadius: '3px', fontWeight: 800 }}>
-                            {nextGameBets[member.userId]?.home ?? '0'} : {nextGameBets[member.userId]?.away ?? '0'}
-                          </span>
-                          <span style={{ fontWeight: 700 }}>{latestRelevantGame.awayTeam.name.substring(0,3).toUpperCase()}</span>
-                        </span>
-                      )
-                    })() : <span style={{ color: 'var(--text-secondary)', fontSize: '0.7rem' }}>—</span>}
-                  </div>
 
                   {/* Points */}
                   <div style={{ textAlign: 'right', display: 'flex', alignItems: 'baseline', gap: '0.1rem', justifyContent: 'flex-end' }}>

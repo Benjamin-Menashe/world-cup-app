@@ -35,7 +35,19 @@
     "notLoggedIn": "You are not logged in.",
     "noGroupsYet": "You haven't joined any groups yet.",
     "rank": "Rank",
-    "joinOrCreate": "Join or Create a Group"
+    "joinOrCreate": "Join or Create a Group",
+    "matchCenter": "Match Center",
+    "live": "LIVE",
+    "finished": "FT",
+    "upcoming": "Upcoming",
+    "noGamesAvailable": "No knockout games to display yet.",
+    "predictions": "Predictions",
+    "selectGame": "Select a game above to see predictions",
+    "predicted": "Predicted",
+    "actual": "Actual",
+    "pointsEarned": "pts",
+    "noPrediction": "No prediction",
+    "kicksOff": "Kicks off"
   },
   "dashboard": {
     "myPoints": "My Points",

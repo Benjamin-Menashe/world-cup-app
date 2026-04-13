@@ -159,6 +159,12 @@ input[type="number"] {
   to { transform: rotate(360deg); }
 }
 
+/* Live pulse for match center */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 /* Nav links container */
 .nav-links {
   display: flex;
