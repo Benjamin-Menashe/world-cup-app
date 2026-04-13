@@ -18,12 +18,18 @@ import {
   addKnockoutGameAction,
   deleteGameAction,
   updatePlayerGoalsAction,
+  createPlayerAction,
+  renamePlayerAction,
+  deletePlayerAction,
   createTeamAction,
+  renameTeamAction,
   updateTeamGroupAction,
   setChampionAction,
   clearChampionAction,
   setUndefeatedTeamAction,
+  clearUndefeatedTeamAction,
   setWinlessTeamAction,
+  clearWinlessTeamAction,
   setGroupRankingAction,
   clearGroupRankingAction,
 } from "@/app/actions/admin"
@@ -68,9 +74,11 @@ export default async function AdminDashboardPage() {
   }
 
   const timeOverride: string | null = resultMap['TimeOverride'] ?? null
-  const championId: string | null = resultMap['Champion'] ?? null
-  const undefeatedId: string | null = resultMap['Undefeated'] ?? null
-  const winlessId: string | null = resultMap['Winless'] ?? null
+  const championId: string | null = typeof resultMap['Champion'] === 'string' ? resultMap['Champion'] : null
+  const undefeatedIds: string[] = Array.isArray(resultMap['Undefeated']) ? (resultMap['Undefeated'] as string[]) :
+    (typeof resultMap['Undefeated'] === 'string' ? [resultMap['Undefeated']] : [])  // back-compat with old single-string format
+  const winlessIds: string[] = Array.isArray(resultMap['Winless']) ? (resultMap['Winless'] as string[]) :
+    (typeof resultMap['Winless'] === 'string' ? [resultMap['Winless']] : [])
 
   const gamesByStage: Record<string, typeof games> = {}
   for (const g of games) {
@@ -267,35 +275,59 @@ export default async function AdminDashboardPage() {
 
             {/* Undefeated */}
             <div style={subPanelStyle}>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>🛡️ Undefeated Group Team</h3>
-              {undefeatedId && (
-                <p style={{ fontSize: '0.85rem', color: '#16a34a', marginBottom: '0.5rem' }}>
-                  Current: <strong>{teams.find(t => t.id === undefeatedId)?.name ?? '?'}</strong>
-                </p>
+              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>🛡️ Undefeated Group Team(s)</h3>
+              {undefeatedIds.length > 0 && (
+                <div style={{ marginBottom: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+                  {undefeatedIds.map(id => (
+                    <span key={id} style={{ fontSize: '0.82rem', background: 'rgba(16,185,129,0.15)', color: '#16a34a', borderRadius: '999px', padding: '0.2rem 0.6rem', fontWeight: 600 }}>
+                      {teams.find(t => t.id === id)?.name ?? id}
+                    </span>
+                  ))}
+                  <form action={clearUndefeatedTeamAction} style={{ display: 'inline' }}>
+                    <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>✕ Clear</button>
+                  </form>
+                </div>
               )}
-              <form action={setUndefeatedTeamAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <select name="teamId" required style={{ ...selectStyle, flex: 1 }}>
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                </select>
-                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>Set</button>
+              <form action={setUndefeatedTeamAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more undefeated teams:</p>
+                <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  {teams.map(t => (
+                    <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="checkbox" name="teamId" value={t.id} defaultChecked={undefeatedIds.includes(t.id)} />
+                      {t.name} <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>(Grp {t.group})</span>
+                    </label>
+                  ))}
+                </div>
+                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start' }}>Set Undefeated</button>
               </form>
             </div>
 
             {/* Winless */}
             <div style={subPanelStyle}>
-              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>😓 Winless Group Team</h3>
-              {winlessId && (
-                <p style={{ fontSize: '0.85rem', color: '#16a34a', marginBottom: '0.5rem' }}>
-                  Current: <strong>{teams.find(t => t.id === winlessId)?.name ?? '?'}</strong>
-                </p>
+              <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>😓 Winless Group Team(s)</h3>
+              {winlessIds.length > 0 && (
+                <div style={{ marginBottom: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+                  {winlessIds.map(id => (
+                    <span key={id} style={{ fontSize: '0.82rem', background: 'rgba(239,68,68,0.12)', color: '#dc2626', borderRadius: '999px', padding: '0.2rem 0.6rem', fontWeight: 600 }}>
+                      {teams.find(t => t.id === id)?.name ?? id}
+                    </span>
+                  ))}
+                  <form action={clearWinlessTeamAction} style={{ display: 'inline' }}>
+                    <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>✕ Clear</button>
+                  </form>
+                </div>
               )}
-              <form action={setWinlessTeamAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <select name="teamId" required style={{ ...selectStyle, flex: 1 }}>
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                </select>
-                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>Set</button>
+              <form action={setWinlessTeamAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more winless teams:</p>
+                <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  {teams.map(t => (
+                    <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="checkbox" name="teamId" value={t.id} defaultChecked={winlessIds.includes(t.id)} />
+                      {t.name} <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>(Grp {t.group})</span>
+                    </label>
+                  ))}
+                </div>
+                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start' }}>Set Winless</button>
               </form>
             </div>
 
@@ -344,32 +376,96 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* ── 5. Player Goals ──────────────────────────────────────────────── */}
+        {/* ── 5. Player Manager ────────────────────────────────────────────── */}
         <section className="glass-panel" style={panelStyle}>
           <SectionHeader
             icon={<ShieldCheck size={20} color="#10b981" />}
-            title="Player Goals (Golden Boot)"
-            subtitle="Set a player's total goals scored. The top scorer automatically receives the +1 bonus on leaderboards."
+            title="Player Manager (Golden Boot)"
+            subtitle="Add, remove, or rename players, and update their goals scored."
           />
-          <form action={updatePlayerGoalsAction} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
-              <select name="playerId" className="input-field" required>
-                {teams.map(t => (
-                  <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
-                    {players.filter(p => p.teamId === t.id).map(p => (
-                      <option key={p.id} value={p.id}>{p.name} — {p.goalsScored} goal{p.goalsScored !== 1 ? 's' : ''}</option>
+          
+          <div style={subPanelStyle}>
+            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Update Player Goals</h3>
+            <form action={updatePlayerGoalsAction} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
+                <select name="playerId" className="input-field" required>
+                  {teams.map(t => (
+                    <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
+                      {players.filter(p => p.teamId === t.id).map(p => (
+                        <option key={p.id} value={p.id}>{p.name} — {p.goalsScored} goal{p.goalsScored !== 1 ? 's' : ''}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+              <div style={{ width: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Goals</label>
+                <input type="number" name="goalsScored" min="0" required className="input-field" />
+              </div>
+              <button type="submit" className="primary-btn">Update</button>
+            </form>
+          </div>
+
+          <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
+            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename / Delete Player</h3>
+            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <form action={renamePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 2, minWidth: '300px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
+                  <select name="playerId" className="input-field" required>
+                    {teams.map(t => (
+                      <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
+                        {players.filter(p => p.teamId === t.id).map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </optgroup>
                     ))}
-                  </optgroup>
-                ))}
-              </select>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
+                  <input type="text" name="name" required className="input-field" placeholder="Hebrew / English Name" />
+                </div>
+                <button type="submit" className="primary-btn">Rename</button>
+              </form>
+
+              <form action={deletePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 1, minWidth: '200px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Delete Player</label>
+                  <select name="playerId" className="input-field" required>
+                    {teams.map(t => (
+                      <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
+                        {players.filter(p => p.teamId === t.id).map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="secondary-btn" style={{ color: 'var(--red)', borderColor: 'var(--red)' }}>Delete</button>
+              </form>
             </div>
-            <div style={{ width: '120px' }}>
-              <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Goals</label>
-              <input type="number" name="goalsScored" min="0" required className="input-field" />
-            </div>
-            <button type="submit" className="primary-btn">Update</button>
-          </form>
+          </div>
+
+          <details style={{ marginTop: '1.5rem' }}>
+            <summary style={{ cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-secondary)', userSelect: 'none' }}>
+              + Add a new player
+            </summary>
+            <form action={createPlayerAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+              <div style={{ flex: 2 }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Player Name</label>
+                <input type="text" name="name" required className="input-field" placeholder="e.g. Lionel Messi" />
+              </div>
+              <div style={{ flex: 1, minWidth: '150px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
+                <select name="teamId" required className="input-field">
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="primary-btn">Add Player</button>
+            </form>
+          </details>
         </section>
 
         {/* ── 6. Team Manager ──────────────────────────────────────────────── */}
@@ -398,6 +494,25 @@ export default async function AdminDashboardPage() {
                 </select>
               </div>
               <button type="submit" className="primary-btn">Move</button>
+            </form>
+          </div>
+
+          {/* Rename Team */}
+          <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
+            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename Team (Translation)</h3>
+            <form action={renameTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '160px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
+                <select name="teamId" required className="input-field">
+                  <option value="">— Select Team —</option>
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: '160px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
+                <input type="text" name="name" required className="input-field" placeholder="e.g. France (צרפת)" />
+              </div>
+              <button type="submit" className="primary-btn">Rename</button>
             </form>
           </div>
 

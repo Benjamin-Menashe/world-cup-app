@@ -150,8 +150,18 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
     }
   }
 
-  const undefeatedTeamIds = new Set(Object.entries(teamRecord).filter(([, r]) => r.wins === 3 && r.losses === 0).map(([id]) => id))
-  const winlessTeamIds = new Set(Object.entries(teamRecord).filter(([, r]) => r.losses === 3 && r.wins === 0).map(([id]) => id))
+  // Undefeated / Winless: use admin override if set, otherwise auto-derive from game records.
+  // Overrides are stored as arrays of team IDs (to support multiple undefeated/winless teams).
+  const overrideUndefeated = resultMap['Undefeated']
+  const overrideWinless    = resultMap['Winless']
+
+  const undefeatedTeamIds: Set<string> = Array.isArray(overrideUndefeated)
+    ? new Set(overrideUndefeated as string[])
+    : new Set(Object.entries(teamRecord).filter(([, r]) => r.wins === 3 && r.losses === 0).map(([id]) => id))
+
+  const winlessTeamIds: Set<string> = Array.isArray(overrideWinless)
+    ? new Set(overrideWinless as string[])
+    : new Set(Object.entries(teamRecord).filter(([, r]) => r.losses === 3 && r.wins === 0).map(([id]) => id))
 
   const groupGamesCount = await prisma.game.count({ where: { stage: 'Group' } })
   const allGroupsFinished = finishedGroupGames.length >= groupGamesCount && groupGamesCount > 0

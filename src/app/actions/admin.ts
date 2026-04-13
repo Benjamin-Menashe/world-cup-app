@@ -141,6 +141,16 @@ export async function updateTeamGroupAction(formData: FormData) {
   revalidatePath("/admin")
 }
 
+export async function renameTeamAction(formData: FormData) {
+  await verifyAdmin()
+  const teamId = formData.get("teamId") as string
+  const name = formData.get("name") as string
+  if (teamId && name) {
+    await prisma.team.update({ where: { id: teamId }, data: { name } })
+  }
+  revalidatePath("/admin")
+}
+
 export async function deleteTeamAction(formData: FormData) {
   await verifyAdmin()
   const teamId = formData.get("teamId") as string
@@ -183,6 +193,26 @@ export async function createPlayerAction(formData: FormData) {
   revalidatePath("/admin")
 }
 
+export async function renamePlayerAction(formData: FormData) {
+  await verifyAdmin()
+  const playerId = formData.get("playerId") as string
+  const name = formData.get("name") as string
+  if (playerId && name) {
+    await prisma.player.update({ where: { id: playerId }, data: { name } })
+  }
+  revalidatePath("/admin")
+}
+
+export async function deletePlayerAction(formData: FormData) {
+  await verifyAdmin()
+  const playerId = formData.get("playerId") as string
+  if (playerId) {
+    await prisma.topScorerBet.deleteMany({ where: { playerId } })
+    await prisma.player.delete({ where: { id: playerId } })
+  }
+  revalidatePath("/admin")
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tournament Results (Champion / Undefeated / Winless / Group Rankings)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -210,15 +240,27 @@ export async function clearChampionAction() {
 
 export async function setUndefeatedTeamAction(formData: FormData) {
   await verifyAdmin()
-  const teamId = formData.get("teamId") as string
-  if (teamId) await upsertResult('Undefeated', teamId)
+  const teamIds = formData.getAll("teamId") as string[]
+  if (teamIds.length > 0) await upsertResult('Undefeated', teamIds)
+  revalidatePath("/admin")
+}
+
+export async function clearUndefeatedTeamAction() {
+  await verifyAdmin()
+  await prisma.tournamentResult.deleteMany({ where: { key: 'Undefeated' } })
   revalidatePath("/admin")
 }
 
 export async function setWinlessTeamAction(formData: FormData) {
   await verifyAdmin()
-  const teamId = formData.get("teamId") as string
-  if (teamId) await upsertResult('Winless', teamId)
+  const teamIds = formData.getAll("teamId") as string[]
+  if (teamIds.length > 0) await upsertResult('Winless', teamIds)
+  revalidatePath("/admin")
+}
+
+export async function clearWinlessTeamAction() {
+  await verifyAdmin()
+  await prisma.tournamentResult.deleteMany({ where: { key: 'Winless' } })
   revalidatePath("/admin")
 }
 
