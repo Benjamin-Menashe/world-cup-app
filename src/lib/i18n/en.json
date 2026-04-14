@@ -40,7 +40,7 @@
     "live": "LIVE",
     "finished": "FT",
     "upcoming": "Upcoming",
-    "noGamesAvailable": "No knockout games to display yet.",
+    "noGamesAvailable": "No current or upcoming games.",
     "predictions": "Predictions",
     "selectGame": "Select a game above to see predictions",
     "predicted": "Predicted",

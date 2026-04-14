@@ -309,15 +309,12 @@ export default async function AdminDashboardPage() {
                 </div>
               )}
               <form action={setUndefeatedTeamAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more undefeated teams:</p>
-                <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more undefeated teams (Hold Ctrl/Cmd to multi-select):</p>
+                <select name="teamId" multiple required size={6} className="input-field" defaultValue={undefeatedIds} style={{ padding: '0.4rem', ...selectStyle }}>
                   {teams.map(t => (
-                    <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                      <input type="checkbox" name="teamId" value={t.id} defaultChecked={undefeatedIds.includes(t.id)} />
-                      {t.name} <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>(Grp {t.group})</span>
-                    </label>
+                    <option key={t.id} value={t.id} style={{ padding: '2px 4px' }}>{t.name} (Grp {t.group})</option>
                   ))}
-                </div>
+                </select>
                 <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start' }}>Set Undefeated</button>
               </form>
             </div>
@@ -338,15 +335,12 @@ export default async function AdminDashboardPage() {
                 </div>
               )}
               <form action={setWinlessTeamAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more winless teams:</p>
-                <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more winless teams (Hold Ctrl/Cmd to multi-select):</p>
+                <select name="teamId" multiple required size={6} className="input-field" defaultValue={winlessIds} style={{ padding: '0.4rem', ...selectStyle }}>
                   {teams.map(t => (
-                    <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                      <input type="checkbox" name="teamId" value={t.id} defaultChecked={winlessIds.includes(t.id)} />
-                      {t.name} <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>(Grp {t.group})</span>
-                    </label>
+                    <option key={t.id} value={t.id} style={{ padding: '2px 4px' }}>{t.name} (Grp {t.group})</option>
                   ))}
-                </div>
+                </select>
                 <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start' }}>Set Winless</button>
               </form>
             </div>
@@ -393,7 +387,115 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* ── 5. Player Manager ────────────────────────────────────────────── */}
+        {/* ── 5. Team Manager ──────────────────────────────────────────────── */}
+        <section className="glass-panel" style={panelStyle}>
+          <SectionHeader
+            icon={<Users size={20} color="#8b5cf6" />}
+            title="Team Manager"
+            subtitle="Move teams between groups or add new teams. Changes affect group pages and all related bets."
+          />
+
+          {/* Assign team to a different group */}
+          <div style={subPanelStyle}>
+            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Move Team to Different Group</h3>
+            <form action={updateTeamGroupAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: 2, minWidth: '160px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
+                <select name="teamId" required className="input-field">
+                  <option value="">— Select Team —</option>
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name} (currently Group {t.group})</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: '100px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Group</label>
+                <select name="group" required className="input-field">
+                  {GROUPS.map(g => <option key={g} value={g}>Group {g}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="primary-btn">Move</button>
+            </form>
+          </div>
+
+          {/* Rename Team */}
+          <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
+            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename Team (English / Hebrew)</h3>
+            <form action={renameTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '160px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
+                <select name="teamId" required className="input-field">
+                  <option value="">— Select Team —</option>
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>English Name</label>
+                <input type="text" name="enName" required className="input-field" placeholder="e.g. France" />
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hebrew Name (optional)</label>
+                <input type="text" name="heName" className="input-field" placeholder="e.g. צרפת" />
+              </div>
+              <button type="submit" className="primary-btn">Rename</button>
+            </form>
+          </div>
+
+          {/* Current group composition */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Current Group Composition</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+              {GROUPS.map(g => (
+                <div key={g} style={{ ...subPanelStyle, padding: '1rem' }}>
+                  <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: 'var(--accent)' }}>Group {g}</h4>
+                  {(teamsByGroup[g] ?? []).length === 0
+                    ? <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>No teams</p>
+                    : (teamsByGroup[g] ?? []).map(t => (
+                        <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                          <span>{t.name}</span>
+                          <DeleteFormWithConfirm
+                            action={deleteTeamAction}
+                            hiddenName="teamId"
+                            hiddenValue={t.id}
+                            itemLabel={t.name}
+                            confirmMessage={`Delete team ${t.name}? This will delete their players and bets too.`}
+                          />
+                        </div>
+                      ))
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add team */}
+          <details style={{ marginTop: '1.5rem' }}>
+            <summary style={{ cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-secondary)', userSelect: 'none' }}>
+              + Add a new team
+            </summary>
+            <form action={createTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>English Name</label>
+                <input type="text" name="enName" required className="input-field" placeholder="e.g. France" />
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hebrew Name (optional)</label>
+                <input type="text" name="heName" className="input-field" placeholder="e.g. צרפת" />
+              </div>
+              <div style={{ width: '80px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Group</label>
+                <select name="group" required className="input-field">
+                  {GROUPS.map(g => <option key={g} value={g}>Group {g}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Flag URL (optional)</label>
+                <input type="url" name="flagUrl" className="input-field" placeholder="https://..." />
+              </div>
+              <button type="submit" className="primary-btn">Add Team</button>
+            </form>
+          </details>
+        </section>
+
+        {/* ── 6. Player Manager ────────────────────────────────────────────── */}
         <section className="glass-panel" style={panelStyle}>
           <SectionHeader
             icon={<ShieldCheck size={20} color="#10b981" />}
@@ -481,110 +583,6 @@ export default async function AdminDashboardPage() {
                 </select>
               </div>
               <button type="submit" className="primary-btn">Add Player</button>
-            </form>
-          </details>
-        </section>
-
-        {/* ── 6. Team Manager ──────────────────────────────────────────────── */}
-        <section className="glass-panel" style={panelStyle}>
-          <SectionHeader
-            icon={<Users size={20} color="#8b5cf6" />}
-            title="Team Manager"
-            subtitle="Move teams between groups or add new teams. Changes affect group pages and all related bets."
-          />
-
-          {/* Assign team to a different group */}
-          <div style={subPanelStyle}>
-            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Move Team to Different Group</h3>
-            <form action={updateTeamGroupAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: 2, minWidth: '160px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
-                <select name="teamId" required className="input-field">
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name} (currently Group {t.group})</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1, minWidth: '100px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Group</label>
-                <select name="group" required className="input-field">
-                  {GROUPS.map(g => <option key={g} value={g}>Group {g}</option>)}
-                </select>
-              </div>
-              <button type="submit" className="primary-btn">Move</button>
-            </form>
-          </div>
-
-          {/* Rename Team */}
-          <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
-            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename Team (Translation)</h3>
-            <form action={renameTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '160px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
-                <select name="teamId" required className="input-field">
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1, minWidth: '160px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
-                <input type="text" name="name" required className="input-field" placeholder="e.g. France (צרפת)" />
-              </div>
-              <button type="submit" className="primary-btn">Rename</button>
-            </form>
-          </div>
-
-          {/* Current group composition */}
-          <div style={{ marginTop: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Current Group Composition</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
-              {GROUPS.map(g => (
-                <div key={g} style={{ ...subPanelStyle, padding: '1rem' }}>
-                  <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: 'var(--accent)' }}>Group {g}</h4>
-                  {(teamsByGroup[g] ?? []).length === 0
-                    ? <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>No teams</p>
-                    : (teamsByGroup[g] ?? []).map(t => (
-                        <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                          <span>{t.name}</span>
-                          <DeleteFormWithConfirm
-                            action={deleteTeamAction}
-                            hiddenName="teamId"
-                            hiddenValue={t.id}
-                            itemLabel={t.name}
-                            confirmMessage={`Delete team ${t.name}? This will delete their players and bets too.`}
-                          />
-                        </div>
-                      ))
-                  }
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Add team */}
-          <details style={{ marginTop: '1.5rem' }}>
-            <summary style={{ cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-secondary)', userSelect: 'none' }}>
-              + Add a new team
-            </summary>
-            <form action={createTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-              <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>English Name</label>
-                <input type="text" name="enName" required className="input-field" placeholder="e.g. France" />
-              </div>
-              <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hebrew Name (optional)</label>
-                <input type="text" name="heName" className="input-field" placeholder="e.g. צרפת" />
-              </div>
-              <div style={{ width: '80px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Group</label>
-                <select name="group" required className="input-field">
-                  {GROUPS.map(g => <option key={g} value={g}>Group {g}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Flag URL (optional)</label>
-                <input type="url" name="flagUrl" className="input-field" placeholder="https://..." />
-              </div>
-              <button type="submit" className="primary-btn">Add Team</button>
             </form>
           </details>
         </section>

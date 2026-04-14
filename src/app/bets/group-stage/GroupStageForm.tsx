@@ -89,15 +89,20 @@ export default function GroupStageForm({
   // Build initial rankings — prefer saved order, fall back to alphabetical
   const initialRankings: Record<string, string[]> = {}
   groupsAlphabet.forEach(g => {
+    const groupTeams = teams.filter(t => t.group === g).map(t => t.id)
     const saved = existingBets?.groupRankingBets.find(b => b.group === g)
+    let parsed: string[] = []
+    
     if (saved) {
-      try {
-        initialRankings[g] = JSON.parse(saved.rankedTeamIds)
-      } catch {
-        initialRankings[g] = teams.filter(t => t.group === g).map(t => t.id)
-      }
+      try { parsed = JSON.parse(saved.rankedTeamIds) } catch {}
+    }
+
+    if (parsed.length > 0) {
+      const merged = parsed.filter(id => groupTeams.includes(id))
+      const newTeams = groupTeams.filter(id => !merged.includes(id))
+      initialRankings[g] = [...merged, ...newTeams]
     } else {
-      initialRankings[g] = teams.filter(t => t.group === g).map(t => t.id)
+      initialRankings[g] = groupTeams
     }
   })
 
@@ -128,18 +133,13 @@ export default function GroupStageForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
-    if (!champion || !topScorer || !winnerTeam || !loserTeam) {
-      alert(dict.ensurePicks)
-      return
-    }
 
     const formData = new FormData()
     formData.append("groupRankings", JSON.stringify(rankings))
-    formData.append("championId", champion)
-    formData.append("topScorerId", topScorer)
-    formData.append("winnerTeamId", winnerTeam)
-    formData.append("loserTeamId", loserTeam)
+    if (champion) formData.append("championId", champion)
+    if (topScorer) formData.append("topScorerId", topScorer)
+    if (winnerTeam) formData.append("winnerTeamId", winnerTeam)
+    if (loserTeam) formData.append("loserTeamId", loserTeam)
 
     setIsSubmitting(true)
     await saveGroupStageBetsAction(formData)

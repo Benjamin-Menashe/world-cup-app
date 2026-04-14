@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { calculateUserPoints, getUserRankingsInGroup } from "@/lib/scoring";
-import { isGroupStageLocked, deriveGroupStandings } from "@/lib/lockTime";
+import { isGroupStageLocked, deriveGroupStandings, getEffectiveNow } from "@/lib/lockTime";
 import { getDictionary } from "@/lib/i18n";
 import MatchCenter from "@/components/MatchCenter";
 
@@ -99,16 +99,15 @@ export default async function Home() {
   }
 
   // ─── Match Center data ───
-  const now = new Date();
+  const now = await getEffectiveNow();
   const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
   
-  // Fetch knockout games that are relevant:
+  // Fetch games that are relevant:
   // 1) Finished in the last 12 hours
   // 2) Currently live (kickoff <= now, not finished, within ~105 min)
   // 3) Upcoming and locked (kickoff within next 1 hour)
   const matchCenterGames = await prisma.game.findMany({
     where: {
-      stage: { not: 'Group' },
       OR: [
         // Finished recently (last 12 hours) — we'll back-filter by kickoff+105min
         { isFinished: true, kickoffTime: { gte: twelveHoursAgo } },
@@ -380,12 +379,12 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Match Center */}
       <section>
         <MatchCenter 
           games={gamesForClient} 
           dict={dict} 
           isLoggedIn={!!userId} 
+          appTime={now.toISOString()}
         />
       </section>
     </div>

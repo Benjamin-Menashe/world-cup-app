@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { Clock, AlertCircle, Loader2, CheckCircle2, RotateCcw, Trash2 } from "lucide-react"
-import { setTimeOverrideAction, clearTimeOverrideAction } from "@/app/actions/admin"
+import { setTimeOverrideAction, clearTimeOverrideAction, masterResetAction } from "@/app/actions/admin"
 
 // ─── Time Override ────────────────────────────────────────────────────────────
 
@@ -91,13 +91,8 @@ export function MasterResetButton() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch("/api/simulate/exit", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "x-sync-secret": "wc2026-sync-secret" },
-      })
-      const data = await res.json() as { success?: boolean; message?: string; error?: string }
-      setResult({ ok: res.ok && !!data.success, msg: data.message ?? data.error ?? "Done." })
+      await masterResetAction()
+      setResult({ ok: true, msg: "Master Reset complete. All teams, players, matches, and bets have been erased." })
     } catch (e) {
       setResult({ ok: false, msg: (e as Error).message })
     }

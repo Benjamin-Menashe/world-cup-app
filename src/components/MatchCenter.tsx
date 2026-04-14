@@ -47,11 +47,13 @@ type Dict = {
 export default function MatchCenter({
   games,
   dict,
-  isLoggedIn
+  isLoggedIn,
+  appTime
 }: {
   games: GameData[]
   dict: Dict
   isLoggedIn: boolean
+  appTime?: string
 }) {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [predictions, setPredictions] = useState<GamePredictionResponse | null>(null)
@@ -116,9 +118,16 @@ export default function MatchCenter({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Match Center Card */}
       <div className="glass-panel" style={{ padding: '1.5rem' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.3rem', marginBottom: '1rem' }}>
-          <Activity color="var(--red)" size={20} /> {d.matchCenter}
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.3rem' }}>
+            <Activity color="var(--red)" size={20} /> {d.matchCenter}
+          </h2>
+          {appTime && (
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Clock size={14} /> {formatTime(appTime)}
+            </div>
+          )}
+        </div>
 
         {games.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{d.noGamesAvailable}</p>

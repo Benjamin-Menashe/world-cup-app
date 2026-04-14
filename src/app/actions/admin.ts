@@ -150,10 +150,12 @@ export async function updateTeamGroupAction(formData: FormData) {
 export async function renameTeamAction(formData: FormData) {
   await verifyAdmin()
   const teamId = formData.get("teamId") as string
-  const name = formData.get("name") as string
-  if (teamId && name) {
-    await prisma.team.update({ where: { id: teamId }, data: { name } })
-  }
+  const enName = formData.get("enName") as string
+  const heName = formData.get("heName") as string
+  if (!teamId || !enName) return
+
+  const name = heName ? `${enName} (${heName})` : enName
+  await prisma.team.update({ where: { id: teamId }, data: { name } })
   revalidatePath("/admin")
 }
 
@@ -165,12 +167,19 @@ export async function deleteTeamAction(formData: FormData) {
   // Cascade: delete bets referencing this team, then games, then team
   await prisma.championBet.deleteMany({ where: { teamId } })
   await prisma.winnerLoserBet.deleteMany({ where: { OR: [{ winnerTeamId: teamId }, { loserTeamId: teamId }] } })
+  
   const teamGames = await prisma.game.findMany({ where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] } })
   for (const g of teamGames) {
     await prisma.gameBet.deleteMany({ where: { gameId: g.id } })
     await prisma.game.delete({ where: { id: g.id } })
   }
+  
+  const teamPlayers = await prisma.player.findMany({ where: { teamId } })
+  for (const p of teamPlayers) {
+    await prisma.topScorerBet.deleteMany({ where: { playerId: p.id } })
+  }
   await prisma.player.deleteMany({ where: { teamId } })
+  
   await prisma.team.delete({ where: { id: teamId } })
   revalidatePath("/admin")
 }
@@ -308,5 +317,27 @@ export async function clearGroupRankingAction(formData: FormData) {
 export async function setTournamentResultAction(key: string, value: unknown) {
   await verifyAdmin()
   await upsertResult(key, value)
+  revalidatePath("/admin")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Master Reset (Total Wipe)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function masterResetAction() {
+  await verifyAdmin()
+  // 1. CLEAR ALL PREDICTIONS
+  await prisma.gameBet.deleteMany()
+  await prisma.groupRankingBet.deleteMany()
+  await prisma.championBet.deleteMany()
+  await prisma.topScorerBet.deleteMany()
+  await prisma.winnerLoserBet.deleteMany()
+
+  // 2. CLEAR ALL TOURNAMENT DATA
+  await prisma.tournamentResult.deleteMany()
+  await prisma.game.deleteMany()
+  // Clear players before teams due to foreign key deps
+  await prisma.player.deleteMany()
+  await prisma.team.deleteMany()
   revalidatePath("/admin")
 }
