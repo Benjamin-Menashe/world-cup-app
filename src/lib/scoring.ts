@@ -30,7 +30,12 @@ export type PointBreakdown = {
   stage?: string;
 }
 
-export async function calculateUserPoints(userId: string, currentUserId?: string | null): Promise<{ total: number, breakdown: PointBreakdown[] }> {
+export async function calculateUserPoints(
+  userId: string, 
+  currentUserId?: string | null,
+  teamsDict: Record<string, string> = {},
+  playersDict: Record<string, string> = {}
+): Promise<{ total: number, breakdown: PointBreakdown[] }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -62,12 +67,13 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
       const pts = bet.player.goalsScored + bonus
       totalPoints += pts
       const suffix = isTopScorer ? ' (+1 Top Scorer Bonus)' : ''
+      const detailsName = playersDict[bet.player.name] || bet.player.name
       breakdown.push({
         group: 'golden_boot',
         category: 'Golden Boot',
         points: pts,
         details: canViewSpecials 
-          ? `Pick: ${bet.player.name} · ${bet.player.goalsScored} goal${bet.player.goalsScored !== 1 ? 's' : ''}${suffix}` 
+          ? `Pick: ${detailsName} · ${bet.player.goalsScored} goal${bet.player.goalsScored !== 1 ? 's' : ''}${suffix}` 
           : `Pick: Hidden · ${bet.player.goalsScored} goal${bet.player.goalsScored !== 1 ? 's' : ''}${suffix}`
       })
     }
@@ -94,8 +100,10 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
     const isMatchLocked = effectiveNow >= lockTime
     const canViewMatch = isMatchLocked || userId === currentUserId
     
-    const homeAbbr = game.homeTeam.name.substring(0, 3).toUpperCase()
-    const awayAbbr = game.awayTeam.name.substring(0, 3).toUpperCase()
+    const homeName = teamsDict[game.homeTeam.name] || game.homeTeam.name
+    const awayName = teamsDict[game.awayTeam.name] || game.awayTeam.name
+    const homeAbbr = homeName.substring(0, 3).toUpperCase()
+    const awayAbbr = awayName.substring(0, 3).toUpperCase()
     
     let details = canViewMatch ? `Predicted: ${homeAbbr} ${betHome} - ${betAway} ${awayAbbr} · Actual: TBD` : `Predicted: Hidden · Actual: TBD`
 
@@ -170,45 +178,54 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
   // Champion
   if (user.championBets.length > 0) {
     const bet = user.championBets[0]
-    if (resultMap["Champion"] === bet.teamId) {
-      totalPoints += 8
-      breakdown.push({ group: 'specials', category: 'Tournament Champion', points: 8, details: canViewSpecials ? `Pick: ${bet.team.name} ✓` : 'Pick: Hidden ✓' })
-    } else if (resultMap["Champion"]) {
-      breakdown.push({ group: 'specials', category: 'Tournament Champion', points: 0, details: canViewSpecials ? `Pick: ${bet.team.name} ✗` : 'Pick: Hidden ✗' })
-    } else {
-      breakdown.push({ group: 'specials', category: 'Tournament Champion', points: 0, details: canViewSpecials ? `Pick: ${bet.team.name} (TBD)` : 'Pick: Hidden (TBD)' })
-    }
+    const pts = resultMap["Champion"] === bet.teamId ? 8 : 0
+    const suffix = resultMap["Champion"] === bet.teamId ? ' ✓' : (resultMap["Champion"] ? ' ✗' : ' (TBD)')
+    if (resultMap["Champion"] === bet.teamId) totalPoints += pts
+    const champName = teamsDict[bet.team.name] || bet.team.name
+    breakdown.push({ 
+      group: 'specials', 
+      category: 'Tournament Champion', 
+      points: pts, 
+      details: canViewSpecials ? `Pick: ${champName}${suffix}` : 'Pick: Hidden' 
+    })
   }
 
   // Undefeated teams
   if (user.winnerLoserBets.length > 0) {
     const bet = user.winnerLoserBets[0]
-    if (undefeatedTeamIds.has(bet.winnerTeamId)) {
-      totalPoints += 3
-      breakdown.push({ group: 'specials', category: 'Undefeated Team', points: 3, details: canViewSpecials ? `Pick: ${bet.winnerTeam.name} ✓` : 'Pick: Hidden ✓' })
-    } else if (allGroupsFinished) {
-      breakdown.push({ group: 'specials', category: 'Undefeated Team', points: 0, details: canViewSpecials ? `Pick: ${bet.winnerTeam.name} ✗` : 'Pick: Hidden ✗' })
-    } else {
-      breakdown.push({ group: 'specials', category: 'Undefeated Team', points: 0, details: canViewSpecials ? `Pick: ${bet.winnerTeam.name} (TBD)` : 'Pick: Hidden (TBD)' })
-    }
+    const pts = undefeatedTeamIds.has(bet.winnerTeamId) ? 3 : 0
+    const suffix = undefeatedTeamIds.has(bet.winnerTeamId) ? ' ✓' : (allGroupsFinished ? ' ✗' : ' (TBD)')
+    if (undefeatedTeamIds.has(bet.winnerTeamId)) totalPoints += pts
+    const detailsName = teamsDict[bet.winnerTeam.name] || bet.winnerTeam.name
+    breakdown.push({ 
+      group: 'specials', 
+      category: 'Undefeated Team', 
+      points: pts, 
+      details: canViewSpecials ? `Pick: ${detailsName}${suffix}` : 'Pick: Hidden' 
+    })
   }
 
   // Winless teams
   if (user.winnerLoserBets.length > 0) {
     const bet = user.winnerLoserBets[0]
-    if (winlessTeamIds.has(bet.loserTeamId)) {
-      totalPoints += 3
-      breakdown.push({ group: 'specials', category: 'Winless Team', points: 3, details: canViewSpecials ? `Pick: ${bet.loserTeam.name} ✓` : 'Pick: Hidden ✓' })
-    } else if (allGroupsFinished) {
-      breakdown.push({ group: 'specials', category: 'Winless Team', points: 0, details: canViewSpecials ? `Pick: ${bet.loserTeam.name} ✗` : 'Pick: Hidden ✗' })
-    } else {
-      breakdown.push({ group: 'specials', category: 'Winless Team', points: 0, details: canViewSpecials ? `Pick: ${bet.loserTeam.name} (TBD)` : 'Pick: Hidden (TBD)' })
-    }
+    const pts = winlessTeamIds.has(bet.loserTeamId) ? 3 : 0
+    const suffix = winlessTeamIds.has(bet.loserTeamId) ? ' ✓' : (allGroupsFinished ? ' ✗' : ' (TBD)')
+    if (winlessTeamIds.has(bet.loserTeamId)) totalPoints += pts
+    const detailsName = teamsDict[bet.loserTeam.name] || bet.loserTeam.name
+    breakdown.push({ 
+      group: 'specials', 
+      category: 'Winless Team', 
+      points: pts, 
+      details: canViewSpecials ? `Pick: ${detailsName}${suffix}` : 'Pick: Hidden' 
+    })
   }
 
   // Group Rankings
   const globalTeams = await prisma.team.findMany()
-  const teamNameMap = Object.fromEntries(globalTeams.map(t => [t.id, t.name.substring(0, 3).toUpperCase()]))
+  const teamNameMap = Object.fromEntries(globalTeams.map(t => {
+    const displayName = teamsDict[t.name] || t.name
+    return [t.id, displayName.substring(0, 3).toUpperCase()]
+  }))
 
   const groupsAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
   for (const groupLetter of groupsAlphabet) {
@@ -244,7 +261,12 @@ export async function calculateUserPoints(userId: string, currentUserId?: string
   return { total: totalPoints, breakdown }
 }
 
-export async function getUserRankingsInGroup(groupId: string, currentUserId?: string | null) {
+export async function getUserRankingsInGroup(
+  groupId: string, 
+  currentUserId?: string | null,
+  teamsDict: Record<string, string> = {},
+  playersDict: Record<string, string> = {}
+) {
   const members = await prisma.member.findMany({
     where: { groupId },
     include: { 
@@ -261,7 +283,7 @@ export async function getUserRankingsInGroup(groupId: string, currentUserId?: st
   const locked = await isGroupStageLocked()
 
   const results = await Promise.all(members.map(async (m) => {
-    const result = await calculateUserPoints(m.userId, currentUserId)
+    const result = await calculateUserPoints(m.userId, currentUserId, teamsDict, playersDict)
     const canViewSpecials = locked || m.userId === currentUserId
     
     return {

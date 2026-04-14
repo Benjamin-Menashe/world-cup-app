@@ -29,11 +29,13 @@ export default function KnockoutForm({
   existingBets,
   lockedGames,
   dict,
+  teamsDict,
 }: {
   games: Game[]
   existingBets: Record<string, { home: number; away: number }>
   lockedGames: Record<string, boolean>
   dict: Record<string, any>
+  teamsDict?: Record<string, string>
 }) {
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>(() => {
     const init: Record<string, { home: string; away: string }> = {}
@@ -188,13 +190,13 @@ export default function KnockoutForm({
                       </div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>
                         <Link href={`/team/${game.homeTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-                          <img src={game.homeTeam.flagUrl} alt={game.homeTeam.name} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
-                          {game.homeTeam.name}
+                          <img src={game.homeTeam.flagUrl} alt={teamsDict?.[game.homeTeam.name] || game.homeTeam.name} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
+                          {teamsDict?.[game.homeTeam.name] || game.homeTeam.name}
                         </Link>
                         <span style={{ color: 'var(--text-secondary)', fontWeight: 400, margin: '0 8px' }}>vs</span>
                         <Link href={`/team/${game.awayTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-                          <img src={game.awayTeam.flagUrl} alt={game.awayTeam.name} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
-                          {game.awayTeam.name}
+                          <img src={game.awayTeam.flagUrl} alt={teamsDict?.[game.awayTeam.name] || game.awayTeam.name} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
+                          {teamsDict?.[game.awayTeam.name] || game.awayTeam.name}
                         </Link>
                       </div>
                     </div>

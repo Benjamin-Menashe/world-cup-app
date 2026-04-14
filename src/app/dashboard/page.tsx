@@ -16,7 +16,9 @@ export default async function DashboardPage() {
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
   const dict = await getDictionary()
-  const { total, breakdown } = await calculateUserPoints(userId)
+  const teamsDict = (dict as any).teams || {}
+  const playersDict = (dict as any).players || {}
+  const { total, breakdown } = await calculateUserPoints(userId, null, teamsDict, playersDict)
 
 
 

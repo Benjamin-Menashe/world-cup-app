@@ -60,6 +60,7 @@ export default function MatchCenter({
   const [loading, setLoading] = useState(false)
 
   const d = dict.home
+  const teamsDict = (dict as any).teams || {}
 
   const handleSelectGame = async (gameId: string) => {
     if (!isLoggedIn) return
@@ -196,22 +197,22 @@ export default function MatchCenter({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     {/* Home Team */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <img src={game.homeTeam.flagUrl} alt="" style={{ width: 18, height: 13, borderRadius: 2, objectFit: 'cover' }} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{game.homeTeam.name.length > 12 ? game.homeTeam.name.substring(0, 3).toUpperCase() : game.homeTeam.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <img src={game.homeTeam.flagUrl} alt="" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px' }} />
+                        <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{teamsDict[game.homeTeam.name] || game.homeTeam.name}</span>
                       </div>
                       {(game.status === 'live' || game.status === 'finished') && (
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'monospace' }}>
-                          {game.homeScore ?? '?'}
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                          {game.homeScore ?? '-'}
                         </span>
                       )}
                     </div>
 
                     {/* Away Team */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <img src={game.awayTeam.flagUrl} alt="" style={{ width: 18, height: 13, borderRadius: 2, objectFit: 'cover' }} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{game.awayTeam.name.length > 12 ? game.awayTeam.name.substring(0, 3).toUpperCase() : game.awayTeam.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <img src={game.awayTeam.flagUrl} alt="" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px' }} />
+                        <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{teamsDict[game.awayTeam.name] || game.awayTeam.name}</span>
                       </div>
                       {(game.status === 'live' || game.status === 'finished') && (
                         <span style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'monospace' }}>

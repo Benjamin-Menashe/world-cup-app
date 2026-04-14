@@ -121,13 +121,9 @@ export async function deleteGameAction(formData: FormData) {
 
 export async function createTeamAction(formData: FormData) {
   await verifyAdmin()
-  const enName = formData.get("enName") as string
-  const heName = formData.get("heName") as string
+  const name = formData.get("name") as string
   const group = formData.get("group") as string
   const flagUrl = formData.get("flagUrl") as string || ""
-
-  let name = enName
-  if (enName && heName) name = `${enName} (${heName})`
 
   if (name && group) {
     await prisma.team.create({ data: { name, group, flagUrl } })
@@ -147,17 +143,7 @@ export async function updateTeamGroupAction(formData: FormData) {
 
 
 
-export async function renameTeamAction(formData: FormData) {
-  await verifyAdmin()
-  const teamId = formData.get("teamId") as string
-  const enName = formData.get("enName") as string
-  const heName = formData.get("heName") as string
-  if (!teamId || !enName) return
 
-  const name = heName ? `${enName} (${heName})` : enName
-  await prisma.team.update({ where: { id: teamId }, data: { name } })
-  revalidatePath("/admin")
-}
 
 export async function deleteTeamAction(formData: FormData) {
   await verifyAdmin()
@@ -208,15 +194,7 @@ export async function createPlayerAction(formData: FormData) {
   revalidatePath("/admin")
 }
 
-export async function renamePlayerAction(formData: FormData) {
-  await verifyAdmin()
-  const playerId = formData.get("playerId") as string
-  const name = formData.get("name") as string
-  if (playerId && name) {
-    await prisma.player.update({ where: { id: playerId }, data: { name } })
-  }
-  revalidatePath("/admin")
-}
+
 
 export async function deletePlayerAction(formData: FormData) {
   await verifyAdmin()

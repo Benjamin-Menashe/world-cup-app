@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, History } from "lucide-react"
+import { getDictionary } from "@/lib/i18n"
 
 export default async function TeamPage({ params }: { params: { teamId: string } }) {
   const { teamId } = await params
@@ -25,6 +26,10 @@ export default async function TeamPage({ params }: { params: { teamId: string } 
 
   if (!team) redirect("/")
 
+  const dict = await getDictionary()
+  const teamsDict = (dict as any).teams || {}
+  const d = dict.team || {}
+
   // Combine and sort games (newest first)
   const allGames = [...team.homeGames, ...team.awayGames].sort(
     (a, b) => new Date(b.kickoffTime).getTime() - new Date(a.kickoffTime).getTime()
@@ -44,11 +49,11 @@ export default async function TeamPage({ params }: { params: { teamId: string } 
     <div style={{ maxWidth: '800px', margin: '2rem auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <Link href="/bets/knockout" className="secondary-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', padding: '0.5rem 1rem' }}>
-          <ArrowLeft size={16} /> Back to Bets
+          <ArrowLeft size={16} /> {d.backToBets}
         </Link>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '3rem', margin: 0 }}>
           <img src={team.flagUrl} alt={`${team.name} flag`} style={{ width: '64px', borderRadius: '4px', border: '1px solid var(--border-subtle)' }} />
-          {team.name}
+          {teamsDict[team.name] || team.name}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginTop: '0.5rem' }}>
           Group {team.group}
@@ -57,11 +62,11 @@ export default async function TeamPage({ params }: { params: { teamId: string } 
 
       <div className="glass-panel" style={{ padding: '2rem' }}>
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '0.75rem' }}>
-          <History color="var(--accent)" /> Tournament Schedule & Results
+          <History color="var(--accent)" /> {d.schedule}
         </h2>
 
         {allGames.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>No games scheduled for this team yet.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>{d.noGames}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {allGames.map(game => {
@@ -93,7 +98,7 @@ export default async function TeamPage({ params }: { params: { teamId: string } 
                     <div style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 400 }}>vs</span>
                       <img src={opponent.flagUrl} alt="flag" style={{ width: '20px', borderRadius: '2px' }} />
-                      {opponent.name}
+                      {teamsDict[opponent.name] || opponent.name}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
                       {new Date(game.kickoffTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}

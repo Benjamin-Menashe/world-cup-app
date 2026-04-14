@@ -51,7 +51,7 @@ export default async function KnockoutBetsPage() {
         </p>
       </div>
 
-      <KnockoutForm games={games} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} />
+      <KnockoutForm games={games} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} teamsDict={(dict as any).teams || {}} />
     </div>
   )
 }

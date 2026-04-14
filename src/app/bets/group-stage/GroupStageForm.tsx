@@ -77,12 +77,16 @@ export default function GroupStageForm({
   existingBets,
   isLocked = false,
   dict,
+  teamsDict,
+  playersDict,
 }: {
   teams: Team[]
   players: Player[]
   existingBets: ExistingBets
   isLocked?: boolean
   dict: any
+  teamsDict?: Record<string, string>
+  playersDict?: Record<string, string>
 }) {
   const groupsAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 
@@ -169,8 +173,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.champion}</label>
             <Select 
-              options={teams.map(t => ({ value: t.id, label: t.name }))}
-              value={teams.find(t => t.id === champion) ? { value: champion, label: teams.find(t => t.id === champion)?.name } : null}
+              options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
+              value={teams.find(t => t.id === champion) ? { value: champion, label: teamsDict?.[teams.find(t => t.id === champion)?.name || ""] || teams.find(t => t.id === champion)?.name } : null}
               onChange={(val) => { setChampion(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
@@ -181,8 +185,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.goldenBoot}</label>
             <Select 
-              options={players.map(p => ({ value: p.id, label: `${p.name} - ${getTeamAbbreviation(p.team.name)}` }))}
-              value={players.find(p => p.id === topScorer) ? { value: topScorer, label: `${players.find(p => p.id === topScorer)?.name} - ${getTeamAbbreviation(players.find(p => p.id === topScorer)?.team.name || "")}` } : null}
+              options={players.map(p => ({ value: p.id, label: `${playersDict?.[p.name] || p.name} - ${teamsDict?.[p.team.name] || getTeamAbbreviation(p.team.name)}` }))}
+              value={players.find(p => p.id === topScorer) ? { value: topScorer, label: `${playersDict?.[players.find(p => p.id === topScorer)?.name || ""] || players.find(p => p.id === topScorer)?.name} - ${teamsDict?.[players.find(p => p.id === topScorer)?.team.name || ""] || getTeamAbbreviation(players.find(p => p.id === topScorer)?.team.name || "")}` } : null}
               onChange={(val) => { setTopScorer(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
@@ -249,8 +253,8 @@ export default function GroupStageForm({
                       <button type="button" onClick={() => moveTeam(group, index, 'up')} disabled={index === 0 || isLocked}
                           style={{ background: 'none', border: 'none', cursor: (index === 0 || isLocked) ? 'default' : 'pointer', color: (index === 0 || isLocked) ? 'rgba(0,0,0,0.1)' : 'var(--accent)', padding: '0 4px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}>▲</button>
 
-                      <img src={team.flagUrl} alt={team.name} style={{ width: '1.5rem', height: '1.1rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', marginLeft: '0.2rem' }} />
-                      <span style={{ flex: 1 }}>{team.name}</span>
+                      <img src={team.flagUrl} alt={teamsDict?.[team.name] || team.name} style={{ width: '1.5rem', height: '1.1rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', marginLeft: '0.2rem' }} />
+                      <span style={{ flex: 1 }}>{teamsDict?.[team.name] || team.name}</span>
                       
                       <button type="button" onClick={() => moveTeam(group, index, 'down')} disabled={index === rankings[group].length - 1 || isLocked}
                           style={{ background: 'none', border: 'none', cursor: (index === rankings[group].length - 1 || isLocked) ? 'default' : 'pointer', color: (index === rankings[group].length - 1 || isLocked) ? 'rgba(0,0,0,0.1)' : 'var(--accent)', padding: '0 4px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}>▼</button>
@@ -271,8 +275,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.undefeated}</label>
             <Select 
-              options={teams.map(t => ({ value: t.id, label: t.name }))}
-              value={teams.find(t => t.id === winnerTeam) ? { value: winnerTeam, label: teams.find(t => t.id === winnerTeam)?.name } : null}
+              options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
+              value={teams.find(t => t.id === winnerTeam) ? { value: winnerTeam, label: teamsDict?.[teams.find(t => t.id === winnerTeam)?.name || ""] || teams.find(t => t.id === winnerTeam)?.name } : null}
               onChange={(val) => { setWinnerTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}
@@ -283,8 +287,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.winless}</label>
             <Select 
-              options={teams.map(t => ({ value: t.id, label: t.name }))}
-              value={teams.find(t => t.id === loserTeam) ? { value: loserTeam, label: teams.find(t => t.id === loserTeam)?.name } : null}
+              options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
+              value={teams.find(t => t.id === loserTeam) ? { value: loserTeam, label: teamsDict?.[teams.find(t => t.id === loserTeam)?.name || ""] || teams.find(t => t.id === loserTeam)?.name } : null}
               onChange={(val) => { setLoserTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               styles={customStyles}

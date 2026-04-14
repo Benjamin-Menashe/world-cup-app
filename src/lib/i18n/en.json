@@ -171,6 +171,13 @@
     "s2Scoring2": "<strong>Exact Score:</strong> Perfectly predicting a specific team's exact goals awards <strong>1 point</strong> per team.",
     "s2Example": "<em>Example:</em> If you predict 2-1 and the match finishes 3-1:<br/>• 2 points for guessing the correct winner.<br/>• 1 point for guessing the Away team's exactly 1 goal.<br/>• Total = 3 points.",
     "s2BonusTitle": "2.2 Knockout Bonuses",
-    "s2BonusFinal": "<strong>The Final Match:</strong> All algorithmic points earned on the World Cup Final match are automatically <strong>Multiplied by 2</strong>!"
-  }
+    "s2BonusFinal": "The Final Match: All algorithmic points earned on the World Cup Final match are automatically Multiplied by 2!"
+  },
+  "team": {
+    "schedule": "Tournament Schedule & Results",
+    "noGames": "No games scheduled for this team yet.",
+    "backToBets": "Back to Bets"
+  },
+  "teams": {},
+  "players": {}
 }

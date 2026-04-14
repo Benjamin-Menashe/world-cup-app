@@ -54,7 +54,15 @@ export default async function GroupStageBetsPage() {
         </div>
       </div>
 
-      <GroupStageForm teams={teams} players={players} existingBets={existingBets} isLocked={isLocked} dict={d} />
+      <GroupStageForm 
+        teams={teams} 
+        players={players} 
+        existingBets={existingBets} 
+        isLocked={isLocked} 
+        dict={d} 
+        teamsDict={(dict as any).teams || {}}
+        playersDict={(dict as any).players || {}}
+      />
     </div>
   )
 }

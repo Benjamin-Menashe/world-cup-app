@@ -28,10 +28,12 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
 
   const targetUser = targetUserMember.user
 
-  // Fetch points & breakdown
-  const pointsData = await calculateUserPoints(userId, currentUserId)
-
   const dict = await getDictionary()
+  const teamsDict = (dict as any).teams || {}
+  const playersDict = (dict as any).players || {}
+
+  // Fetch points & breakdown
+  const pointsData = await calculateUserPoints(userId, currentUserId, teamsDict, playersDict)
 
   return (
     <div style={{ maxWidth: '900px', margin: '2rem auto' }}>

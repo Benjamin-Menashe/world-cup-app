@@ -18,10 +18,8 @@ import {
   deleteGameAction,
   updatePlayerGoalsAction,
   createPlayerAction,
-  renamePlayerAction,
   deletePlayerAction,
   createTeamAction,
-  renameTeamAction,
   deleteTeamAction,
   updateTeamGroupAction,
   setChampionAction,
@@ -416,28 +414,7 @@ export default async function AdminDashboardPage() {
             </form>
           </div>
 
-          {/* Rename Team */}
-          <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
-            <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename Team (English / Hebrew)</h3>
-            <form action={renameTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '160px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
-                <select name="teamId" required className="input-field">
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>English Name</label>
-                <input type="text" name="enName" required className="input-field" placeholder="e.g. France" />
-              </div>
-              <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hebrew Name (optional)</label>
-                <input type="text" name="heName" className="input-field" placeholder="e.g. צרפת" />
-              </div>
-              <button type="submit" className="primary-btn">Rename</button>
-            </form>
-          </div>
+
 
           {/* Current group composition */}
           <div style={{ marginTop: '1.5rem' }}>
@@ -473,12 +450,8 @@ export default async function AdminDashboardPage() {
             </summary>
             <form action={createTeamAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
               <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>English Name</label>
-                <input type="text" name="enName" required className="input-field" placeholder="e.g. France" />
-              </div>
-              <div style={{ flex: 1, minWidth: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hebrew Name (optional)</label>
-                <input type="text" name="heName" className="input-field" placeholder="e.g. צרפת" />
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team Name</label>
+                <input type="text" name="name" required className="input-field" placeholder="e.g. France" />
               </div>
               <div style={{ width: '80px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Group</label>
@@ -528,27 +501,9 @@ export default async function AdminDashboardPage() {
 
           <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename / Delete Player</h3>
-            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-              <form action={renamePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 2, minWidth: '300px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
-                  <select name="playerId" className="input-field" required>
-                    {teams.map(t => (
-                      <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
-                        {players.filter(p => p.teamId === t.id).map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
-                  <input type="text" name="name" required className="input-field" placeholder="Hebrew / English Name" />
-                </div>
-                <button type="submit" className="primary-btn">Rename</button>
-              </form>
 
+
+            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
               <form action={deletePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 1, minWidth: '200px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Delete Player</label>

@@ -27,7 +27,12 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
   const tournamentChampion = await prisma.tournamentResult.findUnique({ where: { key: 'Champion' } })
   const isTournamentFinished = !!tournamentChampion
 
-  const rankings = await getUserRankingsInGroup(groupId, userId)
+  const dict = await getDictionary()
+  const d = dict.group
+  const teamsDict = (dict as any).teams || {}
+  const playersDict = (dict as any).players || {}
+
+  const rankings = await getUserRankingsInGroup(groupId, userId, teamsDict, playersDict)
   
   const isMember = rankings.some(r => r.userId === userId)
   if (!isMember) redirect("/group")
@@ -43,9 +48,6 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
     if (rank === 3) return '🥉'
     return null
   }
-
-  const dict = await getDictionary()
-  const d = dict.group
 
   return (
     <div style={{ maxWidth: '900px', margin: '2rem auto' }}>
@@ -176,12 +178,16 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
 
                   {/* Champ */}
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Champion Pick">
-                    🏆 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.championName ?? d.hidden}</span>
+                    🏆 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {member.championName === 'Hidden' ? d.hidden : (teamsDict[member.championName || ''] || member.championName || '—')}
+                    </span>
                   </span>
 
                   {/* Golden Boot */}
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Golden Boot Pick">
-                    👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.goldenBootName ?? d.hidden}</span>
+                    👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {member.goldenBootName === 'Hidden' ? d.hidden : (playersDict[member.goldenBootName || ''] || member.goldenBootName || '—')}
+                    </span>
                   </span>
 
                   {/* Points */}
