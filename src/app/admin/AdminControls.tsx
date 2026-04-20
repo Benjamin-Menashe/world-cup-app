@@ -79,20 +79,26 @@ export function TimeOverridePanel({ currentOverride }: { currentOverride: string
 
 // ─── Master Reset Button ──────────────────────────────────────────────────────
 
-export function MasterResetButton() {
+export function MasterResetButton({ hasSnapshot }: { hasSnapshot: boolean }) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
   async function handleReset() {
-    if (!confirm(
-      "⚠️ MASTER RESET\n\nThis will:\n• Delete ALL Teams & Players\n• Delete ALL Games & Schedules\n• Delete ALL User Predictions & Bets\n• Delete ALL Tournament Results\n\nAre you sure you want to completely wipe the tournament database? Users will not be deleted."
-    )) return
+    const msg = hasSnapshot
+      ? "♻️ RESET TO SNAPSHOT\n\nThis will:\n• Delete ALL simulated scores & results\n• Delete ALL user predictions & bets\n• Restore your saved teams, games, and players\n\nUser accounts are NOT deleted. Continue?"
+      : "⚠️ FULL WIPE\n\nNo snapshot is saved. This will permanently delete:\n• ALL Teams & Players\n• ALL Games & Schedules\n• ALL User Predictions & Bets\n• ALL Tournament Results\n\nUsers will NOT be deleted. Continue?"
+    if (!confirm(msg)) return
 
     setLoading(true)
     setResult(null)
     try {
       await masterResetAction()
-      setResult({ ok: true, msg: "Master Reset complete. All teams, players, matches, and bets have been erased." })
+      setResult({
+        ok: true,
+        msg: hasSnapshot
+          ? "Reset complete — restored to your saved snapshot."
+          : "Full wipe complete. Database is blank.",
+      })
     } catch (e) {
       setResult({ ok: false, msg: (e as Error).message })
     }
@@ -102,7 +108,9 @@ export function MasterResetButton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: 0 }}>
-        Wipes the entire database including all teams, players, matches, and bets. Use this when you want to return to a clean slate before fetching real API data.
+        {hasSnapshot
+          ? "Clears all simulated scores, results, and user bets, then restores your saved baseline (teams, schedule, players). User accounts are kept."
+          : "No snapshot saved — this will permanently wipe all teams, players, matches, and bets. Save a snapshot first to enable smart restore."}
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
         <button
@@ -116,7 +124,7 @@ export function MasterResetButton() {
           }}
         >
           {loading ? <Loader2 size={16} className="spin" /> : <RotateCcw size={16} />}
-          Reset & Exit — Undo All Changes
+          {hasSnapshot ? "Reset to Saved Snapshot" : "Full Wipe — Clear Everything"}
         </button>
         {result && (
           <span style={{

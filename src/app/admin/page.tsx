@@ -9,7 +9,7 @@ import {
 import SyncButton from "./SyncButton"
 import SyncPlayersButton from "./SyncPlayersButton"
 import InitTournamentButton from "./InitTournamentButton"
-import FixGroupsButton from "./FixGroupsButton"
+import { SaveSnapshotButton } from "./SaveSnapshotButton"
 import { TimeOverridePanel, MasterResetButton, DeleteFormWithConfirm } from "./AdminControls"
 
 import {
@@ -35,8 +35,8 @@ import {
   setKnockoutLockOverrideAction,
 } from "@/app/actions/admin"
 
-const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
-const STAGES = ['Group','R32','R16','QF','SF','Final']
+const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+const STAGES = ['Group', 'R32', 'R16', 'QF', 'SF', 'Final']
 const STAGE_LABELS: Record<string, string> = {
   Group: 'Group Stage', R32: 'Round of 32', R16: 'Round of 16',
   QF: 'Quarter-Finals', SF: 'Semi-Finals', Final: 'Final',
@@ -81,6 +81,18 @@ export default async function AdminDashboardPage() {
   const winlessIds: string[] = Array.isArray(resultMap['Winless']) ? (resultMap['Winless'] as string[]) :
     (typeof resultMap['Winless'] === 'string' ? [resultMap['Winless']] : [])
   const knockoutLockOverride = resultMap['KnockoutLockOverride'] ?? 'Auto'
+
+  // Snapshot status
+  const snapshotRecord = tournamentResults.find(r => r.key === 'BaseSnapshot')
+  const hasSnapshot = !!snapshotRecord
+  const snapshotDate = snapshotRecord ? (() => {
+    try {
+      const parsed = JSON.parse(snapshotRecord.value) as { savedAt?: string }
+      return parsed.savedAt
+        ? new Date(parsed.savedAt).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', dateStyle: 'medium', timeStyle: 'short' })
+        : null
+    } catch { return null }
+  })() : null
 
   const gamesByStage: Record<string, typeof games> = {}
   for (const g of games) {
@@ -135,7 +147,7 @@ export default async function AdminDashboardPage() {
             subtitle="Freeze the app clock or instantly lock the knockout predictions for all users."
           />
           <TimeOverridePanel currentOverride={timeOverride} />
-          
+
           <div style={{ ...subPanelStyle, marginTop: '2rem' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.05rem', color: 'var(--red)' }}>Knockout Predictions Lock</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Override the knockout predictions lock regardless of game kickoff times.</p>
@@ -431,17 +443,17 @@ export default async function AdminDashboardPage() {
                   {(teamsByGroup[g] ?? []).length === 0
                     ? <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>No teams</p>
                     : (teamsByGroup[g] ?? []).map(t => (
-                        <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                          <span>{t.name}</span>
-                          <DeleteFormWithConfirm
-                            action={deleteTeamAction}
-                            hiddenName="teamId"
-                            hiddenValue={t.id}
-                            itemLabel={t.name}
-                            confirmMessage={`Delete team ${t.name}? This will delete their players and bets too.`}
-                          />
-                        </div>
-                      ))
+                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                        <span>{t.name}</span>
+                        <DeleteFormWithConfirm
+                          action={deleteTeamAction}
+                          hiddenName="teamId"
+                          hiddenValue={t.id}
+                          itemLabel={t.name}
+                          confirmMessage={`Delete team ${t.name}? This will delete their players and bets too.`}
+                        />
+                      </div>
+                    ))
                   }
                 </div>
               ))}
@@ -480,20 +492,17 @@ export default async function AdminDashboardPage() {
             title="Player Manager (Golden Boot)"
             subtitle="Add, remove, or rename players, and update their goals scored."
           />
-          
+
           <div style={subPanelStyle}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Update Player Goals</h3>
             <form action={updatePlayerGoalsAction} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: '200px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
                 <select name="playerId" className="input-field" required>
-                  {teams.map(t => (
-                    <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
-                      {players.filter(p => p.teamId === t.id).map(p => (
-                        <option key={p.id} value={p.id}>{p.name} — {p.goalsScored} goal{p.goalsScored !== 1 ? 's' : ''}</option>
-                      ))}
-                    </optgroup>
-                  ))}
+                  {players.map(p => {
+                    const team = teams.find(t => t.id === p.teamId)
+                    return <option key={p.id} value={p.id}>{p.name} ({team?.name ?? '?'}) — {p.goalsScored} goal{p.goalsScored !== 1 ? 's' : ''}</option>
+                  })}
                 </select>
               </div>
               <div style={{ width: '120px' }}>
@@ -506,20 +515,16 @@ export default async function AdminDashboardPage() {
 
           <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename / Delete Player</h3>
-
             <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
               {/* Rename */}
               <form action={renamePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 2, minWidth: '260px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Rename Player</label>
                   <select name="playerId" className="input-field" required>
-                    {teams.map(t => (
-                      <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
-                        {players.filter(p => p.teamId === t.id).map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </optgroup>
-                    ))}
+                    {players.map(p => {
+                      const team = teams.find(t => t.id === p.teamId)
+                      return <option key={p.id} value={p.id}>{p.name} ({team?.name ?? '?'})</option>
+                    })}
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -534,13 +539,10 @@ export default async function AdminDashboardPage() {
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Delete Player</label>
                   <select name="playerId" className="input-field" required>
-                    {teams.map(t => (
-                      <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
-                        {players.filter(p => p.teamId === t.id).map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </optgroup>
-                    ))}
+                    {players.map(p => {
+                      const team = teams.find(t => t.id === p.teamId)
+                      return <option key={p.id} value={p.id}>{p.name} ({team?.name ?? '?'})</option>
+                    })}
                   </select>
                 </div>
                 <button type="submit" className="secondary-btn" style={{ color: 'var(--red)', borderColor: 'var(--red)' }}>Delete</button>
@@ -582,11 +584,6 @@ export default async function AdminDashboardPage() {
               <InitTournamentButton />
             </div>
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem', color: 'var(--accent)' }}>Step 1b: Fix Team Groups</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>If teams were imported with group = "TBD", run this once to assign them to their correct groups (A–L). Uses 1 API call.</p>
-              <FixGroupsButton />
-            </div>
-            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
               <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>Step 2: Player Rosters (One-Time)</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Deep-scans tournament squads to populate the Golden Boot dropdown. Uses ~50 API calls.</p>
               <SyncPlayersButton />
@@ -599,13 +596,23 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* ── 8. Master Reset ──────────────────────────────────────────────── */}
+        {/* ── 8. Save Snapshot ─────────────────────────────────────────────── */}
+        <section className="glass-panel" style={{ ...panelStyle, borderTop: '2px solid rgba(16,185,129,0.2)' }}>
+          <SectionHeader
+            icon={<span style={{ fontSize: '1.2rem' }}>💾</span>}
+            title="Save Baseline Snapshot"
+            subtitle="Freeze the current teams, schedule, and players as your baseline. The Reset button will restore to this state instead of a full wipe."
+          />
+          <SaveSnapshotButton hasSnapshot={hasSnapshot} snapshotDate={snapshotDate} />
+        </section>
+
+        {/* ── 9. Master Reset ─────────────────────────────────────────────── */}
         <section className="glass-panel" style={{ ...panelStyle, borderTop: '2px solid rgba(239,68,68,0.25)' }}>
           <SectionHeader
             icon={<Settings size={20} color="#dc2626" />}
-            title="Reset & Exit — Undo All Changes"
+            title={hasSnapshot ? 'Reset to Snapshot' : 'Full Wipe — Clear Everything'}
           />
-          <MasterResetButton />
+          <MasterResetButton hasSnapshot={hasSnapshot} />
         </section>
 
       </div>

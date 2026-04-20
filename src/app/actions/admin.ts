@@ -311,23 +311,90 @@ export async function setTournamentResultAction(key: string, value: unknown) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Master Reset (Total Wipe)
+// Base Snapshot (Save & Restore)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function saveSnapshotAction() {
+  await verifyAdmin()
+
+  const [teams, games, players] = await Promise.all([
+    prisma.team.findMany(),
+    prisma.game.findMany(),
+    prisma.player.findMany(),
+  ])
+
+  const snapshot = {
+    savedAt: new Date().toISOString(),
+    teams: teams.map(t => ({ id: t.id, name: t.name, flagUrl: t.flagUrl, group: t.group })),
+    games: games.map(g => ({
+      id: g.id,
+      stage: g.stage,
+      kickoffTime: g.kickoffTime.toISOString(),
+      homeTeamId: g.homeTeamId,
+      awayTeamId: g.awayTeamId,
+      homeScore: g.homeScore,
+      awayScore: g.awayScore,
+      isFinished: g.isFinished,
+    })),
+    players: players.map(p => ({ id: p.id, name: p.name, teamId: p.teamId, goalsScored: p.goalsScored })),
+  }
+
+  await prisma.tournamentResult.upsert({
+    where: { key: 'BaseSnapshot' },
+    update: { value: JSON.stringify(snapshot) },
+    create: { key: 'BaseSnapshot', value: JSON.stringify(snapshot) },
+  })
+
+  revalidatePath('/admin')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Master Reset — Restore to Snapshot (or full wipe if no snapshot)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function masterResetAction() {
   await verifyAdmin()
-  // 1. CLEAR ALL PREDICTIONS
+
+  // Read snapshot BEFORE wiping (it lives in tournamentResult)
+  const snapshotRecord = await prisma.tournamentResult.findUnique({
+    where: { key: 'BaseSnapshot' },
+  })
+
+  // 1. CLEAR ALL USER PREDICTIONS
   await prisma.gameBet.deleteMany()
   await prisma.groupRankingBet.deleteMany()
   await prisma.championBet.deleteMany()
   await prisma.topScorerBet.deleteMany()
   await prisma.winnerLoserBet.deleteMany()
 
-  // 2. CLEAR ALL TOURNAMENT DATA
-  await prisma.tournamentResult.deleteMany()
+  // 2. CLEAR ALL TOURNAMENT RESULTS (but keep the snapshot)
+  await prisma.tournamentResult.deleteMany({ where: { key: { not: 'BaseSnapshot' } } })
+
+  // 3. CLEAR ALL TOURNAMENT DATA
   await prisma.game.deleteMany()
-  // Clear players before teams due to foreign key deps
   await prisma.player.deleteMany()
   await prisma.team.deleteMany()
-  revalidatePath("/admin")
+
+  // 4. RESTORE FROM SNAPSHOT (if one exists)
+  if (snapshotRecord) {
+    type SnapshotTeam   = { id: string; name: string; flagUrl: string; group: string }
+    type SnapshotGame   = { id: string; stage: string; kickoffTime: string; homeTeamId: string; awayTeamId: string; homeScore: number | null; awayScore: number | null; isFinished: boolean }
+    type SnapshotPlayer = { id: string; name: string; teamId: string; goalsScored: number }
+    type Snapshot = { teams: SnapshotTeam[]; games: SnapshotGame[]; players: SnapshotPlayer[] }
+
+    const snap = JSON.parse(snapshotRecord.value) as Snapshot
+
+    // Restore in dependency order: teams → games → players
+    for (const t of snap.teams) {
+      await prisma.team.create({ data: t })
+    }
+    for (const g of snap.games) {
+      await prisma.game.create({ data: { ...g, kickoffTime: new Date(g.kickoffTime) } })
+    }
+    for (const p of snap.players) {
+      await prisma.player.create({ data: p })
+    }
+  }
+
+  revalidatePath('/admin')
 }
