@@ -65,9 +65,11 @@ export async function updateGameKickoffAction(formData: FormData) {
   const gameId = formData.get("gameId") as string
   const kickoffTime = formData.get("kickoffTime") as string
   if (gameId && kickoffTime) {
+    // datetime-local has no timezone — treat as IDT (UTC+3) by appending offset
+    const utcDate = new Date(kickoffTime + "+03:00")
     await prisma.game.update({
       where: { id: gameId },
-      data: { kickoffTime: new Date(kickoffTime) }
+      data: { kickoffTime: utcDate }
     })
   }
   revalidatePath("/admin")
@@ -98,8 +100,10 @@ export async function addKnockoutGameAction(formData: FormData) {
   const kickoffTime = formData.get("kickoffTime") as string
 
   if (stage && homeTeamId && awayTeamId && kickoffTime) {
+    // datetime-local has no timezone — treat as IDT (UTC+3) by appending offset
+    const utcDate = new Date(kickoffTime + "+03:00")
     await prisma.game.create({
-      data: { stage, homeTeamId, awayTeamId, kickoffTime: new Date(kickoffTime) }
+      data: { stage, homeTeamId, awayTeamId, kickoffTime: utcDate }
     })
   }
   revalidatePath("/admin")
@@ -194,7 +198,15 @@ export async function createPlayerAction(formData: FormData) {
   revalidatePath("/admin")
 }
 
-
+export async function renamePlayerAction(formData: FormData) {
+  await verifyAdmin()
+  const playerId = formData.get("playerId") as string
+  const name = (formData.get("name") as string)?.trim()
+  if (playerId && name) {
+    await prisma.player.update({ where: { id: playerId }, data: { name } })
+  }
+  revalidatePath("/admin")
+}
 
 export async function deletePlayerAction(formData: FormData) {
   await verifyAdmin()

@@ -19,9 +19,11 @@ export default async function GroupStageBetsPage() {
   // Compute lock state from DB
   const lockTime = await getGroupStageLockTime()
   const isLocked = lockTime ? new Date() >= lockTime : false
-  const lockDeadline = lockTime ? lockTime.toLocaleString('en-GB', {
+  const lockDeadline = lockTime ? lockTime.toLocaleString('he-IL', {
     day: 'numeric', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'Asia/Jerusalem',
+    timeZoneName: 'short'
   }) : 'TBD (no games scheduled yet)'
 
   // Load existing bets to pre-populate the form

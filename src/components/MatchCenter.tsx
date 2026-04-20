@@ -86,7 +86,22 @@ export default function MatchCenter({
 
   const formatTime = (iso: string) => {
     const date = new Date(iso)
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleTimeString('he-IL', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jerusalem',
+    })
+  }
+
+  const formatDateTime = (iso: string) => {
+    const date = new Date(iso)
+    return date.toLocaleString('he-IL', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jerusalem',
+    })
   }
 
   const statusColor = (status: string) => {
@@ -225,7 +240,7 @@ export default function MatchCenter({
                   {/* Kickoff time for upcoming */}
                   {game.status === 'upcoming' && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.2rem' }}>
-                      {d.kicksOff} {formatTime(game.kickoffTime)}
+                      {d.kicksOff} {formatDateTime(game.kickoffTime)}
                     </div>
                   )}
                 </div>

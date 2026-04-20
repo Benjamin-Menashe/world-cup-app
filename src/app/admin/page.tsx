@@ -9,6 +9,7 @@ import {
 import SyncButton from "./SyncButton"
 import SyncPlayersButton from "./SyncPlayersButton"
 import InitTournamentButton from "./InitTournamentButton"
+import FixGroupsButton from "./FixGroupsButton"
 import { TimeOverridePanel, MasterResetButton, DeleteFormWithConfirm } from "./AdminControls"
 
 import {
@@ -18,6 +19,7 @@ import {
   deleteGameAction,
   updatePlayerGoalsAction,
   createPlayerAction,
+  renamePlayerAction,
   deletePlayerAction,
   createTeamAction,
   deleteTeamAction,
@@ -235,9 +237,12 @@ export default async function AdminDashboardPage() {
             title="Kickoff Times"
             subtitle="Adjust when any game is scheduled. Combined with the Time Override, this lets you test any lock scenario."
           />
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>⏰ Times shown and entered in <strong>IDT (UTC+3)</strong></p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '320px', overflowY: 'auto', paddingRight: '0.25rem' }}>
             {games.map(game => {
-              const kickoffLocal = game.kickoffTime.toISOString().slice(0, 16)
+              // Display kickoff in IDT: shift UTC by +3h then slice as local datetime-local value
+              const idt = new Date(game.kickoffTime.getTime() + 3 * 60 * 60 * 1000)
+              const kickoffIDT = idt.toISOString().slice(0, 16)
               return (
                 <form key={game.id} action={updateGameKickoffAction}
                   style={{ ...rowStyle, gridTemplateColumns: '0.4fr 1fr auto 1fr auto' }}>
@@ -247,7 +252,7 @@ export default async function AdminDashboardPage() {
                   <input
                     type="datetime-local"
                     name="kickoffTime"
-                    defaultValue={kickoffLocal}
+                    defaultValue={kickoffIDT}
                     required
                     className="input-field"
                     style={{ fontSize: '0.82rem', padding: '0.25rem 0.4rem' }}
@@ -502,8 +507,29 @@ export default async function AdminDashboardPage() {
           <div style={{ ...subPanelStyle, marginTop: '1.5rem' }}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename / Delete Player</h3>
 
-
             <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+              {/* Rename */}
+              <form action={renamePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 2, minWidth: '260px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Rename Player</label>
+                  <select name="playerId" className="input-field" required>
+                    {teams.map(t => (
+                      <optgroup key={t.id} label={`${t.name} (Group ${t.group})`}>
+                        {players.filter(p => p.teamId === t.id).map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
+                  <input type="text" name="name" required className="input-field" placeholder="Corrected name…" />
+                </div>
+                <button type="submit" className="secondary-btn">Rename</button>
+              </form>
+
+              {/* Delete */}
               <form action={deletePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 1, minWidth: '200px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Delete Player</label>
@@ -554,6 +580,11 @@ export default async function AdminDashboardPage() {
               <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem', color: 'var(--red)' }}>Step 1: One-Time Initialization</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetch all 48 teams and the 104-match schedule from the API to seed a blank database.</p>
               <InitTournamentButton />
+            </div>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem', color: 'var(--accent)' }}>Step 1b: Fix Team Groups</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>If teams were imported with group = "TBD", run this once to assign them to their correct groups (A–L). Uses 1 API call.</p>
+              <FixGroupsButton />
             </div>
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
               <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>Step 2: Player Rosters (One-Time)</h3>
