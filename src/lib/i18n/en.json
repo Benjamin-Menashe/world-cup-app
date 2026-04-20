@@ -179,5 +179,22 @@
     "backToBets": "Back to Bets"
   },
   "teams": {},
-  "players": {}
+  "players": {},
+  "breakdown": {
+    "predicted": "Predicted",
+    "actual": "Actual",
+    "pick": "Pick",
+    "hidden": "Hidden",
+    "tbd": "TBD",
+    "finalMultiplier": "×2 Final",
+    "goalBonus": "+1 Top Scorer Bonus",
+    "goal": "goal",
+    "goals": "goals",
+    "pts": "pts",
+    "vs": "vs",
+    "champion": "Tournament Champion",
+    "golden_boot": "Top Scorer",
+    "undefeated": "Undefeated Team",
+    "winless": "Winless Team"
+  }
 }

@@ -77,7 +77,7 @@
     "mainPicks": "הימורים ראשיים",
     "champion": "🏆 אלופת הטורניר",
     "selectTeam": "בחר קבוצה...",
-    "goldenBoot": "👟 נעל הזהב (מלך השערים)",
+    "goldenBoot": "👟 מלך השערים",
     "selectPlayer": "בחר שחקן...",
     "groupRankings": "דירוג הבתים",
     "rankingsDesc": "גרור או השתמש בחצים כדי לדרג נבחרות מקום 1–4 בכל בית. הניקוד מבוסס על מרחק קנדל-טאו.",
@@ -231,5 +231,21 @@
     "Congo DR": "קונגו",
     "Iraq": "עיראק"
   },
-  "players": {}
+  "breakdown": {
+    "predicted": "הימור",
+    "actual": "תוצאה",
+    "pick": "בחירה",
+    "hidden": "מוסתר",
+    "tbd": "טרם נקבע",
+    "finalMultiplier": "×2 גמר",
+    "goalBonus": "+1 בונוס מלך השערים",
+    "goal": "שער",
+    "goals": "שערים",
+    "pts": "נק'",
+    "vs": "נגד",
+    "champion": "אלופת הטורניר",
+    "golden_boot": "מלך השערים",
+    "undefeated": "נבחרת ללא הפסד",
+    "winless": "נבחרת ללא ניצחון"
+  }
 }

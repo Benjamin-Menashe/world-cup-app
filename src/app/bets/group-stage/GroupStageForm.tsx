@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { saveGroupStageBetsAction } from "@/app/actions/bets"
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges"
-import Select from "react-select"
+import SearchableSelect from "@/components/SearchableSelect"
 
 function getTeamAbbreviation(teamName: string) {
   const overrides: Record<string, string> = {
@@ -17,49 +17,6 @@ function getTeamAbbreviation(teamName: string) {
     "United Arab Emirates": "UAE"
   }
   return overrides[teamName] || teamName.substring(0, 3).toUpperCase()
-}
-
-const customStyles = {
-  control: (base: Record<string, unknown>, state: { isFocused: boolean; isDisabled: boolean }) => ({
-    ...base,
-    background: 'var(--bg-primary)',
-    borderColor: state.isFocused ? 'var(--accent)' : 'var(--border-subtle)',
-    boxShadow: state.isFocused ? '0 0 0 1px var(--accent)' : 'none',
-    color: 'var(--text-primary)',
-    borderRadius: '8px',
-    padding: '0.2rem',
-    cursor: state.isDisabled ? 'not-allowed' : 'pointer',
-    minHeight: '42px',
-    opacity: state.isDisabled ? 0.7 : 1,
-  }),
-  menu: (base: Record<string, unknown>) => ({
-    ...base,
-    background: 'var(--bg-secondary)',
-    border: '1px solid var(--border-subtle)',
-    borderRadius: '8px',
-    zIndex: 100,
-  }),
-  option: (base: Record<string, unknown>, state: { isFocused: boolean }) => ({
-    ...base,
-    backgroundColor: state.isFocused ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-    color: 'var(--text-primary)',
-    cursor: 'pointer',
-    '&:active': {
-      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    }
-  }),
-  singleValue: (base: Record<string, unknown>) => ({
-    ...base,
-    color: 'var(--text-primary)',
-  }),
-  input: (base: Record<string, unknown>) => ({
-    ...base,
-    color: 'var(--text-primary)'
-  }),
-  placeholder: (base: Record<string, unknown>) => ({
-    ...base,
-    color: 'var(--text-secondary)'
-  }),
 }
 
 type Team = { id: string, name: string, group: string, flagUrl: string }
@@ -172,26 +129,22 @@ export default function GroupStageForm({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.champion}</label>
-            <Select 
+            <SearchableSelect 
               options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
               value={teams.find(t => t.id === champion) ? { value: champion, label: teamsDict?.[teams.find(t => t.id === champion)?.name || ""] || teams.find(t => t.id === champion)?.name } : null}
-              onChange={(val) => { setChampion(val?.value || ""); setIsDirty(true) }}
+              onChange={(val: any) => { setChampion(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
-              styles={customStyles}
               placeholder={dict.selectTeam}
-              isSearchable
             />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.goldenBoot}</label>
-            <Select 
+            <SearchableSelect 
               options={players.map(p => ({ value: p.id, label: `${playersDict?.[p.name] || p.name} - ${teamsDict?.[p.team.name] || getTeamAbbreviation(p.team.name)}` }))}
               value={players.find(p => p.id === topScorer) ? { value: topScorer, label: `${playersDict?.[players.find(p => p.id === topScorer)?.name || ""] || players.find(p => p.id === topScorer)?.name} - ${teamsDict?.[players.find(p => p.id === topScorer)?.team.name || ""] || getTeamAbbreviation(players.find(p => p.id === topScorer)?.team.name || "")}` } : null}
-              onChange={(val) => { setTopScorer(val?.value || ""); setIsDirty(true) }}
+              onChange={(val: any) => { setTopScorer(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
-              styles={customStyles}
               placeholder={dict.selectPlayer}
-              isSearchable
             />
           </div>
         </div>
@@ -274,26 +227,22 @@ export default function GroupStageForm({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.undefeated}</label>
-            <Select 
+            <SearchableSelect 
               options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
               value={teams.find(t => t.id === winnerTeam) ? { value: winnerTeam, label: teamsDict?.[teams.find(t => t.id === winnerTeam)?.name || ""] || teams.find(t => t.id === winnerTeam)?.name } : null}
-              onChange={(val) => { setWinnerTeam(val?.value || ""); setIsDirty(true) }}
+              onChange={(val: any) => { setWinnerTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
-              styles={customStyles}
               placeholder={dict.selectTeam}
-              isSearchable
             />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.winless}</label>
-            <Select 
+            <SearchableSelect 
               options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
               value={teams.find(t => t.id === loserTeam) ? { value: loserTeam, label: teamsDict?.[teams.find(t => t.id === loserTeam)?.name || ""] || teams.find(t => t.id === loserTeam)?.name } : null}
-              onChange={(val) => { setLoserTeam(val?.value || ""); setIsDirty(true) }}
+              onChange={(val: any) => { setLoserTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
-              styles={customStyles}
               placeholder={dict.selectTeam}
-              isSearchable
             />
           </div>
         </div>

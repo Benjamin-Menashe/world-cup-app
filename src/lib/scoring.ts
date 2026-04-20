@@ -66,15 +66,15 @@ export async function calculateUserPoints(
       const bonus = isTopScorer ? 1 : 0
       const pts = bet.player.goalsScored + bonus
       totalPoints += pts
-      const suffix = isTopScorer ? ' (+1 Top Scorer Bonus)' : ''
+      const suffix = isTopScorer ? 'bonus' : ''
       const detailsName = playersDict[bet.player.name] || bet.player.name
       breakdown.push({
         group: 'golden_boot',
-        category: 'Golden Boot',
+        category: 'golden_boot',
         points: pts,
         details: canViewSpecials 
-          ? `Pick: ${detailsName} · ${bet.player.goalsScored} goal${bet.player.goalsScored !== 1 ? 's' : ''}${suffix}` 
-          : `Pick: Hidden · ${bet.player.goalsScored} goal${bet.player.goalsScored !== 1 ? 's' : ''}${suffix}`
+          ? `pick: ${detailsName} | ${bet.player.goalsScored} | ${suffix}` 
+          : `pick: hidden | ${bet.player.goalsScored} | ${suffix}`
       })
     }
   }
@@ -119,7 +119,7 @@ export async function calculateUserPoints(
       if (game.stage === 'Final') gamePoints *= 2
       
       totalPoints += gamePoints
-      details = `Predicted: ${homeAbbr} ${betHome} - ${betAway} ${awayAbbr} · Actual: ${homeAbbr} ${game.homeScore} - ${game.awayScore} ${awayAbbr}${game.stage === 'Final' ? ' · ×2 Final' : ''}`
+      details = `predicted: ${homeAbbr} ${betHome}-${betAway} ${awayAbbr} | actual: ${homeAbbr} ${game.homeScore}-${game.awayScore} ${awayAbbr}${game.stage === 'Final' ? ' | final' : ''}`
     }
 
     breakdown.push({
@@ -179,14 +179,12 @@ export async function calculateUserPoints(
   if (user.championBets.length > 0) {
     const bet = user.championBets[0]
     const pts = resultMap["Champion"] === bet.teamId ? 8 : 0
-    const suffix = resultMap["Champion"] === bet.teamId ? ' ✓' : (resultMap["Champion"] ? ' ✗' : ' (TBD)')
-    if (resultMap["Champion"] === bet.teamId) totalPoints += pts
     const champName = teamsDict[bet.team.name] || bet.team.name
     breakdown.push({ 
       group: 'specials', 
-      category: 'Tournament Champion', 
+      category: 'champion', 
       points: pts, 
-      details: canViewSpecials ? `Pick: ${champName}${suffix}` : 'Pick: Hidden' 
+      details: canViewSpecials ? `pick: ${champName} | ${suffix}` : 'pick: hidden' 
     })
   }
 
@@ -194,14 +192,14 @@ export async function calculateUserPoints(
   if (user.winnerLoserBets.length > 0) {
     const bet = user.winnerLoserBets[0]
     const pts = undefeatedTeamIds.has(bet.winnerTeamId) ? 3 : 0
-    const suffix = undefeatedTeamIds.has(bet.winnerTeamId) ? ' ✓' : (allGroupsFinished ? ' ✗' : ' (TBD)')
+    const suffix = undefeatedTeamIds.has(bet.winnerTeamId) ? 'ok' : (allGroupsFinished ? 'no' : 'tbd')
     if (undefeatedTeamIds.has(bet.winnerTeamId)) totalPoints += pts
     const detailsName = teamsDict[bet.winnerTeam.name] || bet.winnerTeam.name
     breakdown.push({ 
       group: 'specials', 
-      category: 'Undefeated Team', 
+      category: 'undefeated', 
       points: pts, 
-      details: canViewSpecials ? `Pick: ${detailsName}${suffix}` : 'Pick: Hidden' 
+      details: canViewSpecials ? `pick: ${detailsName} | ${suffix}` : 'pick: hidden' 
     })
   }
 
@@ -209,14 +207,14 @@ export async function calculateUserPoints(
   if (user.winnerLoserBets.length > 0) {
     const bet = user.winnerLoserBets[0]
     const pts = winlessTeamIds.has(bet.loserTeamId) ? 3 : 0
-    const suffix = winlessTeamIds.has(bet.loserTeamId) ? ' ✓' : (allGroupsFinished ? ' ✗' : ' (TBD)')
+    const suffix = winlessTeamIds.has(bet.loserTeamId) ? 'ok' : (allGroupsFinished ? 'no' : 'tbd')
     if (winlessTeamIds.has(bet.loserTeamId)) totalPoints += pts
     const detailsName = teamsDict[bet.loserTeam.name] || bet.loserTeam.name
     breakdown.push({ 
       group: 'specials', 
-      category: 'Winless Team', 
+      category: 'winless', 
       points: pts, 
-      details: canViewSpecials ? `Pick: ${detailsName}${suffix}` : 'Pick: Hidden' 
+      details: canViewSpecials ? `pick: ${detailsName} | ${suffix}` : 'pick: hidden' 
     })
   }
 
@@ -243,18 +241,18 @@ export async function calculateUserPoints(
       const predicted = JSON.parse(bet.rankedTeamIds) as string[]
       const pts = actualRanking ? kendallTauScore(predicted, actualRanking) : 0
       
-      const predString = canViewSpecials ? predicted.map(id => teamNameMap[id] ?? id).join(', ') : 'Hidden'
-      let details = `Predicted: ${predString}`
+      const predString = canViewSpecials ? predicted.map(id => teamNameMap[id] ?? id).join(', ') : 'hidden'
+      let details = `predicted: ${predString}`
       
       if (actualRanking) {
         totalPoints += pts
         const actString = actualRanking.map(id => teamNameMap[id] ?? id).join(', ')
-        details += ` · Actual: ${actString}`
+        details += ` | actual: ${actString}`
       } else {
-        details += ` · Actual: TBD`
+        details += ` | actual: tbd`
       }
       
-      breakdown.push({ group: 'group_rankings', category: `Group ${groupLetter}`, points: pts, details })
+      breakdown.push({ group: 'group_rankings', category: `group_${groupLetter}`, points: pts, details })
     } catch {}
   }
 

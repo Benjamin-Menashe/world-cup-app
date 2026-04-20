@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import GroupStageForm from "./GroupStageForm"
 import { LayoutList } from "lucide-react"
 import { getGroupStageLockTime } from "@/lib/lockTime"
-import { getDictionary } from "@/lib/i18n"
+import { getDictionary, getLanguage } from "@/lib/i18n"
 
 export default async function GroupStageBetsPage() {
   const userId = await getSession()
@@ -18,8 +18,12 @@ export default async function GroupStageBetsPage() {
 
   // Compute lock state from DB
   const lockTime = await getGroupStageLockTime()
+  const dict = await getDictionary()
+  const lang = await getLanguage()
+  const locale = lang === 'he' ? 'he-IL' : 'en-GB'
+  
   const isLocked = lockTime ? new Date() >= lockTime : false
-  const lockDeadline = lockTime ? lockTime.toLocaleString('he-IL', {
+  const lockDeadline = lockTime ? lockTime.toLocaleString(locale, {
     day: 'numeric', month: 'long', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
     timeZone: 'Asia/Jerusalem',
@@ -37,7 +41,6 @@ export default async function GroupStageBetsPage() {
     }
   })
 
-  const dict = await getDictionary()
   const d = dict.groupStage
 
   return (

@@ -48,12 +48,14 @@ export default function MatchCenter({
   games,
   dict,
   isLoggedIn,
-  appTime
+  appTime,
+  lang = 'en'
 }: {
   games: GameData[]
   dict: Dict
   isLoggedIn: boolean
   appTime?: string
+  lang?: string
 }) {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [predictions, setPredictions] = useState<GamePredictionResponse | null>(null)
@@ -86,7 +88,8 @@ export default function MatchCenter({
 
   const formatTime = (iso: string) => {
     const date = new Date(iso)
-    return date.toLocaleTimeString('he-IL', {
+    const locale = lang === 'he' ? 'he-IL' : 'en-GB'
+    return date.toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'Asia/Jerusalem',
@@ -95,7 +98,8 @@ export default function MatchCenter({
 
   const formatDateTime = (iso: string) => {
     const date = new Date(iso)
-    return date.toLocaleString('he-IL', {
+    const locale = lang === 'he' ? 'he-IL' : 'en-GB'
+    return date.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       hour: '2-digit',

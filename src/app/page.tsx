@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { calculateUserPoints, getUserRankingsInGroup } from "@/lib/scoring";
 import { isGroupStageLocked, deriveGroupStandings, getEffectiveNow } from "@/lib/lockTime";
-import { getDictionary } from "@/lib/i18n";
+import { getDictionary, getLanguage } from "@/lib/i18n";
 import MatchCenter from "@/components/MatchCenter";
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const userId = await getSession();
   const dict = await getDictionary();
+  const lang = await getLanguage();
 
   let user = null;
   let points = 0;
@@ -385,6 +386,7 @@ export default async function Home() {
           dict={dict} 
           isLoggedIn={!!userId} 
           appTime={now.toISOString()}
+          lang={lang}
         />
       </section>
     </div>

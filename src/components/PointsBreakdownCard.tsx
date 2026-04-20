@@ -11,25 +11,54 @@ type SectionConfig = {
   color: string
 }
 
-const SECTIONS: SectionConfig[] = [
-  { key: 'bonus',    label: 'Bonus Picks',      icon: '🏆', color: '#f59e0b' },
-  { key: 'group',    label: 'Group Stage',      icon: '📊', color: '#3b82f6' },
-  { key: 'R32',      label: 'Round of 32',      icon: '⚔️',  color: '#8b5cf6' },
-  { key: 'R16',      label: 'Round of 16',      icon: '⚔️',  color: '#8b5cf6' },
-  { key: 'QF',       label: 'Quarter Finals',   icon: '⚔️',  color: '#eab308' },
-  { key: 'SF',       label: 'Semi Finals',      icon: '⚔️',  color: '#ef4444' },
-  { key: '3rd',      label: 'Third Place',      icon: '⚔️',  color: '#64748b' },
-  { key: 'Final',    label: 'Final',            icon: '⚽',  color: '#10b981' },
-]
+function getSections(dict: any): SectionConfig[] {
+  return [
+    { key: 'bonus',    label: dict?.dashboard?.bonusPicks || 'Bonus Picks',      icon: '🏆', color: '#f59e0b' },
+    { key: 'group',    label: dict?.dashboard?.groupStage || 'Group Stage',     icon: '📊', color: '#3b82f6' },
+    { key: 'R32',      label: dict?.knockout?.stages?.R32 || 'Round of 32',      icon: '⚔️',  color: '#8b5cf6' },
+    { key: 'R16',      label: dict?.knockout?.stages?.R16 || 'Round of 16',      icon: '⚔️',  color: '#8b5cf6' },
+    { key: 'QF',       label: dict?.knockout?.stages?.QF  || 'Quarter Finals',   icon: '⚔️',  color: '#eab308' },
+    { key: 'SF',       label: dict?.knockout?.stages?.SF  || 'Semi Finals',      icon: '⚔️',  color: '#ef4444' },
+    { key: '3rd',      label: dict?.knockout?.stages?.['3rd'] || 'Third Place',   icon: '⚔️',  color: '#64748b' },
+    { key: 'Final',    label: dict?.knockout?.stages?.Final || 'Final',          icon: '⚽',  color: '#10b981' },
+  ]
+}
 
-function SectionSubtotal({ items, config, defaultOpen = true }: { items: PointBreakdown[], config: SectionConfig, defaultOpen?: boolean }) {
+function SectionSubtotal({ items, config, defaultOpen = true, dict }: { items: PointBreakdown[], config: SectionConfig, defaultOpen?: boolean, dict: any }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const total = items.reduce((s, i) => s + i.points, 0)
 
   const renderItemRow = (item: PointBreakdown, i: number, isLast: boolean) => {
-    const detailParts = item.details ? item.details.split(' · ') : []
-    const part1 = detailParts[0] || ''
-    const part2 = detailParts[1] || ''
+    const detailParts = item.details ? item.details.split(' | ') : []
+    
+    // Translation helper
+    const t = (key: string) => dict?.breakdown?.[key] || key
+    
+    // Part 1: Pick / Predicted
+    let part1 = detailParts[0] || ''
+    if (part1.startsWith('pick: ')) part1 = part1.replace('pick: ', `${t('pick')}: `).replace('hidden', t('hidden'))
+    else if (part1.startsWith('predicted: ')) part1 = part1.replace('predicted: ', `${t('predicted')}: `).replace('hidden', t('hidden'))
+
+    // Part 2: Score / Result / Status
+    let part2 = detailParts[1] || ''
+    if (part2.startsWith('actual: ')) part2 = part2.replace('actual: ', `${t('actual')}: `).replace('tbd', t('tbd'))
+    else if (item.group === 'golden_boot') {
+      const g = parseInt(part2)
+      part2 = `${part2} ${g === 1 ? t('goal') : t('goals')}`
+    }
+
+    // Part 3: Suffix / Bonus / Multiplier
+    let part3 = detailParts[2] || ''
+    if (part3 === 'bonus') part3 = t('goalBonus')
+    else if (part3 === 'final') part3 = t('finalMultiplier')
+    else if (part3 === 'ok') part3 = '✓'
+    else if (part3 === 'no') part3 = '✗'
+    else if (part3 === 'tbd') part3 = `(${t('tbd')})`
+
+    // Category Translation
+    let cat = item.category
+    if (dict?.breakdown?.[cat]) cat = dict.breakdown[cat]
+    else if (cat.startsWith('group_')) cat = `${dict.home.groups} ${cat.split('_')[1]}`
 
     return (
       <div key={i} style={{
@@ -38,26 +67,17 @@ function SectionSubtotal({ items, config, defaultOpen = true }: { items: PointBr
         background: i % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
         borderBottom: !isLast ? '1px solid rgba(0,0,0,0.04)' : 'none',
       }}>
-        {/* Category */}
         <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {item.category}
+          {cat}
         </span>
-
-        {/* Detail Part 1 (e.g. Predicted) */}
         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {part1.includes('×2 Final') ? 
-            <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{part1}</span> : 
-            part1}
+          {part1}
         </span>
-
-        {/* Detail Part 2 (e.g. Actual) */}
         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {part2.includes('×2 Final') ? 
-            <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{part2}</span> : 
-            part2}
+          {part3 && (part3 === t('finalMultiplier') || part3 === t('goalBonus')) ? 
+            <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{part3}</span> : 
+            (part2 || part3)}
         </span>
-
-        {/* Points Badge */}
         <div style={{ textAlign: 'right' }}>
           <span style={{ 
             fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0.15rem 0.5rem', borderRadius: '6px',
@@ -65,7 +85,7 @@ function SectionSubtotal({ items, config, defaultOpen = true }: { items: PointBr
             background: item.points > 0 ? `${config.color}20` : 'rgba(0,0,0,0.03)',
             border: item.points > 0 ? `1px solid ${config.color}30` : '1px solid transparent'
           }}>
-            {item.points > 0 ? `+${item.points}` : '0'} pts
+            {item.points > 0 ? `+${item.points}` : '0'} {dict?.breakdown?.pts || 'pts'}
           </span>
         </div>
       </div>
@@ -88,7 +108,7 @@ function SectionSubtotal({ items, config, defaultOpen = true }: { items: PointBr
           {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
           {config.icon} {config.label}
         </span>
-        <span style={{ fontWeight: 800, fontSize: '1.15rem', color: config.color }}>+{total} pts</span>
+        <span style={{ fontWeight: 800, fontSize: '1.15rem', color: config.color }}>+{total} {dict?.breakdown?.pts || 'pts'}</span>
       </button>
 
       {isOpen && (
@@ -120,10 +140,12 @@ export default function PointsBreakdownCard({ breakdown, total, dict }: { breakd
     grouped[groupKey].push(item)
   }
 
+  const SECTIONS = getSections(dict)
+
   return (
     <div>
       {SECTIONS.filter(s => grouped[s.key]?.length).map((s) => (
-        <SectionSubtotal key={s.key} items={grouped[s.key]} config={s} defaultOpen={false} />
+        <SectionSubtotal key={s.key} items={grouped[s.key]} config={s} defaultOpen={false} dict={dict} />
       ))}
 
       {/* Catch-all for any untracked categories */}
@@ -133,6 +155,7 @@ export default function PointsBreakdownCard({ breakdown, total, dict }: { breakd
           items={grouped[k]} 
           config={{ key: k, label: k, icon: '⚽', color: '#fff' }} 
           defaultOpen={false} 
+          dict={dict}
         />
       ))}
 
@@ -143,8 +166,8 @@ export default function PointsBreakdownCard({ breakdown, total, dict }: { breakd
         borderRadius: '12px', background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.02))',
         border: '1px solid rgba(245,158,11,0.2)',
       }}>
-        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>{dict?.totalScore || "Total Score"}</span>
-        <span style={{ fontWeight: 900, fontSize: '1.75rem', color: 'var(--accent)' }}>{total} pts</span>
+        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>{dict?.dashboard?.totalScore || "Total Score"}</span>
+        <span style={{ fontWeight: 900, fontSize: '1.75rem', color: 'var(--accent)' }}>{total} {dict?.breakdown?.pts || 'pts'}</span>
       </div>
     </div>
   )

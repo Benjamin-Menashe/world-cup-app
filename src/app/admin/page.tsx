@@ -11,6 +11,7 @@ import SyncPlayersButton from "./SyncPlayersButton"
 import InitTournamentButton from "./InitTournamentButton"
 import { SaveSnapshotButton } from "./SaveSnapshotButton"
 import { TimeOverridePanel, MasterResetButton, DeleteFormWithConfirm } from "./AdminControls"
+import SearchableSelect from "@/components/SearchableSelect"
 
 import {
   updateGameScoreAction,
@@ -220,15 +221,19 @@ export default async function AdminDashboardPage() {
                     <input type="hidden" name="stage" value={stage} />
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Home Team</label>
-                      <select name="homeTeamId" required style={selectStyle}>
-                        {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                      </select>
+                      <SearchableSelect 
+                        name="homeTeamId" 
+                        options={teams.map(t => ({ value: t.id, label: `${t.name} (${t.group})` }))} 
+                        required 
+                      />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Away Team</label>
-                      <select name="awayTeamId" required style={selectStyle}>
-                        {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                      </select>
+                      <SearchableSelect 
+                        name="awayTeamId" 
+                        options={teams.map(t => ({ value: t.id, label: `${t.name} (${t.group})` }))} 
+                        required 
+                      />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Kickoff</label>
@@ -295,10 +300,15 @@ export default async function AdminDashboardPage() {
                 </p>
               )}
               <form action={setChampionAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <select name="teamId" required style={{ ...selectStyle, flex: 1 }}>
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.group})</option>)}
-                </select>
+                <div style={{ flex: 1 }}>
+                  <SearchableSelect
+                    name="teamId"
+                    options={teams.map(t => ({ value: t.id, label: `${t.name} (${t.group})` }))}
+                    defaultValue={championId || undefined}
+                    placeholder="— Select Team —"
+                    required
+                  />
+                </div>
                 <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>Set</button>
               </form>
               {championId && (
@@ -324,13 +334,15 @@ export default async function AdminDashboardPage() {
                 </div>
               )}
               <form action={setUndefeatedTeamAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more undefeated teams (Hold Ctrl/Cmd to multi-select):</p>
-                <select name="teamId" multiple required size={6} className="input-field" defaultValue={undefeatedIds} style={{ padding: '0.4rem', ...selectStyle }}>
-                  {teams.map(t => (
-                    <option key={t.id} value={t.id} style={{ padding: '2px 4px' }}>{t.name} (Grp {t.group})</option>
-                  ))}
-                </select>
-                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start' }}>Set Undefeated</button>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more undefeated teams:</p>
+                <SearchableSelect
+                  name="teamId"
+                  options={teams.map(t => ({ value: t.id, label: `${t.name} (Grp ${t.group})` }))}
+                  defaultValue={undefeatedIds}
+                  isMulti
+                  required
+                />
+                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start', marginTop: '0.5rem' }}>Set Undefeated</button>
               </form>
             </div>
 
@@ -350,13 +362,15 @@ export default async function AdminDashboardPage() {
                 </div>
               )}
               <form action={setWinlessTeamAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more winless teams (Hold Ctrl/Cmd to multi-select):</p>
-                <select name="teamId" multiple required size={6} className="input-field" defaultValue={winlessIds} style={{ padding: '0.4rem', ...selectStyle }}>
-                  {teams.map(t => (
-                    <option key={t.id} value={t.id} style={{ padding: '2px 4px' }}>{t.name} (Grp {t.group})</option>
-                  ))}
-                </select>
-                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start' }}>Set Winless</button>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem' }}>Select one or more winless teams:</p>
+                <SearchableSelect
+                  name="teamId"
+                  options={teams.map(t => ({ value: t.id, label: `${t.name} (Grp ${t.group})` }))}
+                  defaultValue={winlessIds}
+                  isMulti
+                  required
+                />
+                <button type="submit" className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', alignSelf: 'flex-start', marginTop: '0.5rem' }}>Set Winless</button>
               </form>
             </div>
 
@@ -414,20 +428,22 @@ export default async function AdminDashboardPage() {
           <div style={subPanelStyle}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Move Team to Different Group</h3>
             <form action={updateTeamGroupAction} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: 2, minWidth: '160px' }}>
+              <div style={{ flex: 2, minWidth: '200px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
-                <select name="teamId" required className="input-field">
-                  <option value="">— Select Team —</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name} (currently Group {t.group})</option>)}
-                </select>
+                <SearchableSelect
+                  name="teamId"
+                  options={teams.map(t => ({ value: t.id, label: `${t.name} (currently Group ${t.group})` }))}
+                  required
+                  placeholder="— Select Team —"
+                />
               </div>
-              <div style={{ flex: 1, minWidth: '100px' }}>
+              <div style={{ flex: 1, minWidth: '120px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Group</label>
-                <select name="group" required className="input-field">
+                <select name="group" required className="input-field" style={{ minHeight: '38px' }}>
                   {GROUPS.map(g => <option key={g} value={g}>Group {g}</option>)}
                 </select>
               </div>
-              <button type="submit" className="primary-btn">Move</button>
+              <button type="submit" className="primary-btn" style={{ minHeight: '38px' }}>Move</button>
             </form>
           </div>
 
@@ -496,14 +512,16 @@ export default async function AdminDashboardPage() {
           <div style={subPanelStyle}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Update Player Goals</h3>
             <form action={updatePlayerGoalsAction} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '200px' }}>
+              <div style={{ flex: 1, minWidth: '250px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
-                <select name="playerId" className="input-field" required>
-                  {players.map(p => {
+                <SearchableSelect
+                  name="playerId"
+                  options={players.map(p => {
                     const team = teams.find(t => t.id === p.teamId)
-                    return <option key={p.id} value={p.id}>{p.name} ({team?.name ?? '?'}) — {p.goalsScored} goal{p.goalsScored !== 1 ? 's' : ''}</option>
+                    return { value: p.id, label: `${p.name} (${team?.name ?? '?'}) — ${p.goalsScored} goal${p.goalsScored !== 1 ? 's' : ''}` }
                   })}
-                </select>
+                  required
+                />
               </div>
               <div style={{ width: '120px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Goals</label>
@@ -520,12 +538,14 @@ export default async function AdminDashboardPage() {
               <form action={renamePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 2, minWidth: '260px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Rename Player</label>
-                  <select name="playerId" className="input-field" required>
-                    {players.map(p => {
+                  <SearchableSelect
+                    name="playerId"
+                    options={players.map(p => {
                       const team = teams.find(t => t.id === p.teamId)
-                      return <option key={p.id} value={p.id}>{p.name} ({team?.name ?? '?'})</option>
+                      return { value: p.id, label: `${p.name} (${team?.name ?? '?'})` }
                     })}
-                  </select>
+                    required
+                  />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
@@ -538,12 +558,14 @@ export default async function AdminDashboardPage() {
               <form action={deletePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 1, minWidth: '200px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Delete Player</label>
-                  <select name="playerId" className="input-field" required>
-                    {players.map(p => {
+                  <SearchableSelect
+                    name="playerId"
+                    options={players.map(p => {
                       const team = teams.find(t => t.id === p.teamId)
-                      return <option key={p.id} value={p.id}>{p.name} ({team?.name ?? '?'})</option>
+                      return { value: p.id, label: `${p.name} (${team?.name ?? '?'})` }
                     })}
-                  </select>
+                    required
+                  />
                 </div>
                 <button type="submit" className="secondary-btn" style={{ color: 'var(--red)', borderColor: 'var(--red)' }}>Delete</button>
               </form>
@@ -561,9 +583,11 @@ export default async function AdminDashboardPage() {
               </div>
               <div style={{ flex: 1, minWidth: '150px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Team</label>
-                <select name="teamId" required className="input-field">
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
+                <SearchableSelect
+                  name="teamId"
+                  options={teams.map(t => ({ value: t.id, label: t.name }))}
+                  required
+                />
               </div>
               <button type="submit" className="primary-btn">Add Player</button>
             </form>

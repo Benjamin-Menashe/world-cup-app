@@ -56,7 +56,7 @@ export default async function DashboardPage() {
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '1rem' }}>
           <BarChart2 color="var(--success)" /> {dict.dashboard.pointsBreakdown}
         </h2>
-        <PointsBreakdownCard breakdown={breakdown} total={total} dict={dict.dashboard} />
+        <PointsBreakdownCard breakdown={breakdown} total={total} dict={dict} />
       </div>
 
       <DeleteAccountButton dict={dict.dashboard} />
