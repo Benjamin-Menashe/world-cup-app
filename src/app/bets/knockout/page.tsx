@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import KnockoutForm from "./KnockoutForm"
 import { Swords } from "lucide-react"
-import { getDictionary } from "@/lib/i18n"
+import { getDictionary, getLanguage } from "@/lib/i18n"
 import { getEffectiveNow, getKnockoutLockOverride } from "@/lib/lockTime"
 
 export default async function KnockoutBetsPage() {

@@ -24,7 +24,7 @@ function getSections(dict: any): SectionConfig[] {
   ]
 }
 
-function SectionSubtotal({ items, config, defaultOpen = true, dict }: { items: PointBreakdown[], config: SectionConfig, defaultOpen?: boolean, dict: any }) {
+function SectionSubtotal({ items, config, defaultOpen = true, dict, lang = 'en' }: { items: PointBreakdown[], config: SectionConfig, defaultOpen?: boolean, dict: any, lang?: string }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const total = items.reduce((s, i) => s + i.points, 0)
 
@@ -145,7 +145,7 @@ export default function PointsBreakdownCard({ breakdown, total, dict, lang = 'en
   return (
     <div>
       {SECTIONS.filter(s => grouped[s.key]?.length).map((s) => (
-        <SectionSubtotal key={s.key} items={grouped[s.key]} config={s} defaultOpen={false} dict={dict} />
+        <SectionSubtotal key={s.key} items={grouped[s.key]} config={s} defaultOpen={false} dict={dict} lang={lang} />
       ))}
 
       {/* Catch-all for any untracked categories */}
@@ -156,6 +156,7 @@ export default function PointsBreakdownCard({ breakdown, total, dict, lang = 'en
           config={{ key: k, label: k, icon: '⚽', color: '#fff' }} 
           defaultOpen={false} 
           dict={dict}
+          lang={lang}
         />
       ))}
 

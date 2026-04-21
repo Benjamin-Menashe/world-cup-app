@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { User as UserIcon, Activity, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import PointsBreakdownCard from "@/components/PointsBreakdownCard"
-import { getDictionary } from "@/lib/i18n"
+import { getDictionary, getLanguage } from "@/lib/i18n"
 
 export default async function TopScorerDetail({ params }: { params: { groupId: string, userId: string } }) {
   const currentUserId = await getSession()
