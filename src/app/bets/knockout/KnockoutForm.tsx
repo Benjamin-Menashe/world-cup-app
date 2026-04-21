@@ -30,6 +30,7 @@ export default function KnockoutForm({
   lockedGames,
   dict,
   teamsDict,
+  lang,
 }: {
   games: Game[]
   existingBets: Record<string, { home: number; away: number }>
