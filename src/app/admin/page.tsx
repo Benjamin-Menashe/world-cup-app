@@ -8,10 +8,12 @@ import {
 
 import SyncButton from "./SyncButton"
 import SyncPlayersButton from "./SyncPlayersButton"
+import SyncKnockoutButton from "./SyncKnockoutButton"
 import InitTournamentButton from "./InitTournamentButton"
 import { SaveSnapshotButton } from "./SaveSnapshotButton"
 import { TimeOverridePanel, MasterResetButton, DeleteFormWithConfirm } from "./AdminControls"
 import SearchableSelect from "@/components/SearchableSelect"
+import { getDictionary, getLanguage } from "@/lib/i18n"
 
 import {
   updateGameScoreAction,
@@ -624,11 +626,16 @@ export default async function AdminDashboardPage() {
             </div>
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
               <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>Step 2: Player Rosters (One-Time)</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Deep-scans tournament squads to populate the Golden Boot dropdown. Uses ~50 API calls.</p>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Deep-scans tournament squads to populate the מלך השערים dropdown. Uses ~50 API calls.</p>
               <SyncPlayersButton />
             </div>
             <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>Step 3: Match Scores & Top Scorers (Cron)</h3>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>Step 3: Sync Knockout Matches (Repeatable)</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetches knockout-stage fixtures from the API and adds any that don't yet exist. Safe to run multiple times — skips already-existing matches.</p>
+              <SyncKnockoutButton />
+            </div>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.05rem' }}>Step 4: Match Scores & Top Scorers (Cron)</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Fetches finished matches and active top scorers. Uses 2 API calls. Also triggered automatically by the cron job.</p>
               <SyncButton />
             </div>

@@ -178,7 +178,7 @@ export async function calculateUserPoints(
   // Champion
   if (user.championBets.length > 0) {
     const bet = user.championBets[0]
-    const pts = resultMap["Champion"] === bet.teamId ? 8 : 0
+    const pts = resultMap["Champion"] === bet.teamId ? 10 : 0
     const champName = teamsDict[bet.team.name] || bet.team.name
     breakdown.push({ 
       group: 'specials', 

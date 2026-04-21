@@ -8,7 +8,8 @@ import PointsBreakdownCard from "@/components/PointsBreakdownCard"
 import { getGroupStageLockTime } from "@/lib/lockTime"
 import ShareBreakdownButton from "@/components/ShareBreakdownButton"
 import DeleteAccountButton from "./DeleteAccountButton"
-import { getDictionary } from "@/lib/i18n"
+import ChangeNicknameButton from "./ChangeNicknameButton"
+import { getDictionary, getLanguage } from "@/lib/i18n"
 
 export default async function DashboardPage() {
   const userId = await getSession()
@@ -60,6 +61,7 @@ export default async function DashboardPage() {
         <PointsBreakdownCard breakdown={breakdown} total={total} dict={dict} lang={lang} />
       </div>
 
+      <ChangeNicknameButton currentName={user?.name || ''} dict={dict.dashboard} />
       <DeleteAccountButton dict={dict.dashboard} />
     </div>
   )

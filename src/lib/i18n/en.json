@@ -68,7 +68,13 @@
     "groupStage": "Group Stage",
     "share": "Share",
     "copied": "Copied!",
-    "copyToClipboard": "Copy to clipboard"
+    "copyToClipboard": "Copy to clipboard",
+    "changeNickname": "Change Nickname",
+    "saveNickname": "Save",
+    "nicknamePlaceholder": "Enter your display name...",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saved": "Saved!"
   },
   "groupStage": {
     "ensurePicks": "Please ensure all Main Picks and Bonus Picks are selected.",
@@ -157,8 +163,8 @@
     "s1Scoring2": "A perfectly predicted group awards a maximum of <strong>6 points</strong>. For example, predicting A, B, C, D when the true result is A, B, C, D yields 6 points.",
     "s1Scoring3": "Partial correlations yield fewer points. For example, predicting A, C, B, D (swapping B and C) yields <strong>5 points</strong>. An exactly reversed prediction yields <strong>0 points</strong>.",
     "s1BonusTitle": "1.2 Main & Bonus Picks",
-    "s1BonusChamp": "<strong>Tournament Champion:</strong> Correctly predicting the ultimate winner awards <strong>8 points</strong>.",
-    "s1BonusBoot": "<strong>Golden Boot:</strong> Selecting the top goalscorer awards <strong>1 point</strong> for every goal they score in the tournament, plus an extra <strong>+1 bonus point</strong> if they officially win the Golden Boot.",
+    "s1BonusChamp": "<strong>Tournament Champion:</strong> Correctly predicting the ultimate winner awards <strong>10 points</strong>.",
+    "s1BonusBoot": "<strong>Top Scorer (מלך השערים):</strong> Selecting the top goalscorer awards <strong>1 point</strong> for every goal they score in the tournament, plus an extra <strong>+1 bonus point</strong> if they officially win the Top Scorer award.",
     "s1BonusUndefeated": "<strong>Undefeated Team:</strong> Predicting a team that wins all 3 of their group matches (finishing with 9 points) awards <strong>3 points</strong>.",
     "s1BonusWinless": "<strong>Winless Team:</strong> Predicting a team that loses all 3 of their group matches (finishing with 0 points) awards <strong>3 points</strong>.",
     "section2Title": "Section 2: Knockout Stage Matches",

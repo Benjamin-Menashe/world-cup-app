@@ -78,3 +78,18 @@ export async function deleteAccountAction() {
   await clearSessionCookie()
   redirect("/register")
 }
+
+export async function updateNicknameAction(name: string) {
+  const userId = await getSession()
+  if (!userId) return { error: "Not authenticated" }
+
+  const trimmed = name.trim()
+  if (!trimmed || trimmed.length < 2) return { error: "Name must be at least 2 characters" }
+  if (trimmed.length > 30) return { error: "Name must be 30 characters or fewer" }
+
+  try {
+    await prisma.user.update({ where: { id: userId }, data: { name: trimmed } })
+  } catch {
+    return { error: "Failed to update nickname" }
+  }
+}
