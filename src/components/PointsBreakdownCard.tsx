@@ -85,7 +85,7 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict }: { items: P
             background: item.points > 0 ? `${config.color}20` : 'rgba(0,0,0,0.03)',
             border: item.points > 0 ? `1px solid ${config.color}30` : '1px solid transparent'
           }}>
-            {item.points > 0 ? `+${item.points}` : '0'} {dict?.breakdown?.pts || 'pts'}
+            {item.points > 0 ? `+${item.points}` : '0'} {dict?.breakdown?.pts || (lang === 'he' ? 'נק\'' : 'pts')}
           </span>
         </div>
       </div>
@@ -108,7 +108,7 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict }: { items: P
           {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
           {config.icon} {config.label}
         </span>
-        <span style={{ fontWeight: 800, fontSize: '1.15rem', color: config.color }}>+{total} {dict?.breakdown?.pts || 'pts'}</span>
+        <span style={{ fontWeight: 800, fontSize: '1.15rem', color: config.color }}>+{total} {dict?.breakdown?.pts || (lang === 'he' ? 'נק\'' : 'pts')}</span>
       </button>
 
       {isOpen && (
@@ -120,7 +120,7 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict }: { items: P
   )
 }
 
-export default function PointsBreakdownCard({ breakdown, total, dict }: { breakdown: PointBreakdown[], total: number, dict?: any }) {
+export default function PointsBreakdownCard({ breakdown, total, dict, lang = 'en' }: { breakdown: PointBreakdown[], total: number, dict?: any, lang?: string }) {
   if (breakdown.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
@@ -166,8 +166,8 @@ export default function PointsBreakdownCard({ breakdown, total, dict }: { breakd
         borderRadius: '12px', background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.02))',
         border: '1px solid rgba(245,158,11,0.2)',
       }}>
-        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>{dict?.dashboard?.totalScore || "Total Score"}</span>
-        <span style={{ fontWeight: 900, fontSize: '1.75rem', color: 'var(--accent)' }}>{total} {dict?.breakdown?.pts || 'pts'}</span>
+        <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>{dict?.dashboard?.totalScore || (lang === 'he' ? 'סך הנקודות' : 'Total Score')}</span>
+        <span style={{ fontWeight: 900, fontSize: '1.75rem', color: 'var(--accent)' }}>{total} {dict?.breakdown?.pts || (lang === 'he' ? 'נק\'' : 'pts')}</span>
       </div>
     </div>
   )

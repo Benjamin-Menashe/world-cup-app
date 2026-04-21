@@ -177,16 +177,16 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
                   </span>
 
                   {/* Champ */}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Champion Pick">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title={dict.groupStage.champion}>
                     🏆 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {member.championName === 'Hidden' ? d.hidden : (teamsDict[member.championName || ''] || member.championName || '—')}
+                      {member.championName === 'Hidden' ? dict.groupStage.hidden : (teamsDict[member.championName || ''] || member.championName || '—')}
                     </span>
                   </span>
 
                   {/* Golden Boot */}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title="Golden Boot Pick">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title={dict.groupStage.goldenBoot}>
                     👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {member.goldenBootName === 'Hidden' ? d.hidden : (playersDict[member.goldenBootName || ''] || member.goldenBootName || '—')}
+                      {member.goldenBootName === 'Hidden' ? dict.groupStage.hidden : (playersDict[member.goldenBootName || ''] || member.goldenBootName || '—')}
                     </span>
                   </span>
 

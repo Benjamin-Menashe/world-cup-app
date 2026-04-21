@@ -36,7 +36,9 @@ export default function KnockoutForm({
   lockedGames: Record<string, boolean>
   dict: Record<string, any>
   teamsDict?: Record<string, string>
+  lang?: string
 }) {
+  const locale = lang === 'he' ? 'he-IL' : 'en-GB'
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>(() => {
     const init: Record<string, { home: string; away: string }> = {}
     for (const game of games) {
@@ -185,7 +187,7 @@ export default function KnockoutForm({
                   }}>
                     <div style={{ flex: 1, minWidth: '160px' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                        {kickoff.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {kickoff.toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}
                         {locked && <span style={{ marginLeft: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> {dict.locked}</span>}
                       </div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>

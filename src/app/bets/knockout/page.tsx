@@ -28,6 +28,7 @@ export default async function KnockoutBetsPage() {
   }
 
   const dict = await getDictionary()
+  const lang = await getLanguage()
   const d = dict.knockout
 
   const now = await getEffectiveNow()
@@ -51,7 +52,7 @@ export default async function KnockoutBetsPage() {
         </p>
       </div>
 
-      <KnockoutForm games={games} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} teamsDict={(dict as any).teams || {}} />
+      <KnockoutForm games={games} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} teamsDict={(dict as any).teams || {}} lang={lang} />
     </div>
   )
 }

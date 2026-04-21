@@ -105,7 +105,7 @@ export async function calculateUserPoints(
     const homeAbbr = homeName.substring(0, 3).toUpperCase()
     const awayAbbr = awayName.substring(0, 3).toUpperCase()
     
-    let details = canViewMatch ? `Predicted: ${homeAbbr} ${betHome} - ${betAway} ${awayAbbr} · Actual: TBD` : `Predicted: Hidden · Actual: TBD`
+    let details = canViewMatch ? `predicted: ${homeAbbr} ${betHome} - ${betAway} ${awayAbbr} | actual: tbd` : `predicted: hidden | actual: tbd`
 
     if (game.isFinished && game.homeScore !== null && game.awayScore !== null) {
       const actualDiff = game.homeScore - game.awayScore

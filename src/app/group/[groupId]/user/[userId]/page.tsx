@@ -29,6 +29,7 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
   const targetUser = targetUserMember.user
 
   const dict = await getDictionary()
+  const lang = await getLanguage()
   const teamsDict = (dict as any).teams || {}
   const playersDict = (dict as any).players || {}
 
@@ -63,7 +64,7 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--success)' }}>
             <Activity /> {dict.dashboard.pointsBreakdown}
           </h2>
-          <PointsBreakdownCard breakdown={pointsData.breakdown} total={pointsData.total} dict={dict.dashboard} />
+          <PointsBreakdownCard breakdown={pointsData.breakdown} total={pointsData.total} dict={dict} lang={lang} />
         </section>
       </div>
     </div>

@@ -61,6 +61,10 @@ export default async function AdminDashboardPage() {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user || user.isAdmin !== true) redirect("/")
 
+  const dict = await getDictionary()
+  const lang = await getLanguage()
+  const locale = lang === 'he' ? 'he-IL' : 'en-GB'
+
   // ── Load all data ───────────────────────────────────────────────────────────
   const [games, teams, players, tournamentResults] = await Promise.all([
     prisma.game.findMany({ include: { homeTeam: true, awayTeam: true }, orderBy: { kickoffTime: 'asc' } }),
@@ -90,7 +94,7 @@ export default async function AdminDashboardPage() {
     try {
       const parsed = JSON.parse(snapshotRecord.value) as { savedAt?: string }
       return parsed.savedAt
-        ? new Date(parsed.savedAt).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', dateStyle: 'medium', timeStyle: 'short' })
+        ? new Date(parsed.savedAt).toLocaleString(locale, { timeZone: 'Asia/Jerusalem', dateStyle: 'medium', timeStyle: 'short' })
         : null
     } catch { return null }
   })() : null
@@ -147,7 +151,7 @@ export default async function AdminDashboardPage() {
             title="Global Locks & Time Override"
             subtitle="Freeze the app clock or instantly lock the knockout predictions for all users."
           />
-          <TimeOverridePanel currentOverride={timeOverride} />
+          <TimeOverridePanel currentOverride={timeOverride} lang={lang} />
 
           <div style={{ ...subPanelStyle, marginTop: '2rem' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.05rem', color: 'var(--red)' }}>Knockout Predictions Lock</h3>
@@ -397,16 +401,23 @@ export default async function AdminDashboardPage() {
                     </div>
                     <form action={setGroupRankingAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <input type="hidden" name="group" value={g} />
-                      {[1, 2, 3, 4].map(rank => (
-                        <div key={rank} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', width: '1.4rem' }}>{rank}.</span>
-                          <select name={`rank${rank}`} required style={{ ...selectStyle, flex: 1 }}
-                            defaultValue={Array.isArray(currentRanking) ? (currentRanking[rank - 1] ?? '') : ''}>
-                            <option value="">— pick team —</option>
-                            {gTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                          </select>
-                        </div>
-                      ))}
+                      {[1, 2, 3, 4].map(rank => {
+                        const val = Array.isArray(currentRanking) ? (currentRanking[rank - 1] ?? '') : ''
+                        const team = gTeams.find(t => t.id === val)
+                        return (
+                          <div key={rank} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', width: '1.4rem' }}>{rank}.</span>
+                            <div style={{ flex: 1 }}>
+                              <SearchableSelect
+                                name={`rank${rank}`}
+                                options={gTeams.map(t => ({ value: t.id, label: t.name }))}
+                                defaultValue={val}
+                                required
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
                       <button type="submit" className="primary-btn" style={{ marginTop: '0.4rem', fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}>Set Group {g}</button>
                     </form>
                   </div>
@@ -511,8 +522,8 @@ export default async function AdminDashboardPage() {
 
           <div style={subPanelStyle}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Update Player Goals</h3>
-            <form action={updatePlayerGoalsAction} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '250px' }}>
+            <form action={updatePlayerGoalsAction} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Select Player</label>
                 <SearchableSelect
                   name="playerId"
@@ -523,11 +534,13 @@ export default async function AdminDashboardPage() {
                   required
                 />
               </div>
-              <div style={{ width: '120px' }}>
-                <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Goals</label>
-                <input type="number" name="goalsScored" min="0" required className="input-field" />
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                <div style={{ width: '120px' }}>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Goals</label>
+                  <input type="number" name="goalsScored" min="0" required className="input-field" />
+                </div>
+                <button type="submit" className="primary-btn">Update</button>
               </div>
-              <button type="submit" className="primary-btn">Update</button>
             </form>
           </div>
 
@@ -535,8 +548,8 @@ export default async function AdminDashboardPage() {
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Rename / Delete Player</h3>
             <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
               {/* Rename */}
-              <form action={renamePlayerAction} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flex: 2, minWidth: '260px' }}>
-                <div style={{ flex: 1 }}>
+              <form action={renamePlayerAction} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 2, minWidth: '260px' }}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Rename Player</label>
                   <SearchableSelect
                     name="playerId"
@@ -547,11 +560,13 @@ export default async function AdminDashboardPage() {
                     required
                   />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
-                  <input type="text" name="name" required className="input-field" placeholder="Corrected name…" />
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Name</label>
+                    <input type="text" name="name" required className="input-field" placeholder="Corrected name…" />
+                  </div>
+                  <button type="submit" className="secondary-btn">Rename</button>
                 </div>
-                <button type="submit" className="secondary-btn">Rename</button>
               </form>
 
               {/* Delete */}

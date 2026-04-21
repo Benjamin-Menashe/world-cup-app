@@ -6,9 +6,11 @@ import { setTimeOverrideAction, clearTimeOverrideAction, masterResetAction } fro
 
 // ─── Time Override ────────────────────────────────────────────────────────────
 
-export function TimeOverridePanel({ currentOverride }: { currentOverride: string | null }) {
+export function TimeOverridePanel({ currentOverride, lang = 'en' }: { currentOverride: string | null, lang?: string }) {
   const [isPending, startTransition] = useTransition()
   const [cleared, setCleared] = useState(false)
+
+  const locale = lang === 'he' ? 'he-IL' : 'en-GB'
 
   function handleClear() {
     startTransition(async () => {
@@ -20,7 +22,7 @@ export function TimeOverridePanel({ currentOverride }: { currentOverride: string
 
   // Format the saved override for display
   const displayTime = currentOverride
-    ? new Date(currentOverride).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })
+    ? new Date(currentOverride).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })
     : null
 
   return (
