@@ -101,17 +101,17 @@ export default async function Home() {
 
   // ─── Match Center data ───
   const now = await getEffectiveNow();
-  const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   
   // Fetch games that are relevant:
-  // 1) Finished in the last 12 hours
+  // 1) Finished with kickoff in the last 24 hours (back-filtered below by kickoff+105min)
   // 2) Currently live (kickoff <= now, not finished, within ~105 min)
   // 3) Upcoming and locked (kickoff within next 1 hour)
   const matchCenterGames = await prisma.game.findMany({
     where: {
       OR: [
-        // Finished recently (last 12 hours) — we'll back-filter by kickoff+105min
-        { isFinished: true, kickoffTime: { gte: twelveHoursAgo } },
+        // Finished recently — fetch up to 24h window, back-filter by estimated end time below
+        { isFinished: true, kickoffTime: { gte: twentyFourHoursAgo } },
         // Locked and not finished (upcoming or live)
         { 
           isFinished: false, 
@@ -125,27 +125,37 @@ export default async function Home() {
     include: { homeTeam: true, awayTeam: true }
   });
 
-  const gamesForClient = matchCenterGames.map(g => {
-    const kickoff = g.kickoffTime.getTime();
-    const isLive = !g.isFinished && kickoff <= now.getTime() && now.getTime() < kickoff + 105 * 60 * 1000;
-    const isUpcoming = !g.isFinished && kickoff > now.getTime();
-    
-    let status: 'live' | 'upcoming' | 'finished' = 'finished';
-    if (isLive) status = 'live';
-    else if (isUpcoming) status = 'upcoming';
+  const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+  const matchDurationMs = 105 * 60 * 1000; // ~105 min per match
 
-    return {
-      id: g.id,
-      stage: g.stage,
-      kickoffTime: g.kickoffTime.toISOString(),
-      homeTeam: { name: g.homeTeam.name, flagUrl: g.homeTeam.flagUrl },
-      awayTeam: { name: g.awayTeam.name, flagUrl: g.awayTeam.flagUrl },
-      homeScore: g.homeScore,
-      awayScore: g.awayScore,
-      isFinished: g.isFinished,
-      status
-    };
-  });
+  const gamesForClient = matchCenterGames
+    .filter(g => {
+      if (!g.isFinished) return true; // always include live/upcoming
+      // Only show finished games whose estimated end time (kickoff + 105 min) is within the last 24 hours
+      const estimatedEndTime = g.kickoffTime.getTime() + matchDurationMs;
+      return now.getTime() - estimatedEndTime <= twentyFourHoursMs;
+    })
+    .map(g => {
+      const kickoff = g.kickoffTime.getTime();
+      const isLive = !g.isFinished && kickoff <= now.getTime() && now.getTime() < kickoff + matchDurationMs;
+      const isUpcoming = !g.isFinished && kickoff > now.getTime();
+      
+      let status: 'live' | 'upcoming' | 'finished' = 'finished';
+      if (isLive) status = 'live';
+      else if (isUpcoming) status = 'upcoming';
+
+      return {
+        id: g.id,
+        stage: g.stage,
+        kickoffTime: g.kickoffTime.toISOString(),
+        homeTeam: { name: g.homeTeam.name, flagUrl: g.homeTeam.flagUrl },
+        awayTeam: { name: g.awayTeam.name, flagUrl: g.awayTeam.flagUrl },
+        homeScore: g.homeScore,
+        awayScore: g.awayScore,
+        isFinished: g.isFinished,
+        status
+      };
+    });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
