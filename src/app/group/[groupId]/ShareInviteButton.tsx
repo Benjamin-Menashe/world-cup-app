@@ -8,7 +8,7 @@ export default function ShareInviteButton({ inviteCode, dict }: { inviteCode: st
 
   const handleCopy = () => {
     const inviteUrl = `https://world-cup-app-2026.vercel.app/register?inviteCode=${inviteCode}`
-    const defaultMessage = `⚽ Join my World Cup 2026 betting league!\n\n🔑 Invite Code: ${inviteCode}\n\nClick here to join directly:\n${inviteUrl}\n\nLet's go! 🏆`
+    const defaultMessage = `The World Cup is almost here! 🌍⚽ I'm hosting a betting group and you're invited.\n\nPhase 1: Rank the groups, pick the overall Champion and Golden Boot winner.\nPhase 2: Predict the outcomes for every knockout game!\n\nIt's going to be intense. Click here to join my group before the games start:\n${inviteUrl}\n\n(Invite Code: ${inviteCode})`
     const message = dict ? dict.inviteMessage.replace('{inviteCode}', inviteCode).replace('{inviteUrl}', inviteUrl) : defaultMessage
     navigator.clipboard.writeText(message)
     setCopied(true)
