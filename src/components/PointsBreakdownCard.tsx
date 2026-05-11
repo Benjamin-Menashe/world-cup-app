@@ -61,24 +61,23 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict, lang = 'en' 
     else if (cat.startsWith('group_')) cat = `${dict.home.groups} ${cat.split('_')[1]}`
 
     return (
-      <div key={i} style={{
-        display: 'grid', gridTemplateColumns: '1.4fr 1.2fr 1.2fr 80px', alignItems: 'center', gap: '1rem',
+      <div className="breakdown-row" key={i} style={{
         padding: '0.6rem 1rem',
         background: i % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
         borderBottom: !isLast ? '1px solid rgba(0,0,0,0.04)' : 'none',
       }}>
-        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className="breakdown-cat" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {cat}
         </span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className="breakdown-part1" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {part1}
         </span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className="breakdown-part2" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {part3 && (part3 === t('finalMultiplier') || part3 === t('goalBonus')) ? 
             <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{part3}</span> : 
             (part2 || part3)}
         </span>
-        <div style={{ textAlign: 'right' }}>
+        <div className="breakdown-points" style={{ textAlign: 'right' }}>
           <span style={{ 
             fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0.15rem 0.5rem', borderRadius: '6px',
             color: item.points > 0 ? config.color : 'var(--text-secondary)',
