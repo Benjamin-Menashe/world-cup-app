@@ -8,6 +8,7 @@ import LeaveGroupButton from "./LeaveGroupButton"
 import GroupForms from "../GroupForms"
 import ShareInviteButton from "./ShareInviteButton"
 import ShareRankingButton from "./ShareRankingButton"
+import EditGroupModal from "./EditGroupModal"
 import { getDictionary } from "@/lib/i18n"
 
 export default async function GroupDetailPage({ params }: { params: { groupId: string } }) {
@@ -105,10 +106,17 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Trophy size={36} color="var(--accent)" /> {group.name}
+        <div style={{ flex: '1 1 min-content', minWidth: '250px' }}>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.75rem', wordBreak: 'break-word' }}>
+            <Trophy size={36} color="var(--accent)" style={{ flexShrink: 0 }} /> {group.name}
           </h1>
+          
+          {group.description && (
+            <div style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: 'rgba(0,0,0,0.02)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+              {group.description}
+            </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
             <Share2 size={14} />
             {d.inviteCodeLabel} <ShareInviteButton inviteCode={group.inviteCode} dict={d} />
@@ -121,6 +129,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
           <Link href="/dashboard" className="primary-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', padding: '0.6rem 1.25rem' }}>
             <BarChart2 size={14} /> {d.myBreakdown}
           </Link>
+          <EditGroupModal group={group} dict={d} />
           <LeaveGroupButton groupId={groupId} />
           <ShareRankingButton groupName={group.name} rank={myRank} points={myPoints} totalPlayers={rankings.length} dict={d} />
         </div>

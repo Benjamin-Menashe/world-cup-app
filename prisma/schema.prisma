@@ -27,10 +27,11 @@ model User {
 }
 
 model Group {
-  id         String   @id @default(uuid())
-  name       String
-  inviteCode String   @unique
-  createdAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  inviteCode  String   @unique
+  createdAt   DateTime @default(now())
 
   members Member[]
 }

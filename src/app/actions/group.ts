@@ -65,3 +65,26 @@ export async function leaveGroupAction(formData: FormData) {
   await prisma.member.deleteMany({ where: { userId, groupId } })
   redirect("/group")
 }
+
+export async function updateGroupAction(formData: FormData) {
+  const userId = await getSession()
+  if (!userId) redirect("/login")
+
+  const groupId = formData.get("groupId") as string
+  const name = formData.get("name") as string
+  const description = formData.get("description") as string
+
+  if (!groupId || !name) return { error: "Group ID and name are required" }
+
+  const existing = await prisma.member.findUnique({
+    where: { userId_groupId: { userId, groupId } }
+  })
+  if (!existing) return { error: "Not authorized" }
+
+  await prisma.group.update({
+    where: { id: groupId },
+    data: { name, description }
+  })
+
+  redirect(`/group/${groupId}`)
+}
