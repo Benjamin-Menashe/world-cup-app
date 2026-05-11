@@ -271,3 +271,24 @@ input[type="number"] {
   
   main { padding: 1rem !important; }
 }
+
+/* Ranking Grid Responsive */
+.ranking-row {
+  display: grid;
+  grid-template-columns: 40px 1fr minmax(110px,0.8fr) minmax(110px,0.8fr) 60px;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .ranking-row {
+    grid-template-columns: 30px 1fr 60px;
+    gap: 0.75rem;
+  }
+  .ranking-hide-mobile {
+    display: none !important;
+  }
+  .glass-panel {
+    padding: 1.25rem !important;
+  }
+}

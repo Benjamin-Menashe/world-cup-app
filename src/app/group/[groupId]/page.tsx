@@ -158,9 +158,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
             const medal = rankMedal(member.rank)
             return (
               <Link key={member.userId} href={`/group/${groupId}/user/${member.userId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{
-                  display: 'grid', gridTemplateColumns: '40px 1fr minmax(110px,0.8fr) minmax(110px,0.8fr) 60px',
-                  alignItems: 'center', gap: '1rem',
+                <div className="ranking-row" style={{
                   padding: '0.8rem 1.25rem', borderRadius: '12px',
                   background: isMe ? 'rgba(59,130,246,0.12)' : index === 0 ? 'rgba(245,158,11,0.05)' : 'rgba(0,0,0,0.02)',
                   border: isMe ? '1px solid rgba(59,130,246,0.35)' : index === 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid transparent',
@@ -177,14 +175,14 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
                   </span>
 
                   {/* Champ */}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title={dict.groupStage.champion}>
+                  <span className="ranking-hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title={dict.groupStage.champion}>
                     🏆 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {member.championName === 'Hidden' ? d.hidden : (teamsDict[member.championName || ''] || member.championName || '—')}
                     </span>
                   </span>
 
                   {/* Golden Boot */}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title={dict.groupStage.goldenBoot}>
+                  <span className="ranking-hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }} title={dict.groupStage.goldenBoot}>
                     👟 <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {member.goldenBootName === 'Hidden' ? d.hidden : (playersDict[member.goldenBootName || ''] || member.goldenBootName || '—')}
                     </span>
