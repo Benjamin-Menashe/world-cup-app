@@ -20,7 +20,7 @@ This guide contains the **exact instructions** you need to transition your appli
       ```
     * Commit and push this change to GitHub.
 
-## 2. Publish Google OAuth App
+## 2. ✅ Publish Google OAuth App [COMPLETED]
 * **Why:** By default, Google OAuth apps start in "Testing" mode. This mode has two severe limitations:
     1. Only specifically listed "Test Users" can sign in.
     2. Refresh/Session tokens may expire faster.
@@ -31,7 +31,7 @@ This guide contains the **exact instructions** you need to transition your appli
     * Click the **"Publish App"** button under the "Publishing status" section to change it from "Testing" to "In production".
 * **Do I need Google Verification?** **NO.** Because this app only requests basic, non-sensitive scopes (`email`, `profile`, `openid`), you do not need to go through the lengthy Google app verification process. It will work immediately as soon as you click Publish.
 
-## 3. Final Data Reset (CRITICAL)
+## 3. ✅ Final Data Reset [COMPLETED]
 * **Why:** You have been testing the app with fake data, simulated scores, and test accounts. You need a clean slate before your friends join.
 * **Action:**
     * Log in to the application as your Admin user.

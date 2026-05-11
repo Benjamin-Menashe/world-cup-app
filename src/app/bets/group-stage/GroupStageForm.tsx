@@ -109,6 +109,28 @@ export default function GroupStageForm({
     setIsDirty(false)
   }
 
+  const teamOptions = teams
+    .map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  const playerOptions = players
+    .map(p => {
+      const parts = p.name.trim().split(' ');
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : p.name;
+      return {
+        value: p.id,
+        label: `${playersDict?.[p.name] || p.name} - ${teamsDict?.[p.team.name] || getTeamAbbreviation(p.team.name)}`,
+        lastName: lastName.toLowerCase(),
+        fullName: p.name.toLowerCase()
+      };
+    })
+    .sort((a, b) => {
+      const last = a.lastName.localeCompare(b.lastName);
+      if (last !== 0) return last;
+      return a.fullName.localeCompare(b.fullName);
+    })
+    .map(({ value, label }) => ({ value, label }));
+
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
       <fieldset disabled={isLocked} style={{ border: 'none', padding: 0, margin: 0, opacity: isLocked ? 0.7 : 1 }}>
@@ -130,8 +152,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.champion}</label>
             <SearchableSelect 
-              options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
-              value={teams.find(t => t.id === champion) ? { value: champion, label: teamsDict?.[teams.find(t => t.id === champion)?.name || ""] || teams.find(t => t.id === champion)?.name } : null}
+              options={teamOptions}
+              value={teamOptions.find(o => o.value === champion) || null}
               onChange={(val: any) => { setChampion(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               placeholder={dict.selectTeam}
@@ -140,8 +162,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.goldenBoot}</label>
             <SearchableSelect 
-              options={players.map(p => ({ value: p.id, label: `${playersDict?.[p.name] || p.name} - ${teamsDict?.[p.team.name] || getTeamAbbreviation(p.team.name)}` }))}
-              value={players.find(p => p.id === topScorer) ? { value: topScorer, label: `${playersDict?.[players.find(p => p.id === topScorer)?.name || ""] || players.find(p => p.id === topScorer)?.name} - ${teamsDict?.[players.find(p => p.id === topScorer)?.team.name || ""] || getTeamAbbreviation(players.find(p => p.id === topScorer)?.team.name || "")}` } : null}
+              options={playerOptions}
+              value={playerOptions.find(o => o.value === topScorer) || null}
               onChange={(val: any) => { setTopScorer(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               placeholder={dict.selectPlayer}
@@ -228,8 +250,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.undefeated}</label>
             <SearchableSelect 
-              options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
-              value={teams.find(t => t.id === winnerTeam) ? { value: winnerTeam, label: teamsDict?.[teams.find(t => t.id === winnerTeam)?.name || ""] || teams.find(t => t.id === winnerTeam)?.name } : null}
+              options={teamOptions}
+              value={teamOptions.find(o => o.value === winnerTeam) || null}
               onChange={(val: any) => { setWinnerTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               placeholder={dict.selectTeam}
@@ -238,8 +260,8 @@ export default function GroupStageForm({
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem' }}>{dict.winless}</label>
             <SearchableSelect 
-              options={teams.map(t => ({ value: t.id, label: teamsDict?.[t.name] || t.name }))}
-              value={teams.find(t => t.id === loserTeam) ? { value: loserTeam, label: teamsDict?.[teams.find(t => t.id === loserTeam)?.name || ""] || teams.find(t => t.id === loserTeam)?.name } : null}
+              options={teamOptions}
+              value={teamOptions.find(o => o.value === loserTeam) || null}
               onChange={(val: any) => { setLoserTeam(val?.value || ""); setIsDirty(true) }}
               isDisabled={isLocked}
               placeholder={dict.selectTeam}
