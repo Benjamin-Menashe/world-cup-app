@@ -15,10 +15,15 @@ export async function saveKnockoutBetsAction(formData: FormData) {
     const gameScores = JSON.parse(gameScoresRaw) as Record<string, { home: number, away: number }>
     const now = await getEffectiveNow()
     const override = await getKnockoutLockOverride()
+
+    // Batch-fetch all games at once instead of one-by-one
+    const gameIds = Object.keys(gameScores)
+    const games = await prisma.game.findMany({ where: { id: { in: gameIds } } })
+    const gamesMap = new Map(games.map(g => [g.id, g]))
     
     for (const [gameId, scores] of Object.entries(gameScores)) {
       if (typeof scores.home === 'number' && typeof scores.away === 'number') {
-        const game = await prisma.game.findUnique({ where: { id: gameId } })
+        const game = gamesMap.get(gameId)
         if (!game) continue
 
         let isLocked = false

@@ -18,13 +18,14 @@ export async function saveGroupStageBetsAction(formData: FormData) {
   if (groupRankingsRaw) {
     // groupRankings is Record<string, string[]> i.e., { "A": ["team1", "team2", ...], "B": [...] }
     const groupRankings = JSON.parse(groupRankingsRaw) as Record<string, string[]>
-    for (const [group, rankedTeamIds] of Object.entries(groupRankings)) {
-      await prisma.groupRankingBet.upsert({
+    const upserts = Object.entries(groupRankings).map(([group, rankedTeamIds]) =>
+      prisma.groupRankingBet.upsert({
         where: { userId_group: { userId, group } },
         update: { rankedTeamIds: JSON.stringify(rankedTeamIds) },
         create: { userId, group, rankedTeamIds: JSON.stringify(rankedTeamIds) }
       })
-    }
+    )
+    await prisma.$transaction(upserts)
   }
 
   if (championId) {

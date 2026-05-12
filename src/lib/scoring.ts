@@ -290,55 +290,36 @@ export async function calculateUserPoints(
   return { total: totalPoints, breakdown }
 }
 
-export async function getUserRankingsInGroup(
-  groupId: string, 
-  currentUserId?: string | null,
-  teamsDict: Record<string, string> = {},
-  playersDict: Record<string, string> = {}
-) {
-  const members = await prisma.member.findMany({
-    where: { groupId },
-    include: { 
-      user: {
-        include: {
-          groupRankingBets: true,
-          championBets: { include: { team: true } },
-          topScorerBets: { include: { player: true } },
-          winnerLoserBets: { include: { winnerTeam: true, loserTeam: true } },
-          gameBets: { include: { game: { include: { homeTeam: true, awayTeam: true } } } }
-        }
-      } 
-    }
-  })
+export async function fetchGlobalScoringData(): Promise<GlobalScoringData> {
+  const [
+    isGroupLocked,
+    maxGoalsObj,
+    allKnockouts,
+    effectiveNow,
+    resultsData,
+    finishedGroupGames,
+    groupGamesCount,
+    globalTeams,
+  ] = await Promise.all([
+    isGroupStageLocked(),
+    prisma.player.aggregate({ _max: { goalsScored: true } }),
+    prisma.game.findMany({
+      where: { stage: { not: 'Group' } },
+      orderBy: { kickoffTime: 'asc' },
+      include: { homeTeam: true, awayTeam: true }
+    }),
+    getEffectiveNow(),
+    prisma.tournamentResult.findMany(),
+    prisma.game.findMany({ where: { stage: 'Group', isFinished: true } }),
+    prisma.game.count({ where: { stage: 'Group' } }),
+    prisma.team.findMany(),
+  ])
 
-  // Determine global visibility
-  const isGroupLocked = await isGroupStageLocked()
-
-  // Pre-fetch all global data
-  const maxGoalsObj = await prisma.player.aggregate({ _max: { goalsScored: true } })
-  const maxGoals = maxGoalsObj._max.goalsScored ?? 0
-
-  const allKnockouts = await prisma.game.findMany({
-    where: { stage: { not: 'Group' } },
-    orderBy: { kickoffTime: 'asc' },
-    include: { homeTeam: true, awayTeam: true }
-  })
-
-  const effectiveNow = await getEffectiveNow()
-
-  const resultsData = await prisma.tournamentResult.findMany()
   const resultMap = resultsData.reduce((acc, curr) => {
     try { acc[curr.key] = JSON.parse(curr.value) } 
     catch { acc[curr.key] = curr.value }
     return acc
   }, {} as Record<string, unknown>)
-
-  const finishedGroupGames = await prisma.game.findMany({
-    where: { stage: 'Group', isFinished: true }
-  })
-
-  const groupGamesCount = await prisma.game.count({ where: { stage: 'Group' } })
-  const globalTeams = await prisma.team.findMany()
 
   const groupStandings: Record<string, string[] | null> = {}
   const groupsAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
@@ -346,8 +327,8 @@ export async function getUserRankingsInGroup(
     groupStandings[letter] = await deriveGroupStandings(letter)
   }))
 
-  const globalData: GlobalScoringData = {
-    maxGoals,
+  return {
+    maxGoals: maxGoalsObj._max.goalsScored ?? 0,
     allKnockouts,
     effectiveNow,
     resultMap,
@@ -355,12 +336,38 @@ export async function getUserRankingsInGroup(
     groupGamesCount,
     globalTeams,
     groupStandings,
-    isGroupLocked
+    isGroupLocked,
   }
+}
+
+export async function getUserRankingsInGroup(
+  groupId: string, 
+  currentUserId?: string | null,
+  teamsDict: Record<string, string> = {},
+  playersDict: Record<string, string> = {},
+  preloadedGlobalData?: GlobalScoringData
+) {
+  const [members, globalData] = await Promise.all([
+    prisma.member.findMany({
+      where: { groupId },
+      include: { 
+        user: {
+          include: {
+            groupRankingBets: true,
+            championBets: { include: { team: true } },
+            topScorerBets: { include: { player: true } },
+            winnerLoserBets: { include: { winnerTeam: true, loserTeam: true } },
+            gameBets: { include: { game: { include: { homeTeam: true, awayTeam: true } } } }
+          }
+        } 
+      }
+    }),
+    preloadedGlobalData ?? fetchGlobalScoringData()
+  ])
 
   const results = await Promise.all(members.map(async (m) => {
     const result = await calculateUserPoints(m.userId, currentUserId, teamsDict, playersDict, { globalData, userData: m.user })
-    const canViewSpecials = isGroupLocked || m.userId === currentUserId
+    const canViewSpecials = globalData.isGroupLocked || m.userId === currentUserId
     
     return {
       userId: m.userId,

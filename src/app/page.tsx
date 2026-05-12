@@ -2,8 +2,8 @@ import { Trophy, Activity, Users, ChevronRight, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { calculateUserPoints, getUserRankingsInGroup } from "@/lib/scoring";
-import { isGroupStageLocked, deriveGroupStandings, getEffectiveNow } from "@/lib/lockTime";
+import { calculateUserPoints, getUserRankingsInGroup, fetchGlobalScoringData } from "@/lib/scoring";
+import { getEffectiveNow } from "@/lib/lockTime";
 import { getDictionary, getLanguage } from "@/lib/i18n";
 import MatchCenter from "@/components/MatchCenter";
 
@@ -19,46 +19,50 @@ export default async function Home() {
   let memberships = [] as { id: string; groupId: string; group: { name: string } }[];
   const groupRankings: Record<string, Awaited<ReturnType<typeof getUserRankingsInGroup>>> = {};
 
-  if (userId) {
-    user = await prisma.user.findUnique({ 
-      where: { id: userId },
-      include: {
-        championBets: { include: { team: true } },
-        topScorerBets: { include: { player: true } },
-        groupRankingBets: true,
-        gameBets: { include: { game: true } }
-      }
-    });
-    const res = await calculateUserPoints(userId);
-    points = res.total;
-    memberships = await prisma.member.findMany({
-      where: { userId },
-      include: { group: true }
-    });
+  // Pre-fetch global scoring data once — shared across all scoring calls
+  const globalData = userId ? await fetchGlobalScoringData() : null;
 
-    // Load rankings for each group
-    for (const m of memberships) {
-      groupRankings[m.groupId] = await getUserRankingsInGroup(m.groupId);
-    }
+  if (userId && globalData) {
+    const [userResult, membershipResult] = await Promise.all([
+      prisma.user.findUnique({ 
+        where: { id: userId },
+        include: {
+          championBets: { include: { team: true } },
+          topScorerBets: { include: { player: true } },
+          groupRankingBets: true,
+          gameBets: { include: { game: true } }
+        }
+      }),
+      prisma.member.findMany({
+        where: { userId },
+        include: { group: true }
+      })
+    ]);
+    user = userResult;
+    memberships = membershipResult;
+
+    // Calculate user's own points using pre-fetched global data
+    const res = await calculateUserPoints(userId, null, {}, {}, { globalData });
+    points = res.total;
+
+    // Load rankings for each group — all share the same globalData (no re-fetching)
+    await Promise.all(memberships.map(async (m) => {
+      groupRankings[m.groupId] = await getUserRankingsInGroup(m.groupId, undefined, {}, {}, globalData);
+    }));
   }
 
-  // Calculate Stats
+  // Calculate Stats using pre-fetched globalData (no extra DB calls)
   let perfectGroupsCount = 0;
   let exactScoresCount = 0;
   
-  if (userId && user) {
-    const results = await prisma.tournamentResult.findMany();
-    const resultMap = results.reduce((acc, curr) => {
-      try { acc[curr.key] = JSON.parse(curr.value) } 
-      catch { acc[curr.key] = curr.value }
-      return acc
-    }, {} as Record<string, unknown>);
+  if (userId && user && globalData) {
+    const resultMap = globalData.resultMap;
 
-    // Perfect Groups
+    // Perfect Groups — use globalData.groupStandings instead of calling deriveGroupStandings
     for (const bet of user.groupRankingBets) {
       let actual = resultMap[`Group_${bet.group}`];
       if (!actual || !Array.isArray(actual)) {
-        actual = await deriveGroupStandings(bet.group);
+        actual = globalData.groupStandings[bet.group] || null;
       }
       if (actual && Array.isArray(actual)) {
         try {
@@ -79,9 +83,8 @@ export default async function Home() {
     ).length;
   }
 
-  const isLocked = await isGroupStageLocked();
-  const tournamentChampion = await prisma.tournamentResult.findUnique({ where: { key: 'Champion' } });
-  const isTournamentFinished = !!tournamentChampion;
+  const isLocked = globalData?.isGroupLocked ?? false;
+  const isTournamentFinished = globalData ? !!globalData.resultMap['Champion'] : false;
 
   const singleGroup = memberships.length === 1 ? memberships[0] : null;
   const singleGroupRankings = singleGroup ? groupRankings[singleGroup.groupId] ?? [] : [];
@@ -100,7 +103,7 @@ export default async function Home() {
   }
 
   // ─── Match Center data ───
-  const now = await getEffectiveNow();
+  const now = globalData?.effectiveNow ?? await getEffectiveNow();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   
   // Fetch games that are relevant:
