@@ -63,8 +63,15 @@ export default function UserOverridePanel({
   const [knockoutPending, startKnockoutTransition] = useTransition()
   const [knockoutSaved, setKnockoutSaved] = useState(false)
 
+  // Controlled state for champion & golden boot selects
+  const [selectedChampion, setSelectedChampion] = useState<{ value: string; label: string } | null>(null)
+  const [selectedScorer, setSelectedScorer] = useState<{ value: string; label: string } | null>(null)
+
   // Knockout score local state
   const [knockoutScores, setKnockoutScores] = useState<Record<string, { home: string; away: string }>>({})
+
+  const teamOptions = teams.map(t => ({ value: t.id, label: `${t.name} (${t.group})` }))
+  const playerOptions = players.map(p => ({ value: p.id, label: `${p.name} (${p.teamName})` }))
 
   const selectedUser = users.find(u => u.id === selectedUserId)
 
@@ -75,6 +82,17 @@ export default function UserOverridePanel({
     setChampSaved(false)
     setScorerSaved(false)
     setKnockoutSaved(false)
+
+    // Pre-populate champion & golden boot for selected user
+    if (uid) {
+      const champId = championBets[uid]
+      setSelectedChampion(champId ? teamOptions.find(o => o.value === champId) ?? null : null)
+      const scorerId = topScorerBets[uid]
+      setSelectedScorer(scorerId ? playerOptions.find(o => o.value === scorerId) ?? null : null)
+    } else {
+      setSelectedChampion(null)
+      setSelectedScorer(null)
+    }
 
     // Pre-populate knockout scores for selected user
     if (uid && gameBets[uid]) {
@@ -172,63 +190,77 @@ export default function UserOverridePanel({
           {/* Champion Bet */}
           <div style={subPanelStyle}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>🏆 Champion Bet</h3>
-            <form
-              action={(fd: FormData) => {
-                fd.set("userId", selectedUser.id)
-                startChampTransition(async () => {
-                  await adminUpdateChampionBetAction(fd)
-                  setChampSaved(true)
-                  setTimeout(() => setChampSaved(false), 2000)
-                })
-              }}
-              style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}
-            >
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: '200px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                   Current: <strong>{teams.find(t => t.id === championBets[selectedUser.id])?.name ?? 'None'}</strong>
                 </label>
                 <SearchableSelect
-                  name="teamId"
-                  key={selectedUser.id + '-champ'}
-                  options={teams.map(t => ({ value: t.id, label: `${t.name} (${t.group})` }))}
-                  defaultValue={championBets[selectedUser.id] || undefined}
+                  options={teamOptions}
+                  value={selectedChampion}
+                  onChange={(opt: any) => setSelectedChampion(opt)}
                   placeholder="— Select Champion —"
-                  required
                 />
               </div>
-              <SaveButton isPending={champPending} saved={champSaved} />
-            </form>
+              <button
+                type="button"
+                disabled={champPending || !selectedChampion}
+                className="primary-btn"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                onClick={() => {
+                  if (!selectedChampion) return
+                  const fd = new FormData()
+                  fd.set("userId", selectedUser.id)
+                  fd.set("teamId", selectedChampion.value)
+                  startChampTransition(async () => {
+                    await adminUpdateChampionBetAction(fd)
+                    setChampSaved(true)
+                    setTimeout(() => setChampSaved(false), 2000)
+                  })
+                }}
+              >
+                {champPending ? <Loader2 size={14} className="spin" /> : champSaved ? <CheckCircle2 size={14} /> : null}
+                {champSaved ? 'Saved!' : 'Save'}
+              </button>
+            </div>
           </div>
 
           {/* Golden Boot */}
           <div style={subPanelStyle}>
             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>⚽ Golden Boot</h3>
-            <form
-              action={(fd: FormData) => {
-                fd.set("userId", selectedUser.id)
-                startScorerTransition(async () => {
-                  await adminUpdateTopScorerBetAction(fd)
-                  setScorerSaved(true)
-                  setTimeout(() => setScorerSaved(false), 2000)
-                })
-              }}
-              style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}
-            >
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: '200px' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                   Current: <strong>{players.find(p => p.id === topScorerBets[selectedUser.id])?.name ?? 'None'}</strong>
                 </label>
                 <SearchableSelect
-                  name="playerId"
-                  key={selectedUser.id + '-scorer'}
-                  options={players.map(p => ({ value: p.id, label: `${p.name} (${p.teamName})` }))}
-                  defaultValue={topScorerBets[selectedUser.id] || undefined}
+                  options={playerOptions}
+                  value={selectedScorer}
+                  onChange={(opt: any) => setSelectedScorer(opt)}
                   placeholder="— Select Player —"
-                  required
                 />
               </div>
-              <SaveButton isPending={scorerPending} saved={scorerSaved} />
-            </form>
+              <button
+                type="button"
+                disabled={scorerPending || !selectedScorer}
+                className="primary-btn"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                onClick={() => {
+                  if (!selectedScorer) return
+                  const fd = new FormData()
+                  fd.set("userId", selectedUser.id)
+                  fd.set("playerId", selectedScorer.value)
+                  startScorerTransition(async () => {
+                    await adminUpdateTopScorerBetAction(fd)
+                    setScorerSaved(true)
+                    setTimeout(() => setScorerSaved(false), 2000)
+                  })
+                }}
+              >
+                {scorerPending ? <Loader2 size={14} className="spin" /> : scorerSaved ? <CheckCircle2 size={14} /> : null}
+                {scorerSaved ? 'Saved!' : 'Save'}
+              </button>
+            </div>
           </div>
 
           {/* Knockout Scores */}
