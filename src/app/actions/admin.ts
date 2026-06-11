@@ -398,3 +398,65 @@ export async function masterResetAction() {
 
   revalidatePath('/admin')
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin: Override User Predictions (bypasses all locks)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function adminUpdateUserNameAction(formData: FormData) {
+  await verifyAdmin()
+  const targetUserId = formData.get("userId") as string
+  const name = (formData.get("name") as string)?.trim()
+  if (targetUserId && name) {
+    await prisma.user.update({ where: { id: targetUserId }, data: { name } })
+  }
+  revalidatePath("/admin")
+}
+
+export async function adminUpdateChampionBetAction(formData: FormData) {
+  await verifyAdmin()
+  const targetUserId = formData.get("userId") as string
+  const teamId = formData.get("teamId") as string
+  if (targetUserId && teamId) {
+    await prisma.championBet.upsert({
+      where: { userId: targetUserId },
+      update: { teamId },
+      create: { userId: targetUserId, teamId },
+    })
+  }
+  revalidatePath("/admin")
+}
+
+export async function adminUpdateTopScorerBetAction(formData: FormData) {
+  await verifyAdmin()
+  const targetUserId = formData.get("userId") as string
+  const playerId = formData.get("playerId") as string
+  if (targetUserId && playerId) {
+    await prisma.topScorerBet.upsert({
+      where: { userId: targetUserId },
+      update: { playerId },
+      create: { userId: targetUserId, playerId },
+    })
+  }
+  revalidatePath("/admin")
+}
+
+export async function adminUpdateKnockoutBetsAction(formData: FormData) {
+  await verifyAdmin()
+  const targetUserId = formData.get("userId") as string
+  const gameScoresRaw = formData.get("gameScores") as string
+  if (!targetUserId || !gameScoresRaw) return
+
+  const gameScores = JSON.parse(gameScoresRaw) as Record<string, { home: number; away: number }>
+
+  for (const [gameId, scores] of Object.entries(gameScores)) {
+    if (typeof scores.home === "number" && typeof scores.away === "number") {
+      await prisma.gameBet.upsert({
+        where: { userId_gameId: { userId: targetUserId, gameId } },
+        update: { homeScore: scores.home, awayScore: scores.away },
+        create: { userId: targetUserId, gameId, homeScore: scores.home, awayScore: scores.away },
+      })
+    }
+  }
+  revalidatePath("/admin")
+}

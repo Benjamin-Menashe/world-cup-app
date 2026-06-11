@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import {
   Settings, Zap, Clock, Trophy, Users, CalendarClock,
-  Goal, ShieldCheck,
+  Goal, ShieldCheck, UserCog,
 } from "lucide-react"
 
 import SyncButton from "./SyncButton"
@@ -12,6 +12,7 @@ import SyncKnockoutButton from "./SyncKnockoutButton"
 import InitTournamentButton from "./InitTournamentButton"
 import { SaveSnapshotButton } from "./SaveSnapshotButton"
 import { TimeOverridePanel, MasterResetButton, DeleteFormWithConfirm } from "./AdminControls"
+import UserOverridePanel from "./UserOverridePanel"
 import SearchableSelect from "@/components/SearchableSelect"
 import { getDictionary, getLanguage } from "@/lib/i18n"
 
@@ -68,12 +69,38 @@ export default async function AdminDashboardPage() {
   const locale = lang === 'he' ? 'he-IL' : 'en-GB'
 
   // ── Load all data ───────────────────────────────────────────────────────────
-  const [games, teams, players, tournamentResults] = await Promise.all([
+  const [games, teams, players, tournamentResults, allUsers, allChampionBets, allTopScorerBets, allGameBets] = await Promise.all([
     prisma.game.findMany({ include: { homeTeam: true, awayTeam: true }, orderBy: { kickoffTime: 'asc' } }),
     prisma.team.findMany({ orderBy: [{ group: 'asc' }, { name: 'asc' }] }),
     prisma.player.findMany({ orderBy: { name: 'asc' } }),
     prisma.tournamentResult.findMany(),
+    prisma.user.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, email: true } }),
+    prisma.championBet.findMany(),
+    prisma.topScorerBet.findMany(),
+    prisma.gameBet.findMany(),
   ])
+
+  // ── Build maps for UserOverridePanel ────────────────────────────────────────
+  const championBetsMap: Record<string, string> = {}
+  for (const b of allChampionBets) championBetsMap[b.userId] = b.teamId
+
+  const topScorerBetsMap: Record<string, string> = {}
+  for (const b of allTopScorerBets) topScorerBetsMap[b.userId] = b.playerId
+
+  const gameBetsMap: Record<string, Record<string, { home: number; away: number }>> = {}
+  for (const b of allGameBets) {
+    if (!gameBetsMap[b.userId]) gameBetsMap[b.userId] = {}
+    gameBetsMap[b.userId][b.gameId] = { home: b.homeScore, away: b.awayScore }
+  }
+
+  const knockoutGames = games
+    .filter(g => g.stage !== 'Group')
+    .map(g => ({ id: g.id, stage: g.stage, homeTeamName: g.homeTeam.name, awayTeamName: g.awayTeam.name }))
+
+  const playerOptions = players.map(p => {
+    const team = teams.find(t => t.id === p.teamId)
+    return { id: p.id, name: p.name, teamName: team?.name ?? '?' }
+  })
 
   const resultMap: Record<string, string> = {}
   for (const r of tournamentResults) {
@@ -429,7 +456,25 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* ── 5. Team Manager ──────────────────────────────────────────────── */}
+        {/* ── 5. User Prediction Override ────────────────────────────────── */}
+        <section className="glass-panel" style={panelStyle}>
+          <SectionHeader
+            icon={<UserCog size={20} color="#ec4899" />}
+            title="Override User Predictions"
+            subtitle="Select any user to edit their nickname, champion pick, golden boot pick, or knockout score predictions. Bypasses all lock restrictions."
+          />
+          <UserOverridePanel
+            users={allUsers}
+            teams={teams.map(t => ({ id: t.id, name: t.name, group: t.group }))}
+            players={playerOptions}
+            knockoutGames={knockoutGames}
+            championBets={championBetsMap}
+            topScorerBets={topScorerBetsMap}
+            gameBets={gameBetsMap}
+          />
+        </section>
+
+        {/* ── 6. Team Manager ──────────────────────────────────────────────── */}
         <section className="glass-panel" style={panelStyle}>
           <SectionHeader
             icon={<Users size={20} color="#8b5cf6" />}
