@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
+import { getEffectiveNow } from "@/lib/lockTime"
 import prisma from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,8 @@ export async function GET(req: NextRequest) {
 
   // Check if predictions should be visible (locked 1h before kickoff)
   const lockTime = new Date(game.kickoffTime.getTime() - 60 * 60 * 1000)
-  const isLocked = new Date() >= lockTime
+  const now = await getEffectiveNow()
+  const isLocked = now >= lockTime
 
   // Get all groups the current user belongs to
   const memberships = await prisma.member.findMany({

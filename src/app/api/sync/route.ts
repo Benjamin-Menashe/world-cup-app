@@ -76,9 +76,9 @@ async function runSync() {
             where: { id: g.id },
             data: {
               kickoffTime: apiKickoff,
-              // Use the score at the end of regular time (fulltime)
-              homeScore: isFinished ? fixture.score.fulltime.home : null,
-              awayScore: isFinished ? fixture.score.fulltime.away : null,
+              // Use fulltime score when finished, live goals during match
+              homeScore: isFinished ? fixture.score.fulltime.home : fixture.goals.home,
+              awayScore: isFinished ? fixture.score.fulltime.away : fixture.goals.away,
               isFinished: isFinished,
             },
           })
