@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Activity, Clock, CheckCircle } from 'lucide-react'
 
 type GameData = {
@@ -12,6 +13,7 @@ type GameData = {
   homeScore: number | null
   awayScore: number | null
   isFinished: boolean
+  isLocked: boolean
   status: 'live' | 'upcoming' | 'finished'
 }
 
@@ -60,21 +62,35 @@ export default function MatchCenter({
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [predictions, setPredictions] = useState<GamePredictionResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const d = dict.home
   const teamsDict = (dict as any).teams || {}
 
-  const handleSelectGame = async (gameId: string) => {
+  const isKnockout = (stage: string) => stage !== 'Group'
+
+  const handleSelectGame = async (game: GameData) => {
     if (!isLoggedIn) return
-    if (selectedGameId === gameId) {
+
+    // Group stage games: no interaction (display only)
+    if (!isKnockout(game.stage)) return
+
+    // Knockout game not yet locked: redirect to predictions page
+    if (!game.isLocked && !game.isFinished) {
+      router.push('/bets/knockout')
+      return
+    }
+
+    // Knockout game locked/live/finished: toggle predictions panel
+    if (selectedGameId === game.id) {
       setSelectedGameId(null)
       setPredictions(null)
       return
     }
-    setSelectedGameId(gameId)
+    setSelectedGameId(game.id)
     setLoading(true)
     try {
-      const res = await fetch(`/api/game-predictions?gameId=${gameId}`)
+      const res = await fetch(`/api/game-predictions?gameId=${game.id}`)
       if (res.ok) {
         const data = await res.json()
         setPredictions(data)
@@ -162,11 +178,13 @@ export default function MatchCenter({
             {games.map(game => {
               const colors = statusColor(game.status)
               const isSelected = selectedGameId === game.id
+              const knockout = isKnockout(game.stage)
+              const clickable = isLoggedIn && (knockout)
 
               return (
                 <div
                   key={game.id}
-                  onClick={() => handleSelectGame(game.id)}
+                  onClick={() => handleSelectGame(game)}
                   style={{
                     minWidth: '200px',
                     maxWidth: '240px',
@@ -175,7 +193,7 @@ export default function MatchCenter({
                     border: isSelected ? '2px solid var(--accent)' : colors.border,
                     borderRadius: '12px',
                     padding: '1rem',
-                    cursor: isLoggedIn ? 'pointer' : 'default',
+                    cursor: clickable ? 'pointer' : 'default',
                     transition: 'all 0.2s ease',
                     display: 'flex',
                     flexDirection: 'column',
@@ -244,7 +262,13 @@ export default function MatchCenter({
                   {/* Kickoff time for upcoming */}
                   {game.status === 'upcoming' && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.2rem' }}>
-                      {d.kicksOff} {formatDateTime(game.kickoffTime)}
+                      {knockout && !game.isLocked ? (
+                        <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                          {d.predictNow || '→ Predict now'}
+                        </span>
+                      ) : (
+                        <>{d.kicksOff} {formatDateTime(game.kickoffTime)}</>
+                      )}
                     </div>
                   )}
                 </div>

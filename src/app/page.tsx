@@ -109,17 +109,18 @@ export default async function Home() {
   // Fetch games that are relevant:
   // 1) Finished with kickoff in the last 24 hours (back-filtered below by kickoff+105min)
   // 2) Currently live (kickoff <= now, not finished, within ~105 min)
-  // 3) Upcoming and locked (kickoff within next 1 hour)
+  // 3) Upcoming within next 24 hours
+  const twentyFourHoursAhead = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const matchCenterGames = await prisma.game.findMany({
     where: {
       OR: [
         // Finished recently — fetch up to 24h window, back-filter by estimated end time below
         { isFinished: true, kickoffTime: { gte: twentyFourHoursAgo } },
-        // Locked and not finished (upcoming or live)
+        // Not finished and kickoff within next 24 hours
         { 
           isFinished: false, 
           kickoffTime: { 
-            lte: new Date(now.getTime() + 60 * 60 * 1000) // locked = within 1 hour
+            lte: twentyFourHoursAhead
           } 
         }
       ]
@@ -147,6 +148,9 @@ export default async function Home() {
       if (isLive) status = 'live';
       else if (isUpcoming) status = 'upcoming';
 
+      const lockTime = new Date(kickoff - 60 * 60 * 1000);
+      const gameLocked = now >= lockTime;
+
       return {
         id: g.id,
         stage: g.stage,
@@ -156,6 +160,7 @@ export default async function Home() {
         homeScore: g.homeScore,
         awayScore: g.awayScore,
         isFinished: g.isFinished,
+        isLocked: gameLocked,
         status
       };
     });
