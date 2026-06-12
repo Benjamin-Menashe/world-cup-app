@@ -27,6 +27,15 @@ interface ApiScorer {
   statistics: Array<{ goals: { total: number | null } }>
 }
 
+// Fuzzy team-name match: handles cases like "Cape Verde" vs "Cape Verde Islands"
+function teamNamesMatch(dbName: string, apiName: string): boolean {
+  const a = dbName.toLowerCase()
+  const b = apiName.toLowerCase()
+  if (a === b) return true
+  // One contains the other (handles suffixes like "Islands", "Republic", etc.)
+  return a.includes(b) || b.includes(a)
+}
+
 async function runSync() {
   const headers = { "x-apisports-key": API_KEY }
   const summary = {
@@ -57,14 +66,11 @@ async function runSync() {
       })
 
       for (const fixture of fixtures) {
-        // Match by team names (case-insensitive)
-        const homeName = fixture.teams.home.name.toLowerCase()
-        const awayName = fixture.teams.away.name.toLowerCase()
-
+        // Match by team names (case-insensitive, with fuzzy fallback)
         const g = dbGames.find(
           (match) =>
-            match.homeTeam.name.toLowerCase() === homeName &&
-            match.awayTeam.name.toLowerCase() === awayName
+            teamNamesMatch(match.homeTeam.name, fixture.teams.home.name) &&
+            teamNamesMatch(match.awayTeam.name, fixture.teams.away.name)
         )
 
         if (g) {
@@ -154,9 +160,19 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   // Vercel Cron automatically sends Authorization: Bearer <CRON_SECRET>
+  const cronSecret = process.env.CRON_SECRET
   const authHeader = req.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized cron endpoint" }, { status: 401 })
+
+  // Primary: check CRON_SECRET
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    return await runSync()
   }
-  return await runSync()
+
+  // Fallback: accept SYNC_SECRET via x-sync-secret header
+  const syncHeader = req.headers.get("x-sync-secret")
+  if (syncHeader && syncHeader === SYNC_SECRET) {
+    return await runSync()
+  }
+
+  return NextResponse.json({ error: "Unauthorized cron endpoint" }, { status: 401 })
 }
