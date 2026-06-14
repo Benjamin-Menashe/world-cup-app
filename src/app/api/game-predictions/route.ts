@@ -6,29 +6,30 @@ import prisma from "@/lib/prisma"
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const gameId = req.nextUrl.searchParams.get("gameId")
   if (!gameId) return NextResponse.json({ error: "Missing gameId" }, { status: 400 })
 
-  // Fetch the game
-  const game = await prisma.game.findUnique({
-    where: { id: gameId },
-    include: { homeTeam: true, awayTeam: true }
-  })
+  // Parallelize independent queries
+  const [game, now, memberships] = await Promise.all([
+    prisma.game.findUnique({
+      where: { id: gameId },
+      include: { homeTeam: true, awayTeam: true }
+    }),
+    getEffectiveNow(),
+    prisma.member.findMany({
+      where: { userId },
+      select: { groupId: true }
+    })
+  ])
   if (!game) return NextResponse.json({ error: "Game not found" }, { status: 404 })
 
   // Check if predictions should be visible (locked 1h before kickoff)
   const lockTime = new Date(game.kickoffTime.getTime() - 60 * 60 * 1000)
-  const now = await getEffectiveNow()
   const isLocked = now >= lockTime
 
-  // Get all groups the current user belongs to
-  const memberships = await prisma.member.findMany({
-    where: { userId },
-    select: { groupId: true }
-  })
   const groupIds = memberships.map(m => m.groupId)
 
   // Get all members from those groups (deduplicated by userId)

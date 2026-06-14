@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 export async function saveGroupStageBetsAction(formData: FormData) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   // The formData will contain JSON strings for the complex data

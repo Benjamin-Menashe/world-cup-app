@@ -7,7 +7,7 @@ import { getDictionary, getLanguage } from "@/lib/i18n"
 import { getEffectiveNow, getKnockoutLockOverride } from "@/lib/lockTime"
 
 export default async function KnockoutBetsPage() {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   // Fetch all non-group games

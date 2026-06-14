@@ -10,7 +10,7 @@ import MatchCenter from "@/components/MatchCenter";
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const userId = await getSession();
+  const userId = (await getSession())?.userId ?? null;
   const dict = await getDictionary();
   const lang = await getLanguage();
 

@@ -6,7 +6,7 @@ import { Users } from "lucide-react"
 import { getDictionary } from "@/lib/i18n"
 
 export default async function GroupPage() {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const memberships = await prisma.member.findMany({

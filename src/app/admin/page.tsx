@@ -58,8 +58,12 @@ function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title
 }
 
 export default async function AdminDashboardPage() {
-  const userId = await getSession()
-  if (!userId) redirect("/login")
+  const session = await getSession()
+  if (!session) redirect("/login")
+  const userId = session.userId
+
+  // Fast JWT-based admin gate
+  if (!session.isAdmin) redirect("/")
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user || user.isAdmin !== true) redirect("/")

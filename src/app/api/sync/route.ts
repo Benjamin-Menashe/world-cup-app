@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { deriveGroupStandings } from "@/lib/lockTime"
+import { deriveGroupStandingsFromGames } from "@/lib/lockTime"
 
 const API_KEY = process.env.API_FOOTBALL_KEY || ""
 const SYNC_SECRET = process.env.SYNC_SECRET || "wc2026-sync-secret"
@@ -41,12 +41,51 @@ async function runSync() {
   const summary = {
     gamesChecked: 0,
     gamesUpdated: 0,
+    gamesSkipped: 0,
     playersChecked: 0,
     playersUpdated: 0,
     errors: [] as string[],
   }
 
   try {
+    // ── 0. Smart early-exit: skip sync if no matches are live or recently finished ──
+    const now = new Date()
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000)
+    const matchDurationMs = 120 * 60 * 1000 // 2h buffer for match duration + halftime
+
+    const activeGames = await prisma.game.findMany({
+      where: {
+        OR: [
+          // Games currently live (kickoff in the past, not yet finished)
+          {
+            isFinished: false,
+            kickoffTime: { lte: now },
+          },
+          // Games that finished recently (within the last 2 hours)
+          {
+            isFinished: true,
+            kickoffTime: { gte: twoHoursAgo },
+          },
+          // Games about to start (within the next 30 minutes)
+          {
+            isFinished: false,
+            kickoffTime: {
+              lte: new Date(now.getTime() + 30 * 60 * 1000),
+              gte: now,
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    })
+
+    if (activeGames.length === 0) {
+      return NextResponse.json({
+        success: true,
+        summary: { ...summary, errors: ["ℹ️ No active/recent matches — skipped sync"] },
+      })
+    }
+
     // ── 1. Sync Game Scores & Dates ───────────────────────────────────────────
     const fixturesRes = await fetch(
       `${API_BASE}/fixtures?league=${LEAGUE_ID}&season=${SEASON}`,
@@ -77,31 +116,53 @@ async function runSync() {
           const apiKickoff = new Date(fixture.fixture.date)
           const finishedStatus = ['FT', 'AET', 'PEN']
           const isFinished = finishedStatus.includes(fixture.fixture.status.short)
-          
-          await prisma.game.update({
-            where: { id: g.id },
-            data: {
-              kickoffTime: apiKickoff,
-              // Use fulltime score when finished, live goals during match
-              homeScore: isFinished ? fixture.score.fulltime.home : fixture.goals.home,
-              awayScore: isFinished ? fixture.score.fulltime.away : fixture.goals.away,
-              isFinished: isFinished,
-            },
-          })
-          summary.gamesUpdated++
+          const newHomeScore = isFinished ? fixture.score.fulltime.home : fixture.goals.home
+          const newAwayScore = isFinished ? fixture.score.fulltime.away : fixture.goals.away
+
+          // Skip update if nothing changed (biggest single ops saver)
+          const needsUpdate =
+            g.kickoffTime.getTime() !== apiKickoff.getTime() ||
+            g.homeScore !== newHomeScore ||
+            g.awayScore !== newAwayScore ||
+            g.isFinished !== isFinished
+
+          if (needsUpdate) {
+            await prisma.game.update({
+              where: { id: g.id },
+              data: {
+                kickoffTime: apiKickoff,
+                homeScore: newHomeScore,
+                awayScore: newAwayScore,
+                isFinished: isFinished,
+              },
+            })
+            summary.gamesUpdated++
+          } else {
+            summary.gamesSkipped++
+          }
         }
       }
 
       // ── 1b. Auto-derive and store group standings for completed groups ──────────
+      // Batch: fetch all finished group games once, derive standings in-memory (not 12 queries)
+      const finishedGroupGames = dbGames.filter(
+        g => g.stage === 'Group' && g.isFinished && g.homeScore !== null && g.awayScore !== null
+      )
+      const teamGroupMap = new Map(dbGames.flatMap(g => [
+        [g.homeTeamId, g.homeTeam.group],
+        [g.awayTeamId, g.awayTeam.group],
+      ]))
+
       const groupLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
       let groupsFinalized = 0
-      for (const g of groupLetters) {
-        const standings = await deriveGroupStandings(g)
+      for (const gl of groupLetters) {
+        const groupGames = finishedGroupGames.filter(g => teamGroupMap.get(g.homeTeamId) === gl)
+        const standings = deriveGroupStandingsFromGames(groupGames)
         if (!standings) continue
         await prisma.tournamentResult.upsert({
-          where: { key: `Group_${g}` },
+          where: { key: `Group_${gl}` },
           update: { value: JSON.stringify(standings) },
-          create: { key: `Group_${g}`, value: JSON.stringify(standings) },
+          create: { key: `Group_${gl}`, value: JSON.stringify(standings) },
         })
         groupsFinalized++
       }

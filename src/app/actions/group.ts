@@ -9,7 +9,7 @@ function generateInviteCode() {
 }
 
 export async function createGroupAction(formData: FormData) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const name = formData.get("name") as string
@@ -37,7 +37,7 @@ export async function createGroupAction(formData: FormData) {
 }
 
 export async function joinGroupAction(formData: FormData) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const inviteCode = (formData.get("inviteCode") as string)?.toUpperCase().trim()
@@ -56,7 +56,7 @@ export async function joinGroupAction(formData: FormData) {
 }
 
 export async function leaveGroupAction(formData: FormData) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const groupId = formData.get("groupId") as string
@@ -67,7 +67,7 @@ export async function leaveGroupAction(formData: FormData) {
 }
 
 export async function updateGroupAction(formData: FormData) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const groupId = formData.get("groupId") as string

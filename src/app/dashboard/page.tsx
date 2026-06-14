@@ -1,18 +1,17 @@
 import { getSession } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { calculateUserPoints } from "@/lib/scoring"
+import { calculateUserPoints, fetchGlobalScoringData } from "@/lib/scoring"
 import { Edit3, BarChart2 } from "lucide-react"
 import Link from "next/link"
 import PointsBreakdownCard from "@/components/PointsBreakdownCard"
-import { getGroupStageLockTime } from "@/lib/lockTime"
 import ShareBreakdownButton from "@/components/ShareBreakdownButton"
 import DeleteAccountButton from "./DeleteAccountButton"
 import ChangeNicknameButton from "./ChangeNicknameButton"
 import { getDictionary, getLanguage } from "@/lib/i18n"
 
 export default async function DashboardPage() {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
@@ -20,14 +19,12 @@ export default async function DashboardPage() {
   const lang = await getLanguage()
   const teamsDict = (dict as any).teams || {}
   const playersDict = (dict as any).players || {}
-  const { total, breakdown } = await calculateUserPoints(userId, null, teamsDict, playersDict)
 
+  // Pre-fetch global scoring data once — saves ~8 DB queries inside calculateUserPoints
+  const globalData = await fetchGlobalScoringData()
+  const { total, breakdown } = await calculateUserPoints(userId, null, teamsDict, playersDict, { globalData })
 
-
-
-  // Lock derived from first group game kickoff - 1 hour
-  const lockTime = await getGroupStageLockTime()
-  const isLocked = lockTime ? new Date() >= lockTime : false
+  const isLocked = globalData.isGroupLocked
 
   return (
     <div style={{ maxWidth: '800px', margin: '2rem auto' }}>

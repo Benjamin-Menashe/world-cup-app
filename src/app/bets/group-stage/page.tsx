@@ -7,7 +7,7 @@ import { getGroupStageLockTime } from "@/lib/lockTime"
 import { getDictionary, getLanguage } from "@/lib/i18n"
 
 export default async function GroupStageBetsPage() {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const teams = await prisma.team.findMany({ orderBy: { name: 'asc' } })

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma"
-import { deriveGroupStandings, isGroupStageLocked, getEffectiveNow } from "@/lib/lockTime"
+import { deriveGroupStandings, deriveGroupStandingsFromGames, isGroupStageLocked, getEffectiveNow } from "@/lib/lockTime"
 import { Prisma, Game, Team } from "@prisma/client"
 
 export type GlobalScoringData = {
@@ -321,11 +321,14 @@ export async function fetchGlobalScoringData(): Promise<GlobalScoringData> {
     return acc
   }, {} as Record<string, unknown>)
 
+  // Derive group standings in-memory from already-fetched data (saves 12 DB queries)
+  const teamGroupMap = new Map(globalTeams.map(t => [t.id, t.group]))
   const groupStandings: Record<string, string[] | null> = {}
   const groupsAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-  await Promise.all(groupsAlphabet.map(async (letter) => {
-    groupStandings[letter] = await deriveGroupStandings(letter)
-  }))
+  for (const letter of groupsAlphabet) {
+    const groupGames = finishedGroupGames.filter(g => teamGroupMap.get(g.homeTeamId) === letter)
+    groupStandings[letter] = deriveGroupStandingsFromGames(groupGames)
+  }
 
   return {
     maxGoals: maxGoalsObj._max.goalsScored ?? 0,

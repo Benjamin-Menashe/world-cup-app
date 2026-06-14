@@ -7,7 +7,6 @@ import LanguageToggle from "@/components/LanguageToggle";
 
 import { getSession } from "@/lib/auth";
 import { logoutAction } from "@/app/actions/auth";
-import prisma from "@/lib/prisma";
 import MobileNav from "@/components/MobileNav";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,15 +21,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const userId = await getSession();
+  const session = await getSession();
+  const userId = session?.userId ?? null;
   const dict = await getDictionary();
   const lang = await getLanguage();
-  let isAdmin = false;
-
-  if (userId) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user?.isAdmin) isAdmin = true;
-  }
+  const isAdmin = session?.isAdmin ?? false;
 
   return (
     <html lang={lang}>

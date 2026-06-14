@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { getEffectiveNow, getKnockoutLockOverride } from "@/lib/lockTime"
 
 export async function saveKnockoutBetsAction(formData: FormData) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   const gameScoresRaw = formData.get("gameScores") as string
@@ -21,24 +21,30 @@ export async function saveKnockoutBetsAction(formData: FormData) {
     const games = await prisma.game.findMany({ where: { id: { in: gameIds } } })
     const gamesMap = new Map(games.map(g => [g.id, g]))
     
-    for (const [gameId, scores] of Object.entries(gameScores)) {
-      if (typeof scores.home === 'number' && typeof scores.away === 'number') {
+    // Build upsert operations for unlocked games, then execute as a single transaction
+    const upserts = Object.entries(gameScores)
+      .filter(([gameId, scores]) => {
+        if (typeof scores.home !== 'number' || typeof scores.away !== 'number') return false
         const game = gamesMap.get(gameId)
-        if (!game) continue
+        if (!game) return false
 
         let isLocked = false
         if (override === "Locked") isLocked = true
         else if (override === "Unlocked") isLocked = false
         else isLocked = now >= new Date(game.kickoffTime.getTime() - 60 * 60 * 1000)
 
-        if (isLocked) continue
-
-        await prisma.gameBet.upsert({
+        return !isLocked
+      })
+      .map(([gameId, scores]) =>
+        prisma.gameBet.upsert({
           where: { userId_gameId: { userId, gameId } },
           update: { homeScore: scores.home, awayScore: scores.away },
           create: { userId, gameId, homeScore: scores.home, awayScore: scores.away }
         })
-      }
+      )
+
+    if (upserts.length > 0) {
+      await prisma.$transaction(upserts)
     }
   }
 }

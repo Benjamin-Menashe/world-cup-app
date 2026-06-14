@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
   }
 
   // 4. Issue JWT session cookie and redirect home
-  const token = await signToken(user.id)
+  const token = await signToken(user.id, user.isAdmin)
   await setSessionCookie(token)
 
   return NextResponse.redirect(new URL("/", req.url))

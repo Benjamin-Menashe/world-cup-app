@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/auth"
 import prisma from "@/lib/prisma"
-import { calculateUserPoints } from "@/lib/scoring"
+import { calculateUserPoints, fetchGlobalScoringData } from "@/lib/scoring"
 import { redirect } from "next/navigation"
 import { User as UserIcon, Activity, ChevronLeft } from "lucide-react"
 import Link from "next/link"
@@ -8,7 +8,7 @@ import PointsBreakdownCard from "@/components/PointsBreakdownCard"
 import { getDictionary, getLanguage } from "@/lib/i18n"
 
 export default async function TopScorerDetail({ params }: { params: { groupId: string, userId: string } }) {
-  const currentUserId = await getSession()
+  const currentUserId = (await getSession())?.userId ?? null
   if (!currentUserId) redirect("/login")
 
   const { groupId, userId } = await params
@@ -33,8 +33,9 @@ export default async function TopScorerDetail({ params }: { params: { groupId: s
   const teamsDict = (dict as any).teams || {}
   const playersDict = (dict as any).players || {}
 
-  // Fetch points & breakdown
-  const pointsData = await calculateUserPoints(userId, currentUserId, teamsDict, playersDict)
+  // Pre-fetch global scoring data once — saves ~7 DB queries inside calculateUserPoints
+  const globalData = await fetchGlobalScoringData()
+  const pointsData = await calculateUserPoints(userId, currentUserId, teamsDict, playersDict, { globalData })
 
   return (
     <div style={{ maxWidth: '900px', margin: '2rem auto' }}>

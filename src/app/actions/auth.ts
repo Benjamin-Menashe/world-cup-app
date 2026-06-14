@@ -22,7 +22,7 @@ export async function loginAction(formData: FormData) {
   const isValid = await bcrypt.compare(password, user.password)
   if (!isValid) return { error: "Invalid credentials" }
 
-  const token = await signToken(user.id)
+  const token = await signToken(user.id, user.isAdmin)
   await setSessionCookie(token)
   
   redirect("/")
@@ -54,7 +54,7 @@ export async function registerAction(formData: FormData) {
     }
   }
 
-  const token = await signToken(user.id)
+  const token = await signToken(user.id, user.isAdmin ?? false)
   await setSessionCookie(token)
 
   redirect("/")
@@ -66,11 +66,11 @@ export async function logoutAction() {
 }
 
 export async function deleteAccountAction() {
-  const userId = await getSession()
-  if (!userId) return { error: "Not authenticated" }
+  const session = await getSession()
+  if (!session) return { error: "Not authenticated" }
 
   try {
-    await prisma.user.delete({ where: { id: userId } })
+    await prisma.user.delete({ where: { id: session.userId } })
   } catch {
     return { error: "Failed to delete account" }
   }
@@ -80,15 +80,15 @@ export async function deleteAccountAction() {
 }
 
 export async function updateNicknameAction(name: string) {
-  const userId = await getSession()
-  if (!userId) return { error: "Not authenticated" }
+  const session = await getSession()
+  if (!session) return { error: "Not authenticated" }
 
   const trimmed = name.trim()
   if (!trimmed || trimmed.length < 2) return { error: "Name must be at least 2 characters" }
   if (trimmed.length > 30) return { error: "Name must be 30 characters or fewer" }
 
   try {
-    await prisma.user.update({ where: { id: userId }, data: { name: trimmed } })
+    await prisma.user.update({ where: { id: session.userId }, data: { name: trimmed } })
   } catch {
     return { error: "Failed to update nickname" }
   }

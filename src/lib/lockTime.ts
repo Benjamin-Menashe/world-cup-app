@@ -67,6 +67,25 @@ export async function deriveGroupStandings(
   const finished = games.filter(g => g.isFinished && g.homeScore !== null && g.awayScore !== null)
   if (finished.length < 6) return null
 
+  return tallyGroupStandings(finished)
+}
+
+/**
+ * Pure-function version: derives standings from pre-fetched games (no DB call).
+ * `games` should already be filtered to the target group's finished games.
+ */
+export function deriveGroupStandingsFromGames(
+  games: Array<{ homeTeamId: string; awayTeamId: string; homeScore: number | null; awayScore: number | null; isFinished: boolean }>
+): string[] | null {
+  const finished = games.filter(g => g.isFinished && g.homeScore !== null && g.awayScore !== null)
+  if (finished.length < 6) return null
+  return tallyGroupStandings(finished)
+}
+
+/** Shared tally logic for both DB-backed and in-memory group standings derivation. */
+function tallyGroupStandings(
+  finished: Array<{ homeTeamId: string; awayTeamId: string; homeScore: number | null; awayScore: number | null }>
+): string[] {
   // Tally records
   const record: Record<string, { wins: number; draws: number; losses: number; gf: number; ga: number }> = {}
   const ensure = (id: string) => {

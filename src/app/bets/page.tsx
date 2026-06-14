@@ -4,7 +4,7 @@ import Link from "next/link"
 import { LayoutList, Swords } from "lucide-react"
 
 export default async function BetsDashboard() {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
 
   return (

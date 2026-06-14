@@ -6,10 +6,13 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
 async function verifyAdmin() {
-  const userId = await getSession()
-  if (!userId) redirect("/login")
+  const session = await getSession()
+  if (!session) redirect("/login")
   
-  const user = await prisma.user.findUnique({ where: { id: userId } })
+  // Fast JWT gate
+  if (!session.isAdmin) redirect("/")
+
+  const user = await prisma.user.findUnique({ where: { id: session.userId } })
   if (!user || user.isAdmin !== true) {
     redirect("/")
   }

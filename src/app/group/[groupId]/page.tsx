@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/auth"
 import prisma from "@/lib/prisma"
-import { getUserRankingsInGroup } from "@/lib/scoring"
+import { getUserRankingsInGroup, fetchGlobalScoringData } from "@/lib/scoring"
 import { redirect } from "next/navigation"
 import { Trophy, ClipboardList, Edit3, BarChart2, Share2 } from "lucide-react"
 import Link from "next/link"
@@ -12,7 +12,7 @@ import EditGroupModal from "./EditGroupModal"
 import { getDictionary } from "@/lib/i18n"
 
 export default async function GroupDetailPage({ params }: { params: { groupId: string } }) {
-  const userId = await getSession()
+  const userId = (await getSession())?.userId ?? null
   if (!userId) redirect("/login")
   
   const { groupId } = await params
@@ -25,15 +25,16 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
   const group = memberships.find(m => m.groupId === groupId)?.group
   if (!group) redirect("/group")
 
-  const tournamentChampion = await prisma.tournamentResult.findUnique({ where: { key: 'Champion' } })
-  const isTournamentFinished = !!tournamentChampion
+  // Pre-fetch global scoring data once — saves ~20 DB queries inside getUserRankingsInGroup
+  const globalData = await fetchGlobalScoringData()
+  const isTournamentFinished = !!globalData.resultMap['Champion']
 
   const dict = await getDictionary()
   const d = dict.group
   const teamsDict = (dict as any).teams || {}
   const playersDict = (dict as any).players || {}
 
-  const rankings = await getUserRankingsInGroup(groupId, userId, teamsDict, playersDict)
+  const rankings = await getUserRankingsInGroup(groupId, userId, teamsDict, playersDict, globalData)
   
   const isMember = rankings.some(r => r.userId === userId)
   if (!isMember) redirect("/group")
