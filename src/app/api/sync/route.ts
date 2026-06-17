@@ -36,7 +36,7 @@ function teamNamesMatch(dbName: string, apiName: string): boolean {
   return a.includes(b) || b.includes(a)
 }
 
-async function runSync() {
+async function runSync(force: boolean = false) {
   const headers = { "x-apisports-key": API_KEY }
   const summary = {
     gamesChecked: 0,
@@ -79,7 +79,7 @@ async function runSync() {
       select: { id: true },
     })
 
-    if (activeGames.length === 0) {
+    if (!force && activeGames.length === 0) {
       return NextResponse.json({
         success: true,
         summary: { ...summary, errors: ["ℹ️ No active/recent matches — skipped sync"] },
@@ -98,6 +98,14 @@ async function runSync() {
       const fixturesData = await fixturesRes.json()
       const fixtures: ApiFixture[] = fixturesData.response || []
       summary.gamesChecked = fixtures.length
+
+      // Load processed games to avoid double-counting player goals
+      const processedRes = await prisma.tournamentResult.findUnique({ where: { key: 'ProcessedGames' } })
+      const processedGames: string[] = processedRes ? JSON.parse(processedRes.value) : []
+      let processedGamesUpdated = false
+
+      // Get all players from DB for name matching
+      const dbPlayers = await prisma.player.findMany()
 
       // Get all games from our DB to match by team names
       const dbGames = await prisma.game.findMany({
@@ -140,7 +148,45 @@ async function runSync() {
           } else {
             summary.gamesSkipped++
           }
+
+          // Fetch player goal events if the game is finished and hasn't been processed yet
+          if (isFinished && !processedGames.includes(g.id)) {
+            summary.playersChecked++ // using this to count games checked for events
+            try {
+              const evRes = await fetch(`${API_BASE}/fixtures/events?fixture=${fixture.fixture.id}`, { headers })
+              const evData = await evRes.json()
+              const events = evData.response || []
+              
+              const goals = events.filter((e: any) => e.type === 'Goal' && (e.detail === 'Normal Goal' || e.detail === 'Penalty'))
+              
+              for (const goal of goals) {
+                const apiName = goal.player.name.toLowerCase()
+                const match = dbPlayers.find(p => p.name.toLowerCase().includes(apiName) || apiName.includes(p.name.toLowerCase()))
+                
+                if (match) {
+                  await prisma.player.update({
+                    where: { id: match.id },
+                    data: { goalsScored: { increment: 1 } }
+                  })
+                  summary.playersUpdated++
+                }
+              }
+              
+              processedGames.push(g.id)
+              processedGamesUpdated = true
+            } catch (err) {
+              summary.errors.push(`Failed to fetch events for ${g.homeTeam.name} vs ${g.awayTeam.name}`)
+            }
+          }
         }
+      }
+
+      if (processedGamesUpdated) {
+        await prisma.tournamentResult.upsert({
+          where: { key: 'ProcessedGames' },
+          update: { value: JSON.stringify(processedGames) },
+          create: { key: 'ProcessedGames', value: JSON.stringify(processedGames) }
+        })
       }
 
       // ── 1b. Auto-derive and store group standings for completed groups ──────────
@@ -169,40 +215,7 @@ async function runSync() {
       if (groupsFinalized > 0) summary.errors.push(`ℹ️ Auto-stored standings for ${groupsFinalized} completed group(s)`)
     }
 
-    const scorersRes = await fetch(
-      `${API_BASE}/players/topscorers?league=${LEAGUE_ID}&season=${SEASON}`,
-      { headers }
-    )
-
-    if (!scorersRes.ok) {
-      summary.errors.push(`Scorers API returned ${scorersRes.status}`)
-    } else {
-      const scorersData = await scorersRes.json()
-      const scorers: ApiScorer[] = scorersData.response || []
-      summary.playersChecked = scorers.length
-
-      // Get all players from DB
-      const dbPlayers = await prisma.player.findMany()
-
-      for (const scorer of scorers) {
-        const apiGoals = scorer.statistics[0]?.goals?.total ?? 0
-        const apiName = scorer.player.name.toLowerCase()
-
-        // Match by name (partial or full)
-        const match = dbPlayers.find((p) =>
-          p.name.toLowerCase().includes(apiName) ||
-          apiName.includes(p.name.toLowerCase())
-        )
-
-        if (match && match.goalsScored !== apiGoals) {
-          await prisma.player.update({
-            where: { id: match.id },
-            data: { goalsScored: apiGoals },
-          })
-          summary.playersUpdated++
-        }
-      }
-    }
+    // Old player topscorers logic removed as we now use event-based matching above
   } catch (err) {
     summary.errors.push((err as Error)?.message ?? "Unknown error")
   }
@@ -216,23 +229,25 @@ export async function POST(req: NextRequest) {
   if (secret !== SYNC_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-  return await runSync()
+  const force = req.nextUrl.searchParams.get("force") === "true"
+  return await runSync(force)
 }
 
 export async function GET(req: NextRequest) {
   // Vercel Cron automatically sends Authorization: Bearer <CRON_SECRET>
   const cronSecret = process.env.CRON_SECRET
   const authHeader = req.headers.get("authorization")
+  const force = req.nextUrl.searchParams.get("force") === "true"
 
   // Primary: check CRON_SECRET
   if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-    return await runSync()
+    return await runSync(force)
   }
 
   // Fallback: accept SYNC_SECRET via x-sync-secret header
   const syncHeader = req.headers.get("x-sync-secret")
   if (syncHeader && syncHeader === SYNC_SECRET) {
-    return await runSync()
+    return await runSync(force)
   }
 
   return NextResponse.json({ error: "Unauthorized cron endpoint" }, { status: 401 })

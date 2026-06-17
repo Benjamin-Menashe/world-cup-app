@@ -92,6 +92,37 @@ async function main() {
   console.log(`\nGames with scores in DB: ${recheck.length}`);
   recheck.forEach(g => console.log(`  ${g.homeTeam.name} ${g.homeScore}-${g.awayScore} ${g.awayTeam.name} (finished: ${g.isFinished})`));
 
+  console.log('\nFetching top scorers from API...');
+  const scorersRes = await fetch(`${API_BASE}/players/topscorers?league=1&season=2026`, {
+    headers: { 'x-apisports-key': API_KEY },
+  });
+  const scorersData = await scorersRes.json();
+  const scorers = scorersData.response || [];
+  console.log(`Got ${scorers.length} top scorers`);
+
+  const dbPlayers = await prisma.player.findMany();
+  let playersUpdated = 0;
+
+  for (const scorer of scorers) {
+    const apiGoals = scorer.statistics[0]?.goals?.total ?? 0;
+    const apiName = scorer.player.name.toLowerCase();
+
+    const match = dbPlayers.find((p) =>
+      p.name.toLowerCase().includes(apiName) ||
+      apiName.includes(p.name.toLowerCase())
+    );
+
+    if (match && match.goalsScored !== apiGoals) {
+      await prisma.player.update({
+        where: { id: match.id },
+        data: { goalsScored: apiGoals },
+      });
+      playersUpdated++;
+      console.log(`  ✅ ${match.name}: ${match.goalsScored} -> ${apiGoals} goals`);
+    }
+  }
+  console.log(`\nUpdated ${playersUpdated} players.`);
+
   await prisma.$disconnect();
 }
 

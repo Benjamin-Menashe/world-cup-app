@@ -11,7 +11,7 @@ export default function SyncButton() {
     setStatus("loading")
     setMessage("")
     try {
-      const res = await fetch("/api/sync", {
+      const res = await fetch("/api/sync?force=true", {
         method: "POST",
         headers: { "x-sync-secret": "wc2026-sync-secret" },
       })
