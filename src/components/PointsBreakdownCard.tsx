@@ -53,6 +53,7 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict, lang = 'en' 
     else if (part3 === 'final') part3 = t('finalMultiplier')
     else if (part3 === 'ok') part3 = '✓'
     else if (part3 === 'no') part3 = '✗'
+    else if (part3 === 'elim') part3 = '✗'
     else if (part3 === 'tbd') part3 = `(${t('tbd')})`
 
     // Category Translation

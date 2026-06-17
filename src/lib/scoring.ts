@@ -2,6 +2,8 @@ import prisma from "@/lib/prisma"
 import { deriveGroupStandings, deriveGroupStandingsFromGames, isGroupStageLocked, getEffectiveNow } from "@/lib/lockTime"
 import { Prisma, Game, Team } from "@prisma/client"
 
+export type TeamRecord = { wins: number; losses: number; draws: number }
+
 export type GlobalScoringData = {
   maxGoals: number;
   allKnockouts: Prisma.GameGetPayload<{ include: { homeTeam: true, awayTeam: true } }>[];
@@ -12,6 +14,7 @@ export type GlobalScoringData = {
   globalTeams: Team[];
   groupStandings: Record<string, string[] | null>;
   isGroupLocked: boolean;
+  teamRecord: Record<string, TeamRecord>;
 }
 
 export type UserWithBets = Prisma.UserGetPayload<{
@@ -173,18 +176,27 @@ export async function calculateUserPoints(
     where: { stage: 'Group', isFinished: true }
   })
 
-  const teamRecord: Record<string, { wins: number, losses: number }> = {}
-  for (const game of finishedGroupGames) {
-    if (game.homeScore === null || game.awayScore === null) continue
-    if (!teamRecord[game.homeTeamId]) teamRecord[game.homeTeamId] = { wins: 0, losses: 0 }
-    if (!teamRecord[game.awayTeamId]) teamRecord[game.awayTeamId] = { wins: 0, losses: 0 }
-    if (game.homeScore > game.awayScore) {
-      teamRecord[game.homeTeamId].wins++
-      teamRecord[game.awayTeamId].losses++
-    } else if (game.awayScore > game.homeScore) {
-      teamRecord[game.awayTeamId].wins++
-      teamRecord[game.homeTeamId].losses++
+  // Use pre-computed teamRecord from globalData when available (avoids recomputing per user).
+  // Falls back to building it locally only when called without globalData (e.g. standalone).
+  let teamRecord = options?.globalData?.teamRecord
+  if (!teamRecord) {
+    const record: Record<string, { wins: number, losses: number, draws: number }> = {}
+    for (const game of finishedGroupGames) {
+      if (game.homeScore === null || game.awayScore === null) continue
+      if (!record[game.homeTeamId]) record[game.homeTeamId] = { wins: 0, losses: 0, draws: 0 }
+      if (!record[game.awayTeamId]) record[game.awayTeamId] = { wins: 0, losses: 0, draws: 0 }
+      if (game.homeScore > game.awayScore) {
+        record[game.homeTeamId].wins++
+        record[game.awayTeamId].losses++
+      } else if (game.awayScore > game.homeScore) {
+        record[game.awayTeamId].wins++
+        record[game.homeTeamId].losses++
+      } else {
+        record[game.homeTeamId].draws++
+        record[game.awayTeamId].draws++
+      }
     }
+    teamRecord = record
   }
 
   // Undefeated / Winless: use admin override if set, otherwise auto-derive from game records.
@@ -199,6 +211,21 @@ export async function calculateUserPoints(
   const winlessTeamIds: Set<string> = Array.isArray(overrideWinless)
     ? new Set(overrideWinless as string[])
     : new Set(Object.entries(teamRecord).filter(([, r]) => r.losses === 3 && r.wins === 0).map(([id]) => id))
+
+  // Early-elimination check: a team is "out of the running" before group stage ends if:
+  //   - Undefeated pick: has any loss OR any draw (can no longer achieve 3W-0D-0L)
+  //   - Winless pick:    has any win  OR any draw (can no longer achieve 0W-0D-3L)
+  // Only applies when not using admin overrides (overrides imply manual resolution).
+  const isTeamEliminatedFromUndefeated = (teamId: string): boolean => {
+    if (Array.isArray(overrideUndefeated)) return false // admin override active
+    const r = teamRecord[teamId]
+    return !!r && (r.losses > 0 || r.draws > 0)
+  }
+  const isTeamEliminatedFromWinless = (teamId: string): boolean => {
+    if (Array.isArray(overrideWinless)) return false // admin override active
+    const r = teamRecord[teamId]
+    return !!r && (r.wins > 0 || r.draws > 0)
+  }
 
   const groupGamesCount = options?.globalData?.groupGamesCount ?? await prisma.game.count({ where: { stage: 'Group' } })
   const allGroupsFinished = finishedGroupGames.length >= groupGamesCount && groupGamesCount > 0
@@ -223,7 +250,11 @@ export async function calculateUserPoints(
   if (user.winnerLoserBets.length > 0) {
     const bet = user.winnerLoserBets[0]
     const pts = undefeatedTeamIds.has(bet.winnerTeamId) ? 3 : 0
-    const suffix = undefeatedTeamIds.has(bet.winnerTeamId) ? 'ok' : (allGroupsFinished ? 'no' : 'tbd')
+    let suffix: string
+    if (undefeatedTeamIds.has(bet.winnerTeamId)) suffix = 'ok'
+    else if (allGroupsFinished) suffix = 'no'
+    else if (isTeamEliminatedFromUndefeated(bet.winnerTeamId)) suffix = 'elim'
+    else suffix = 'tbd'
     if (undefeatedTeamIds.has(bet.winnerTeamId)) totalPoints += pts
     const detailsName = teamsDict[bet.winnerTeam.name] || bet.winnerTeam.name
     breakdown.push({ 
@@ -238,7 +269,11 @@ export async function calculateUserPoints(
   if (user.winnerLoserBets.length > 0) {
     const bet = user.winnerLoserBets[0]
     const pts = winlessTeamIds.has(bet.loserTeamId) ? 3 : 0
-    const suffix = winlessTeamIds.has(bet.loserTeamId) ? 'ok' : (allGroupsFinished ? 'no' : 'tbd')
+    let suffix: string
+    if (winlessTeamIds.has(bet.loserTeamId)) suffix = 'ok'
+    else if (allGroupsFinished) suffix = 'no'
+    else if (isTeamEliminatedFromWinless(bet.loserTeamId)) suffix = 'elim'
+    else suffix = 'tbd'
     if (winlessTeamIds.has(bet.loserTeamId)) totalPoints += pts
     const detailsName = teamsDict[bet.loserTeam.name] || bet.loserTeam.name
     breakdown.push({ 
@@ -330,6 +365,24 @@ export async function fetchGlobalScoringData(): Promise<GlobalScoringData> {
     groupStandings[letter] = deriveGroupStandingsFromGames(groupGames)
   }
 
+  // Build teamRecord once here so all per-user calculateUserPoints calls share it
+  const teamRecord: Record<string, { wins: number; losses: number; draws: number }> = {}
+  for (const game of finishedGroupGames) {
+    if (game.homeScore === null || game.awayScore === null) continue
+    if (!teamRecord[game.homeTeamId]) teamRecord[game.homeTeamId] = { wins: 0, losses: 0, draws: 0 }
+    if (!teamRecord[game.awayTeamId]) teamRecord[game.awayTeamId] = { wins: 0, losses: 0, draws: 0 }
+    if (game.homeScore > game.awayScore) {
+      teamRecord[game.homeTeamId].wins++
+      teamRecord[game.awayTeamId].losses++
+    } else if (game.awayScore > game.homeScore) {
+      teamRecord[game.awayTeamId].wins++
+      teamRecord[game.homeTeamId].losses++
+    } else {
+      teamRecord[game.homeTeamId].draws++
+      teamRecord[game.awayTeamId].draws++
+    }
+  }
+
   return {
     maxGoals: maxGoalsObj._max.goalsScored ?? 0,
     allKnockouts,
@@ -340,6 +393,7 @@ export async function fetchGlobalScoringData(): Promise<GlobalScoringData> {
     globalTeams,
     groupStandings,
     isGroupLocked,
+    teamRecord,
   }
 }
 
