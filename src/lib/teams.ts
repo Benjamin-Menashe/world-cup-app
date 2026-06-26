@@ -1,4 +1,5 @@
-export function normalizeTeamName(name: string): string {
+export function normalizeTeamName(name: string | null | undefined): string {
+  if (!name) return "";
   return name
     .toLowerCase()
     .normalize("NFD")
@@ -6,7 +7,7 @@ export function normalizeTeamName(name: string): string {
     .trim();
 }
 
-export function teamNamesMatch(nameA: string, nameB: string): boolean {
+export function teamNamesMatch(nameA: string | null | undefined, nameB: string | null | undefined): boolean {
   const normA = normalizeTeamName(nameA);
   const normB = normalizeTeamName(nameB);
   

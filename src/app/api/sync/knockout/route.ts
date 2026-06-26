@@ -55,11 +55,11 @@ export async function POST(req: NextRequest) {
     const dbTeams = await prisma.team.findMany()
 
     for (const f of knockoutFixtures) {
-      const hName = f.teams.home.name
-      const aName = f.teams.away.name
+      const hName = f.teams?.home?.name
+      const aName = f.teams?.away?.name
 
-      const dbHome = dbTeams.find(t => teamNamesMatch(t.name, hName))
-      const dbAway = dbTeams.find(t => teamNamesMatch(t.name, aName))
+      const dbHome = hName ? dbTeams.find(t => teamNamesMatch(t.name, hName)) : undefined
+      const dbAway = aName ? dbTeams.find(t => teamNamesMatch(t.name, aName)) : undefined
 
       // Log when teams aren't found (they'll be TBD)
       if (!dbHome) summary.errors.push(`Home team not found: "${hName}" — will be TBD`)
