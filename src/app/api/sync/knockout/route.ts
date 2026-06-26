@@ -17,12 +17,7 @@ interface ApiFixture {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-sync-secret")
-  if (secret !== SYNC_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
+async function runSync() {
   const headers = { "x-apisports-key": API_KEY }
   const summary = {
     gamesAdded: 0,
@@ -120,4 +115,28 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, summary })
+}
+
+export async function POST(req: NextRequest) {
+  const secret = req.headers.get("x-sync-secret")
+  if (secret !== SYNC_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  return await runSync()
+}
+
+export async function GET(req: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET
+  const authHeader = req.headers.get("authorization")
+
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    return await runSync()
+  }
+
+  const syncHeader = req.headers.get("x-sync-secret")
+  if (syncHeader && syncHeader === SYNC_SECRET) {
+    return await runSync()
+  }
+
+  return NextResponse.json({ error: "Unauthorized cron endpoint" }, { status: 401 })
 }
