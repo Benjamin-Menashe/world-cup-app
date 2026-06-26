@@ -39,12 +39,13 @@ export async function POST(req: NextRequest) {
     const fixtures: ApiFixture[] = data.response || []
 
     const knockoutFixtures = fixtures.filter(f => {
+      if (!f.league?.round) return false
       const r = f.league.round.toLowerCase()
       return (
-        r.includes("1/16") ||
-        r.includes("1/8") ||
-        r.includes("1/4") ||
-        r.includes("1/2") ||
+        r.includes("16") ||
+        r.includes("32") ||
+        r.includes("quarter") ||
+        r.includes("semi") ||
         r.includes("3rd") ||
         r.includes("third") ||
         r.includes("final")
