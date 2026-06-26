@@ -120,6 +120,9 @@ export async function calculateUserPoints(
   const effectiveNow = options?.globalData?.effectiveNow ?? await getEffectiveNow()
 
   for (const game of allKnockouts) {
+    // Skip TBD games — no teams, no scoring
+    if (!game.homeTeam || !game.awayTeam) continue
+
     const bet = user.gameBets.find(b => b.gameId === game.id)
     const betHome = bet ? bet.homeScore : 0
     const betAway = bet ? bet.awayScore : 0
@@ -183,6 +186,7 @@ export async function calculateUserPoints(
     const record: Record<string, { wins: number, losses: number, draws: number }> = {}
     for (const game of finishedGroupGames) {
       if (game.homeScore === null || game.awayScore === null) continue
+      if (!game.homeTeamId || !game.awayTeamId) continue
       if (!record[game.homeTeamId]) record[game.homeTeamId] = { wins: 0, losses: 0, draws: 0 }
       if (!record[game.awayTeamId]) record[game.awayTeamId] = { wins: 0, losses: 0, draws: 0 }
       if (game.homeScore > game.awayScore) {
@@ -361,7 +365,7 @@ export async function fetchGlobalScoringData(): Promise<GlobalScoringData> {
   const groupStandings: Record<string, string[] | null> = {}
   const groupsAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
   for (const letter of groupsAlphabet) {
-    const groupGames = finishedGroupGames.filter(g => teamGroupMap.get(g.homeTeamId) === letter)
+    const groupGames = finishedGroupGames.filter(g => g.homeTeamId && teamGroupMap.get(g.homeTeamId) === letter)
     groupStandings[letter] = deriveGroupStandingsFromGames(groupGames)
   }
 
@@ -369,6 +373,7 @@ export async function fetchGlobalScoringData(): Promise<GlobalScoringData> {
   const teamRecord: Record<string, { wins: number; losses: number; draws: number }> = {}
   for (const game of finishedGroupGames) {
     if (game.homeScore === null || game.awayScore === null) continue
+    if (!game.homeTeamId || !game.awayTeamId) continue
     if (!teamRecord[game.homeTeamId]) teamRecord[game.homeTeamId] = { wins: 0, losses: 0, draws: 0 }
     if (!teamRecord[game.awayTeamId]) teamRecord[game.awayTeamId] = { wins: 0, losses: 0, draws: 0 }
     if (game.homeScore > game.awayScore) {

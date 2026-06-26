@@ -252,8 +252,8 @@ export default function MatchCenter({
                         <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{teamsDict[game.awayTeam.name] || game.awayTeam.name}</span>
                       </div>
                       {(game.status === 'live' || game.status === 'finished') && (
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'monospace' }}>
-                          {game.awayScore ?? '?'}
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                          {game.awayScore ?? '-'}
                         </span>
                       )}
                     </div>
@@ -307,7 +307,7 @@ export default function MatchCenter({
                   <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{predictions.game.homeTeam.name}</span>
                 </div>
                 {predictions.game.isFinished ? (
-                  <span style={{ fontFamily: 'monospace', fontSize: '1.3rem', fontWeight: 800 }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: 700 }}>
                     {predictions.game.homeScore} - {predictions.game.awayScore}
                   </span>
                 ) : (
@@ -358,8 +358,7 @@ export default function MatchCenter({
                               borderRadius: '6px',
                               border: '1px solid var(--border-subtle)',
                               fontWeight: 700,
-                              fontSize: '0.85rem',
-                              fontFamily: 'monospace'
+                              fontSize: '0.85rem'
                             }}>
                               {pred.homeScore} - {pred.awayScore}
                             </span>

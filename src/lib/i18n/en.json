@@ -104,6 +104,7 @@
       "R16": "Round of 16",
       "QF": "Quarter Finals",
       "SF": "Semi Finals",
+      "3rd": "3rd Place",
       "Final": "⚽ Final"
     },
     "notOpen": "Knockout Stage Not Yet Open",
@@ -114,6 +115,7 @@
     "savePicks": "Save {stage} Picks",
     "locked": "Locked",
     "saved": "Saved!",
+    "waitingForTeams": "Waiting for teams",
     "pageTitle": "Knockout Stage Predictions",
     "pageDesc": "Predict the exact score at the end of 90 minutes for each match. Each match locks 1 hour before kickoff."
   },

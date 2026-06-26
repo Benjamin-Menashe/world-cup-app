@@ -78,14 +78,14 @@ model Game {
   id          String   @id @default(uuid())
   stage       String // Group, R32, R16, QF, SF, 3rd, Final
   kickoffTime DateTime
-  homeTeamId  String
-  awayTeamId  String
+  homeTeamId  String?
+  awayTeamId  String?
   homeScore   Int?
   awayScore   Int?
   isFinished  Boolean  @default(false)
 
-  homeTeam Team @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam Team @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeTeam Team? @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam Team? @relation("AwayTeam", fields: [awayTeamId], references: [id])
 
   bets GameBet[]
 }

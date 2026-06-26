@@ -41,6 +41,16 @@ export default async function KnockoutBetsPage() {
     else lockedGamesMap[g.id] = now >= new Date(g.kickoffTime.getTime() - 60 * 60 * 1000)
   }
 
+  // Normalize games: replace null teams with TBD placeholder
+  const normalizedGames = games.map(g => ({
+    id: g.id,
+    stage: g.stage,
+    kickoffTime: g.kickoffTime,
+    homeTeam: g.homeTeam ? { id: g.homeTeam.id, name: g.homeTeam.name, flagUrl: g.homeTeam.flagUrl } : null,
+    awayTeam: g.awayTeam ? { id: g.awayTeam.id, name: g.awayTeam.name, flagUrl: g.awayTeam.flagUrl } : null,
+    isTbd: !g.homeTeam || !g.awayTeam,
+  }))
+
   return (
     <div style={{ maxWidth: '1000px', margin: '2rem auto' }}>
       <div style={{ marginBottom: '3rem' }}>
@@ -52,7 +62,7 @@ export default async function KnockoutBetsPage() {
         </p>
       </div>
 
-      <KnockoutForm games={games} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} teamsDict={(dict as any).teams || {}} lang={lang} />
+      <KnockoutForm games={normalizedGames} existingBets={existingBetsMap} lockedGames={lockedGamesMap} dict={d} teamsDict={(dict as any).teams || {}} lang={lang} />
     </div>
   )
 }

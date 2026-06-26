@@ -98,11 +98,11 @@ export async function addKnockoutGameAction(formData: FormData) {
   await verifyAdmin()
   
   const stage = formData.get("stage") as string
-  const homeTeamId = formData.get("homeTeamId") as string
-  const awayTeamId = formData.get("awayTeamId") as string
+  const homeTeamId = (formData.get("homeTeamId") as string) || null
+  const awayTeamId = (formData.get("awayTeamId") as string) || null
   const kickoffTime = formData.get("kickoffTime") as string
 
-  if (stage && homeTeamId && awayTeamId && kickoffTime) {
+  if (stage && kickoffTime) {
     // datetime-local has no timezone — treat as IDT (UTC+3) by appending offset
     const utcDate = new Date(kickoffTime + "+03:00")
     await prisma.game.create({

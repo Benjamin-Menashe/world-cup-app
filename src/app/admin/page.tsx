@@ -40,10 +40,10 @@ import {
 } from "@/app/actions/admin"
 
 const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-const STAGES = ['Group', 'R32', 'R16', 'QF', 'SF', 'Final']
+const STAGES = ['Group', 'R32', 'R16', 'QF', 'SF', '3rd', 'Final']
 const STAGE_LABELS: Record<string, string> = {
   Group: 'Group Stage', R32: 'Round of 32', R16: 'Round of 16',
-  QF: 'Quarter-Finals', SF: 'Semi-Finals', Final: 'Final',
+  QF: 'Quarter-Finals', SF: 'Semi-Finals', '3rd': '3rd Place', Final: 'Final',
 }
 
 function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
@@ -99,7 +99,7 @@ export default async function AdminDashboardPage() {
 
   const knockoutGames = games
     .filter(g => g.stage !== 'Group')
-    .map(g => ({ id: g.id, stage: g.stage, homeTeamName: g.homeTeam.name, awayTeamName: g.awayTeam.name }))
+    .map(g => ({ id: g.id, stage: g.stage, homeTeamName: g.homeTeam?.name ?? 'TBD', awayTeamName: g.awayTeam?.name ?? 'TBD' }))
 
   const playerOptions = players.map(p => {
     const team = teams.find(t => t.id === p.teamId)
@@ -225,11 +225,11 @@ export default async function AdminDashboardPage() {
                           <form action={updateGameScoreAction}
                             style={{ ...rowStyle, gridTemplateColumns: '1fr auto auto auto 1fr auto auto', flex: 1, margin: 0 }}>
                             <input type="hidden" name="gameId" value={game.id} />
-                            <span style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.88rem' }}>{game.homeTeam.name}</span>
+                            <span style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.88rem' }}>{game.homeTeam?.name ?? 'TBD'}</span>
                             <input type="number" name="homeScore" defaultValue={game.homeScore ?? ''} min="0" style={smallInput} />
                             <span style={{ color: 'var(--text-secondary)' }}>–</span>
                             <input type="number" name="awayScore" defaultValue={game.awayScore ?? ''} min="0" style={smallInput} />
-                            <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{game.awayTeam.name}</span>
+                            <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{game.awayTeam?.name ?? 'TBD'}</span>
                             <select name="isFinished" defaultValue={game.isFinished ? "true" : "false"} style={{ ...selectStyle, width: '100px' }}>
                               <option value="true">Finished</option>
                               <option value="false">Live/Future</option>
@@ -302,7 +302,7 @@ export default async function AdminDashboardPage() {
                   style={{ ...rowStyle, gridTemplateColumns: '0.4fr 1fr auto 1fr auto' }}>
                   <input type="hidden" name="gameId" value={game.id} />
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 700 }}>{game.stage}</span>
-                  <span style={{ textAlign: 'right', fontWeight: 600 }}>{game.homeTeam.name}</span>
+                  <span style={{ textAlign: 'right', fontWeight: 600 }}>{game.homeTeam?.name ?? 'TBD'}</span>
                   <input
                     type="datetime-local"
                     name="kickoffTime"
@@ -311,7 +311,7 @@ export default async function AdminDashboardPage() {
                     className="input-field"
                     style={{ fontSize: '0.82rem', padding: '0.25rem 0.4rem' }}
                   />
-                  <span style={{ fontWeight: 600 }}>{game.awayTeam.name}</span>
+                  <span style={{ fontWeight: 600 }}>{game.awayTeam?.name ?? 'TBD'}</span>
                   <button type="submit" className="secondary-btn" style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}>Save</button>
                 </form>
               )

@@ -10,19 +10,22 @@ type Game = {
   id: string
   stage: string
   kickoffTime: Date
-  homeTeam: { id: string, name: string, flagUrl: string }
-  awayTeam: { id: string, name: string, flagUrl: string }
+  homeTeam: { id: string, name: string, flagUrl: string } | null
+  awayTeam: { id: string, name: string, flagUrl: string } | null
+  isTbd: boolean
 }
 
-const STAGE_ORDER = ['R32', 'R16', 'QF', 'SF', 'Final']
+const STAGE_ORDER = ['R32', 'R16', 'QF', 'SF', '3rd', 'Final']
 const STAGE_LABELS: Record<string, string> = {
   R32: 'R32',
   R16: 'R16',
   QF: 'QF',
   SF: 'SF',
+  '3rd': '3rd',
   Final: 'Final',
 }
 
+const TBD_FLAG = 'https://flagcdn.com/w320/un.png'
 
 export default function KnockoutForm({
   games,
@@ -73,6 +76,8 @@ export default function KnockoutForm({
   async function handleSaveRound(stageGames: Game[]) {
     const parsedScores: Record<string, { home: number; away: number }> = {}
     for (const game of stageGames) {
+      // Skip TBD games — can't bet on unknown matchup
+      if (game.isTbd) continue
       const s = scores[game.id]
       if (!lockedGames[game.id]) {
         parsedScores[game.id] = { 
@@ -126,12 +131,18 @@ export default function KnockoutForm({
     )
   }
 
+  // Helper to get team display name
+  const getTeamName = (team: Game['homeTeam']) => {
+    if (!team) return 'TBD'
+    return teamsDict?.[team.name] || team.name
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
       {presentStages.map(stage => {
         const stageGames = gamesByStage[stage]
         const allLocked = stageGames.every(g => lockedGames[g.id])
-        const anyUnlocked = stageGames.some(g => !lockedGames[g.id])
+        const anyUnlocked = stageGames.some(g => !lockedGames[g.id] && !g.isTbd)
         const isSaved = savedRounds[stage]
         const isExpanded = expandedStages[stage]
 
@@ -178,60 +189,83 @@ export default function KnockoutForm({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: anyUnlocked ? '1.5rem' : '0' }}>
               {stageGames.map(game => {
                 const locked = lockedGames[game.id]
+                const isTbd = game.isTbd
+                const disabled = locked || isTbd
                 const kickoff = new Date(game.kickoffTime)
                 return (
                   <div key={game.id} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem',
                     padding: '1.25rem 1.5rem', background: 'var(--bg-primary)', borderRadius: '12px',
-                    border: '1px solid var(--border-subtle)',
-                    opacity: locked ? 0.65 : 1
+                    border: isTbd ? '1px dashed var(--border-subtle)' : '1px solid var(--border-subtle)',
+                    opacity: locked ? 0.65 : isTbd ? 0.75 : 1
                   }}>
                     <div style={{ flex: 1, minWidth: '160px' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                         {kickoff.toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}
                         {locked && <span style={{ marginLeft: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> {dict.locked}</span>}
+                        {isTbd && !locked && <span style={{ marginLeft: '0.5rem', color: 'var(--warning, #f59e0b)', fontSize: '0.75rem', fontWeight: 600 }}>⏳ TBD</span>}
                       </div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>
-                        <Link href={`/team/${game.homeTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-                          <img src={game.homeTeam.flagUrl} alt={teamsDict?.[game.homeTeam.name] || game.homeTeam.name} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
-                          {teamsDict?.[game.homeTeam.name] || game.homeTeam.name}
-                        </Link>
+                        {game.homeTeam ? (
+                          <Link href={`/team/${game.homeTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
+                            <img src={game.homeTeam.flagUrl} alt={getTeamName(game.homeTeam)} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
+                            {getTeamName(game.homeTeam)}
+                          </Link>
+                        ) : (
+                          <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                            <img src={TBD_FLAG} alt="TBD" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px', opacity: 0.5 }} />
+                            TBD
+                          </span>
+                        )}
                         <span style={{ color: 'var(--text-secondary)', fontWeight: 400, margin: '0 8px' }}>vs</span>
-                        <Link href={`/team/${game.awayTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-                          <img src={game.awayTeam.flagUrl} alt={teamsDict?.[game.awayTeam.name] || game.awayTeam.name} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
-                          {teamsDict?.[game.awayTeam.name] || game.awayTeam.name}
-                        </Link>
+                        {game.awayTeam ? (
+                          <Link href={`/team/${game.awayTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
+                            <img src={game.awayTeam.flagUrl} alt={getTeamName(game.awayTeam)} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
+                            {getTeamName(game.awayTeam)}
+                          </Link>
+                        ) : (
+                          <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                            <img src={TBD_FLAG} alt="TBD" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px', opacity: 0.5 }} />
+                            TBD
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
-                        <button type="button" onClick={() => handleIncrement(game.id, 'home', -1)} disabled={locked} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: locked ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
-                        <input type="number" min="0" max="99" placeholder="0" disabled={locked} inputMode="numeric" pattern="[0-9]*"
-                          style={{ width: '40px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: locked ? 0.5 : 1, margin: 0 }}
-                          value={scores[game.id]?.home ?? ""}
-                          onChange={e => {
-                            const val = e.target.value;
-                            if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'home', val)
-                          }}
-                        />
-                        <button type="button" onClick={() => handleIncrement(game.id, 'home', 1)} disabled={locked} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: locked ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
+                    {isTbd ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                        ⏳ {dict.waitingForTeams || 'Waiting for teams'}
                       </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                          <button type="button" onClick={() => handleIncrement(game.id, 'home', -1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
+                          <input type="number" min="0" max="99" placeholder="0" disabled={disabled} inputMode="numeric" pattern="[0-9]*"
+                            style={{ width: '40px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: disabled ? 0.5 : 1, margin: 0 }}
+                            value={scores[game.id]?.home ?? ""}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'home', val)
+                            }}
+                          />
+                          <button type="button" onClick={() => handleIncrement(game.id, 'home', 1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
+                        </div>
 
-                      <span style={{ color: 'var(--text-secondary)', padding: '0 4px', fontWeight: 'bold' }}>:</span>
+                        <span style={{ color: 'var(--text-secondary)', padding: '0 4px', fontWeight: 'bold' }}>:</span>
 
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
-                        <button type="button" onClick={() => handleIncrement(game.id, 'away', -1)} disabled={locked} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: locked ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
-                        <input type="number" min="0" max="99" placeholder="0" disabled={locked} inputMode="numeric" pattern="[0-9]*"
-                          style={{ width: '40px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: locked ? 0.5 : 1, margin: 0 }}
-                          value={scores[game.id]?.away ?? ""}
-                          onChange={e => {
-                            const val = e.target.value;
-                            if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'away', val)
-                          }}
-                        />
-                        <button type="button" onClick={() => handleIncrement(game.id, 'away', 1)} disabled={locked} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: locked ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                          <button type="button" onClick={() => handleIncrement(game.id, 'away', -1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
+                          <input type="number" min="0" max="99" placeholder="0" disabled={disabled} inputMode="numeric" pattern="[0-9]*"
+                            style={{ width: '40px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: disabled ? 0.5 : 1, margin: 0 }}
+                            value={scores[game.id]?.away ?? ""}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'away', val)
+                            }}
+                          />
+                          <button type="button" onClick={() => handleIncrement(game.id, 'away', 1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )
               })}

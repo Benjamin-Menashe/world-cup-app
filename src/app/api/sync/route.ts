@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { deriveGroupStandingsFromGames } from "@/lib/lockTime"
+import { teamNamesMatch } from "@/lib/teams"
 
 const API_KEY = process.env.API_FOOTBALL_KEY || ""
 const SYNC_SECRET = process.env.SYNC_SECRET || "wc2026-sync-secret"
@@ -27,14 +28,6 @@ interface ApiScorer {
   statistics: Array<{ goals: { total: number | null } }>
 }
 
-// Fuzzy team-name match: handles cases like "Cape Verde" vs "Cape Verde Islands"
-function teamNamesMatch(dbName: string, apiName: string): boolean {
-  const a = dbName.toLowerCase()
-  const b = apiName.toLowerCase()
-  if (a === b) return true
-  // One contains the other (handles suffixes like "Islands", "Republic", etc.)
-  return a.includes(b) || b.includes(a)
-}
 
 async function runSync(force: boolean = false) {
   const headers = { "x-apisports-key": API_KEY }
@@ -114,8 +107,11 @@ async function runSync(force: boolean = false) {
 
       for (const fixture of fixtures) {
         // Match by team names (case-insensitive, with fuzzy fallback)
+        // Skip DB games where either team is null (TBD knockout games)
         const g = dbGames.find(
           (match) =>
+            match.homeTeam &&
+            match.awayTeam &&
             teamNamesMatch(match.homeTeam.name, fixture.teams.home.name) &&
             teamNamesMatch(match.awayTeam.name, fixture.teams.away.name)
         )
@@ -175,7 +171,7 @@ async function runSync(force: boolean = false) {
               processedGames.push(g.id)
               processedGamesUpdated = true
             } catch (err) {
-              summary.errors.push(`Failed to fetch events for ${g.homeTeam.name} vs ${g.awayTeam.name}`)
+              summary.errors.push(`Failed to fetch events for ${g.homeTeam?.name ?? 'TBD'} vs ${g.awayTeam?.name ?? 'TBD'}`)
             }
           }
         }
@@ -194,10 +190,12 @@ async function runSync(force: boolean = false) {
       const finishedGroupGames = dbGames.filter(
         g => g.stage === 'Group' && g.isFinished && g.homeScore !== null && g.awayScore !== null
       )
-      const teamGroupMap = new Map(dbGames.flatMap(g => [
-        [g.homeTeamId, g.homeTeam.group],
-        [g.awayTeamId, g.awayTeam.group],
-      ]))
+      const teamGroupMap = new Map(dbGames
+        .filter(g => g.homeTeam && g.awayTeam)
+        .flatMap(g => [
+          [g.homeTeamId, g.homeTeam!.group],
+          [g.awayTeamId, g.awayTeam!.group],
+        ]))
 
       const groupLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
       let groupsFinalized = 0
