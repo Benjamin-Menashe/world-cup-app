@@ -194,76 +194,82 @@ export default function KnockoutForm({
                 const kickoff = new Date(game.kickoffTime)
                 return (
                   <div key={game.id} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem',
+                    display: 'flex', flexDirection: 'column', gap: '0.75rem',
                     padding: '1.25rem 1.5rem', background: 'var(--bg-primary)', borderRadius: '12px',
                     border: isTbd ? '1px dashed var(--border-subtle)' : '1px solid var(--border-subtle)',
                     opacity: locked ? 0.65 : isTbd ? 0.75 : 1
                   }}>
-                    <div style={{ flex: 1, minWidth: '160px' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                        {kickoff.toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}
-                        {locked && <span style={{ marginLeft: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> {dict.locked}</span>}
-                        {isTbd && !locked && <span style={{ marginLeft: '0.5rem', color: 'var(--warning, #f59e0b)', fontSize: '0.75rem', fontWeight: 600 }}>⏳ TBD</span>}
-                      </div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>
-                        {game.homeTeam ? (
-                          <Link href={`/team/${game.homeTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-                            <img src={game.homeTeam.flagUrl} alt={getTeamName(game.homeTeam)} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
-                            {getTeamName(game.homeTeam)}
-                          </Link>
-                        ) : (
-                          <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                            <img src={TBD_FLAG} alt="TBD" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px', opacity: 0.5 }} />
-                            TBD
-                          </span>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      {kickoff.toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}
+                      {locked && <span style={{ marginInlineStart: '0.5rem', color: 'var(--red)' }}><Lock size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> {dict.locked}</span>}
+                      {isTbd && !locked && <span style={{ marginInlineStart: '0.5rem', color: 'var(--warning, #f59e0b)', fontSize: '0.75rem', fontWeight: 600 }}>⏳ TBD</span>}
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 600, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {game.homeTeam ? (
+                            <Link href={`/team/${game.homeTeam.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                              <img src={game.homeTeam.flagUrl} alt={getTeamName(game.homeTeam)} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginInlineEnd: '8px' }} />
+                              {getTeamName(game.homeTeam)}
+                            </Link>
+                          ) : (
+                            <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                              <img src={TBD_FLAG} alt="TBD" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginInlineEnd: '8px', opacity: 0.5 }} />
+                              TBD
+                            </span>
+                          )}
+                        </div>
+                        {!isTbd && (
+                          <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden', flexShrink: 0 }}>
+                            <button type="button" onClick={() => handleIncrement(game.id, 'home', -1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.4rem 0.6rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>-</button>
+                            <input type="number" min="0" max="99" placeholder="0" disabled={disabled} inputMode="numeric" pattern="[0-9]*"
+                              style={{ width: '36px', textAlign: 'center', fontSize: '1.1rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: disabled ? 0.5 : 1, margin: 0, padding: 0 }}
+                              value={scores[game.id]?.home ?? ""}
+                              onChange={e => {
+                                const val = e.target.value;
+                                if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'home', val)
+                              }}
+                            />
+                            <button type="button" onClick={() => handleIncrement(game.id, 'home', 1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.4rem 0.6rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>+</button>
+                          </div>
                         )}
-                        <span style={{ color: 'var(--text-secondary)', fontWeight: 400, margin: '0 8px' }}>vs</span>
-                        {game.awayTeam ? (
-                          <Link href={`/team/${game.awayTeam.id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-                            <img src={game.awayTeam.flagUrl} alt={getTeamName(game.awayTeam)} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
-                            {getTeamName(game.awayTeam)}
-                          </Link>
-                        ) : (
-                          <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                            <img src={TBD_FLAG} alt="TBD" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px', opacity: 0.5 }} />
-                            TBD
-                          </span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 600, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {game.awayTeam ? (
+                            <Link href={`/team/${game.awayTeam.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                              <img src={game.awayTeam.flagUrl} alt={getTeamName(game.awayTeam)} style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginInlineEnd: '8px' }} />
+                              {getTeamName(game.awayTeam)}
+                            </Link>
+                          ) : (
+                            <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                              <img src={TBD_FLAG} alt="TBD" style={{ width: '1.2rem', height: '0.9rem', objectFit: 'cover', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', marginInlineEnd: '8px', opacity: 0.5 }} />
+                              TBD
+                            </span>
+                          )}
+                        </div>
+                        {!isTbd && (
+                          <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden', flexShrink: 0 }}>
+                            <button type="button" onClick={() => handleIncrement(game.id, 'away', -1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.4rem 0.6rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>-</button>
+                            <input type="number" min="0" max="99" placeholder="0" disabled={disabled} inputMode="numeric" pattern="[0-9]*"
+                              style={{ width: '36px', textAlign: 'center', fontSize: '1.1rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: disabled ? 0.5 : 1, margin: 0, padding: 0 }}
+                              value={scores[game.id]?.away ?? ""}
+                              onChange={e => {
+                                const val = e.target.value;
+                                if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'away', val)
+                              }}
+                            />
+                            <button type="button" onClick={() => handleIncrement(game.id, 'away', 1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.4rem 0.6rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>+</button>
+                          </div>
                         )}
                       </div>
                     </div>
-                    {isTbd ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+
+                    {isTbd && (
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic', marginTop: '0.25rem' }}>
                         ⏳ {dict.waitingForTeams || 'Waiting for teams'}
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
-                          <button type="button" onClick={() => handleIncrement(game.id, 'home', -1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
-                          <input type="number" min="0" max="99" placeholder="0" disabled={disabled} inputMode="numeric" pattern="[0-9]*"
-                            style={{ width: '40px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: disabled ? 0.5 : 1, margin: 0 }}
-                            value={scores[game.id]?.home ?? ""}
-                            onChange={e => {
-                              const val = e.target.value;
-                              if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'home', val)
-                            }}
-                          />
-                          <button type="button" onClick={() => handleIncrement(game.id, 'home', 1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
-                        </div>
-
-                        <span style={{ color: 'var(--text-secondary)', padding: '0 4px', fontWeight: 'bold' }}>:</span>
-
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
-                          <button type="button" onClick={() => handleIncrement(game.id, 'away', -1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>-</button>
-                          <input type="number" min="0" max="99" placeholder="0" disabled={disabled} inputMode="numeric" pattern="[0-9]*"
-                            style={{ width: '40px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', border: 'none', background: 'transparent', color: 'black', opacity: disabled ? 0.5 : 1, margin: 0 }}
-                            value={scores[game.id]?.away ?? ""}
-                            onChange={e => {
-                              const val = e.target.value;
-                              if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 99)) updateScore(game.id, 'away', val)
-                            }}
-                          />
-                          <button type="button" onClick={() => handleIncrement(game.id, 'away', 1)} disabled={disabled} style={{ background: 'none', border: 'none', color: '#666', padding: '0.5rem 0.75rem', cursor: disabled ? 'default' : 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>+</button>
-                        </div>
                       </div>
                     )}
                   </div>
