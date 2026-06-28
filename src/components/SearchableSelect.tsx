@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Select from "react-select"
 
 const customStyles = {
@@ -69,11 +70,32 @@ export default function SearchableSelect({
   isMulti?: boolean
   isDisabled?: boolean
 }) {
-  const selectedOption = value !== undefined
-    ? value
-    : (isMulti 
+  const [internalValue, setInternalValue] = useState<any>(() => {
+    return isMulti 
         ? options.filter(o => (defaultValue as string[])?.includes(o.value))
-        : options.find(o => o.value === defaultValue) || null)
+        : options.find(o => o.value === defaultValue) || null
+  })
+
+  // Sync internal value if defaultValue changes (e.g. from a server action revalidation)
+  useEffect(() => {
+    setInternalValue(
+      isMulti 
+        ? options.filter(o => (defaultValue as string[])?.includes(o.value))
+        : options.find(o => o.value === defaultValue) || null
+    )
+  }, [JSON.stringify(defaultValue), isMulti]) // intentionally omitting options to avoid reset on every render
+
+  const isControlled = value !== undefined
+  const selectedOption = isControlled ? value : internalValue
+
+  const handleChange = (val: any, actionMeta: any) => {
+    if (!isControlled) {
+      setInternalValue(val)
+    }
+    if (onChange) {
+      onChange(val, actionMeta)
+    }
+  }
 
   return (
     <>
@@ -81,7 +103,7 @@ export default function SearchableSelect({
         name={name}
         options={options}
         value={selectedOption}
-        onChange={onChange}
+        onChange={handleChange}
         placeholder={placeholder}
         required={required}
         styles={customStyles}
