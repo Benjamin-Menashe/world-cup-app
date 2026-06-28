@@ -64,7 +64,7 @@ export default function SearchableSelect({
   options: { value: string; label: string }[]
   defaultValue?: string | string[]
   value?: any
-  onChange?: (val: any) => void
+  onChange?: (val: any, actionMeta?: any) => void
   placeholder?: string
   required?: boolean
   isMulti?: boolean
