@@ -15,31 +15,7 @@ type GameData = {
   isFinished: boolean
   isLocked: boolean
   status: 'live' | 'upcoming' | 'finished'
-}
-
-type PredictionData = {
-  userId: string
-  name: string
-  isCurrentUser: boolean
-  homeScore: number | null
-  awayScore: number | null
-  hasBet: boolean
-  visible: boolean
-}
-
-type GamePredictionResponse = {
-  game: {
-    id: string
-    stage: string
-    kickoffTime: string
-    homeTeam: { name: string; flagUrl: string }
-    awayTeam: { name: string; flagUrl: string }
-    homeScore: number | null
-    awayScore: number | null
-    isFinished: boolean
-    isLocked: boolean
-  }
-  predictions: PredictionData[]
+  userPrediction?: { homeScore: number | null, awayScore: number | null } | null
 }
 
 type Dict = {
@@ -59,9 +35,6 @@ export default function MatchCenter({
   appTime?: string
   lang?: string
 }) {
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
-  const [predictions, setPredictions] = useState<GamePredictionResponse | null>(null)
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const d = dict.home
@@ -81,25 +54,8 @@ export default function MatchCenter({
       return
     }
 
-    // Knockout game locked/live/finished: toggle predictions panel
-    if (selectedGameId === game.id) {
-      setSelectedGameId(null)
-      setPredictions(null)
-      return
-    }
-    setSelectedGameId(game.id)
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/game-predictions?gameId=${game.id}`)
-      if (res.ok) {
-        const data = await res.json()
-        setPredictions(data)
-      }
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
+    // Knockout game locked/live/finished: redirect to specific game page
+    router.push(`/game/${game.id}`)
   }
 
   const formatTime = (iso: string) => {
@@ -130,26 +86,6 @@ export default function MatchCenter({
     return { bg: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.25)', badge: '#3b82f6', badgeBg: 'rgba(59,130,246,0.1)' }
   }
 
-  // Compute scoring for a prediction
-  const computePoints = (pred: PredictionData, game: GamePredictionResponse['game']) => {
-    if (!game.isFinished || game.homeScore === null || game.awayScore === null) return null
-    if (!pred.visible || pred.homeScore === null || pred.awayScore === null) return null
-
-    const bh = pred.homeScore
-    const ba = pred.awayScore
-    const ah = game.homeScore
-    const aa = game.awayScore
-
-    let pts = 0
-    const betDir = bh > ba ? 1 : bh < ba ? -1 : 0
-    const actDir = ah > aa ? 1 : ah < aa ? -1 : 0
-    if (betDir === actDir) pts += 2
-    if (bh === ah) pts += 1
-    if (ba === aa) pts += 1
-    if (game.stage === 'Final') pts *= 2
-    return pts
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Match Center Card */}
@@ -176,11 +112,6 @@ export default function MatchCenter({
             scrollbarWidth: 'thin'
           }}>
             {games.map(game => {
-              const colors = statusColor(game.status)
-              const isSelected = selectedGameId === game.id
-              const knockout = isKnockout(game.stage)
-              const clickable = isLoggedIn && (knockout)
-
               return (
                 <div
                   key={game.id}
@@ -189,8 +120,8 @@ export default function MatchCenter({
                     minWidth: '200px',
                     maxWidth: '240px',
                     flex: '0 0 auto',
-                    background: isSelected ? 'rgba(59,130,246,0.12)' : colors.bg,
-                    border: isSelected ? '2px solid var(--accent)' : colors.border,
+                    background: colors.bg,
+                    border: colors.border,
                     borderRadius: '12px',
                     padding: '1rem',
                     cursor: clickable ? 'pointer' : 'default',
@@ -263,9 +194,15 @@ export default function MatchCenter({
                   {game.status === 'upcoming' && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.2rem' }}>
                       {knockout && !game.isLocked ? (
-                        <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
-                          {d.predictNow || '→ Predict now'}
-                        </span>
+                        game.userPrediction ? (
+                          <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                            {d.yourPrediction || 'Your Pick'}: {game.userPrediction.homeScore} - {game.userPrediction.awayScore}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                            {d.predictNow || '→ Predict now'}
+                          </span>
+                        )
                       ) : (
                         <>{d.kicksOff} {formatDateTime(game.kickoffTime)}</>
                       )}
@@ -277,124 +214,6 @@ export default function MatchCenter({
           </div>
         )}
       </div>
-
-      {/* Predictions Panel */}
-      {isLoggedIn && selectedGameId && (
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.2rem', marginBottom: '1rem' }}>
-            ⚽ {d.predictions}
-          </h2>
-
-          {loading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-              <div style={{ width: 24, height: 24, border: '3px solid var(--border-subtle)', borderTop: '3px solid var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            </div>
-          ) : predictions ? (
-            <div>
-              {/* Game header */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '1rem',
-                padding: '0.75rem',
-                background: 'rgba(0,0,0,0.02)',
-                borderRadius: '10px',
-                marginBottom: '1rem'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <img src={predictions.game.homeTeam.flagUrl} alt="" style={{ width: 20, borderRadius: 2 }} />
-                  <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{predictions.game.homeTeam.name}</span>
-                </div>
-                {predictions.game.isFinished ? (
-                  <span style={{ fontSize: '1.3rem', fontWeight: 700 }}>
-                    {predictions.game.homeScore} - {predictions.game.awayScore}
-                  </span>
-                ) : (
-                  <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>vs</span>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{predictions.game.awayTeam.name}</span>
-                  <img src={predictions.game.awayTeam.flagUrl} alt="" style={{ width: 20, borderRadius: 2 }} />
-                </div>
-              </div>
-
-              {/* Predictions list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                {predictions.predictions.map(pred => {
-                  const pts = computePoints(pred, predictions.game)
-                  return (
-                    <div
-                      key={pred.userId}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '0.6rem 0.85rem',
-                        borderRadius: '8px',
-                        background: pred.isCurrentUser ? 'rgba(59,130,246,0.1)' : 'rgba(0,0,0,0.02)',
-                        border: pred.isCurrentUser ? '1px solid rgba(59,130,246,0.25)' : '1px solid transparent'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{
-                          fontWeight: pred.isCurrentUser ? 700 : 500,
-                          fontSize: '0.9rem'
-                        }}>
-                          {pred.name}
-                          {pred.isCurrentUser && <span style={{ color: 'var(--accent)', fontSize: '0.75rem', marginLeft: '0.25rem' }}>★</span>}
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        {pred.visible ? (
-                          pred.hasBet ? (
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.3rem',
-                              background: 'white',
-                              padding: '3px 10px',
-                              borderRadius: '6px',
-                              border: '1px solid var(--border-subtle)',
-                              fontWeight: 700,
-                              fontSize: '0.85rem'
-                            }}>
-                              {pred.homeScore} - {pred.awayScore}
-                            </span>
-                          ) : (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                              {d.noPrediction}
-                            </span>
-                          )
-                        ) : (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>🔒</span>
-                        )}
-
-                        {pts !== null && (
-                          <span style={{
-                            fontSize: '0.8rem',
-                            fontWeight: 700,
-                            color: pts > 0 ? 'var(--success)' : 'var(--text-secondary)',
-                            minWidth: '40px',
-                            textAlign: 'right'
-                          }}>
-                            +{pts} {d.pointsEarned}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ) : (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
-              {d.selectGame}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   )
 }

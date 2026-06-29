@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import type { PointBreakdown } from "@/lib/scoring"
+import Link from "next/link"
 
 type SectionConfig = {
   key: string
@@ -61,33 +62,88 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict, lang = 'en' 
     if (dict?.breakdown?.[cat]) cat = dict.breakdown[cat]
     else if (cat.startsWith('group_')) cat = `${dict.home.groups} ${cat.split('_')[1]}`
 
-    return (
-      <div className="breakdown-row" key={i} style={{
-        padding: '0.6rem 1rem',
-        background: i % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
-        borderBottom: !isLast ? '1px solid rgba(0,0,0,0.04)' : 'none',
-      }}>
-        <span className="breakdown-cat" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {cat}
-        </span>
-        <span className="breakdown-part1" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {part1}
-        </span>
-        <span className="breakdown-part2" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {part3 && (part3 === t('finalMultiplier') || part3 === t('goalBonus')) ? 
-            <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{part3}</span> : 
-            (part2 || part3)}
-        </span>
-        <div className="breakdown-points" style={{ textAlign: 'right' }}>
-          <span style={{ 
-            fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0.15rem 0.5rem', borderRadius: '6px',
-            color: item.points > 0 ? config.color : 'var(--text-secondary)',
-            background: item.points > 0 ? `${config.color}20` : 'rgba(0,0,0,0.03)',
-            border: item.points > 0 ? `1px solid ${config.color}30` : '1px solid transparent'
-          }}>
-            {item.points > 0 ? `+${item.points}` : '0'} {dict?.breakdown?.pts || (lang === 'he' ? 'נק\'' : 'pts')}
+    let innerContent;
+
+    if (item.group === 'knockout') {
+      let firstLine = cat;
+      const actualScoreRaw = detailParts[1] ? detailParts[1].replace('actual: ', '') : '';
+      if (actualScoreRaw && actualScoreRaw !== 'tbd' && actualScoreRaw !== t('tbd')) {
+        firstLine = actualScoreRaw;
+      }
+
+      let secondLine = detailParts[0] || '';
+      if (secondLine.startsWith('predicted: ')) secondLine = secondLine.replace('predicted: ', `${t('predicted')} `).replace('hidden', t('hidden'))
+
+      innerContent = (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: '150px' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {firstLine}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              {secondLine} {part3 ? `| ${part3}` : ''}
+            </span>
+          </div>
+          <div className="breakdown-points" style={{ textAlign: 'right', flexShrink: 0 }}>
+            <span style={{ 
+              fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0.15rem 0.5rem', borderRadius: '6px',
+              color: item.points > 0 ? config.color : 'var(--text-secondary)',
+              background: item.points > 0 ? `${config.color}20` : 'rgba(0,0,0,0.03)',
+              border: item.points > 0 ? `1px solid ${config.color}30` : '1px solid transparent'
+            }}>
+              {item.points > 0 ? `+${item.points}` : '0'} {dict?.breakdown?.pts || (lang === 'he' ? 'נק\'' : 'pts')}
+            </span>
+          </div>
+        </>
+      )
+    } else {
+      innerContent = (
+        <>
+          <span className="breakdown-cat" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {cat}
           </span>
-        </div>
+          <span className="breakdown-part1" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {part1}
+          </span>
+          <span className="breakdown-part2" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {part3 && (part3 === t('finalMultiplier') || part3 === t('goalBonus')) ? 
+              <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{part3}</span> : 
+              (part2 || part3)}
+          </span>
+          <div className="breakdown-points" style={{ textAlign: 'right' }}>
+            <span style={{ 
+              fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0.15rem 0.5rem', borderRadius: '6px',
+              color: item.points > 0 ? config.color : 'var(--text-secondary)',
+              background: item.points > 0 ? `${config.color}20` : 'rgba(0,0,0,0.03)',
+              border: item.points > 0 ? `1px solid ${config.color}30` : '1px solid transparent'
+            }}>
+              {item.points > 0 ? `+${item.points}` : '0'} {dict?.breakdown?.pts || (lang === 'he' ? 'נק\'' : 'pts')}
+            </span>
+          </div>
+        </>
+      )
+    }
+
+    const rowStyle = {
+      padding: '0.6rem 1rem',
+      background: i % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
+      borderBottom: !isLast ? '1px solid rgba(0,0,0,0.04)' : 'none',
+      ...(item.group === 'knockout' ? { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' } : {})
+    };
+
+    if (item.gameId && item.group === 'knockout') {
+      return (
+        <Link href={`/game/${item.gameId}`} key={i} style={{ textDecoration: 'none', display: 'block', color: 'inherit' }}>
+          <div className={item.group === 'knockout' ? "" : "breakdown-row"} style={rowStyle}>
+            {innerContent}
+          </div>
+        </Link>
+      )
+    }
+
+    return (
+      <div className={item.group === 'knockout' ? "" : "breakdown-row"} key={i} style={rowStyle}>
+        {innerContent}
       </div>
     )
   }

@@ -54,6 +54,7 @@ export type PointBreakdown = {
   details?: string;
   group: 'golden_boot' | 'knockout' | 'specials' | 'group_rankings';
   stage?: string;
+  gameId?: string;
 }
 
 export async function calculateUserPoints(
@@ -159,7 +160,8 @@ export async function calculateUserPoints(
       stage: game.stage,
       category: `${game.homeTeam.name} vs ${game.awayTeam.name}`,
       points: gamePoints,
-      details
+      details,
+      gameId: game.id
     })
   }
 

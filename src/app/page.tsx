@@ -151,6 +151,9 @@ export default async function Home() {
       const lockTime = new Date(kickoff - 60 * 60 * 1000);
       const gameLocked = now >= lockTime;
 
+      const userBet = user?.gameBets?.find(b => b.gameId === g.id);
+      const userPrediction = userBet ? { homeScore: userBet.homeScore, awayScore: userBet.awayScore } : null;
+
       return {
         id: g.id,
         stage: g.stage,
@@ -161,7 +164,8 @@ export default async function Home() {
         awayScore: g.awayScore,
         isFinished: g.isFinished,
         isLocked: gameLocked,
-        status
+        status,
+        userPrediction
       };
     });
 
