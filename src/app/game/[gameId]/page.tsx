@@ -71,11 +71,8 @@ export default async function GamePredictionsPage({ params }: { params: Promise<
       }
     })
 
-    // Sort: current user first, then by homeScore, awayScore, then alphabetically
+    // Sort: purely by homeScore, awayScore, then alphabetically
     predictions.sort((a, b) => {
-      if (a.isCurrentUser) return -1
-      if (b.isCurrentUser) return 1
-      
       if (a.homeScore !== null && b.homeScore !== null) {
         if (a.homeScore !== b.homeScore) {
           return b.homeScore - a.homeScore
