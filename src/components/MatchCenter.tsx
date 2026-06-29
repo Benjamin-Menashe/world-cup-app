@@ -112,6 +112,10 @@ export default function MatchCenter({
             scrollbarWidth: 'thin'
           }}>
             {games.map(game => {
+              const colors = statusColor(game.status)
+              const knockout = isKnockout(game.stage)
+              const clickable = isLoggedIn && knockout
+
               return (
                 <div
                   key={game.id}
