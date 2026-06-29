@@ -71,10 +71,24 @@ export default async function GamePredictionsPage({ params }: { params: Promise<
       }
     })
 
-    // Sort: current user first, then alphabetically
+    // Sort: current user first, then by homeScore, awayScore, then alphabetically
     predictions.sort((a, b) => {
       if (a.isCurrentUser) return -1
       if (b.isCurrentUser) return 1
+      
+      if (a.homeScore !== null && b.homeScore !== null) {
+        if (a.homeScore !== b.homeScore) {
+          return b.homeScore - a.homeScore
+        }
+        if (a.awayScore !== null && b.awayScore !== null && a.awayScore !== b.awayScore) {
+          return b.awayScore - a.awayScore
+        }
+      } else if (a.homeScore !== null && b.homeScore === null) {
+        return -1
+      } else if (a.homeScore === null && b.homeScore !== null) {
+        return 1
+      }
+
       return a.name.localeCompare(b.name)
     })
 
