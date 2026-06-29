@@ -158,7 +158,7 @@ export default function MatchCenter({
                       {game.status === 'live' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />}
                       {game.status === 'live' && d.live}
                       {game.status === 'finished' && <><CheckCircle size={10} /> {d.finished}</>}
-                      {game.status === 'upcoming' && <><Clock size={10} /> {d.upcoming}</>}
+                      {game.status === 'upcoming' && <><Clock size={10} /> {d.upcoming} {formatTime(game.kickoffTime)}</>}
                     </span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                       {game.stage}

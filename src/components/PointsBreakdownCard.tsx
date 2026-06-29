@@ -68,7 +68,12 @@ function SectionSubtotal({ items, config, defaultOpen = true, dict, lang = 'en' 
       let firstLine = cat;
       const actualScoreRaw = detailParts[1] ? detailParts[1].replace('actual: ', '') : '';
       if (actualScoreRaw && actualScoreRaw !== 'tbd' && actualScoreRaw !== t('tbd')) {
-        firstLine = actualScoreRaw;
+        const scoreMatch = actualScoreRaw.match(/\d+\s*-\s*\d+/);
+        if (scoreMatch) {
+          firstLine = cat.replace(' vs ', ` ${scoreMatch[0]} `);
+        } else {
+          firstLine = actualScoreRaw;
+        }
       }
 
       let secondLine = detailParts[0] || '';
