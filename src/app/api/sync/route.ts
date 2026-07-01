@@ -108,12 +108,14 @@ async function runSync(force: boolean = false) {
       for (const fixture of fixtures) {
         // Match by team names (case-insensitive, with fuzzy fallback)
         // Skip DB games where either team is null (TBD knockout games)
+        const apiKickoff = new Date(fixture.fixture.date)
         const g = dbGames.find(
           (match) =>
             match.homeTeam &&
             match.awayTeam &&
             teamNamesMatch(match.homeTeam.name, fixture.teams.home.name) &&
-            teamNamesMatch(match.awayTeam.name, fixture.teams.away.name)
+            teamNamesMatch(match.awayTeam.name, fixture.teams.away.name) &&
+            Math.abs(match.kickoffTime.getTime() - apiKickoff.getTime()) < 48 * 60 * 60 * 1000 // within 48h to avoid group vs knockout mismatch
         )
 
         if (g) {
@@ -153,7 +155,7 @@ async function runSync(force: boolean = false) {
               const evData = await evRes.json()
               const events = evData.response || []
               
-              const goals = events.filter((e: any) => e.type === 'Goal' && (e.detail === 'Normal Goal' || e.detail === 'Penalty'))
+              const goals = events.filter((e: any) => e.type === 'Goal' && (e.detail === 'Normal Goal' || e.detail === 'Penalty') && e.comments !== 'Penalty Shootout')
               
               for (const goal of goals) {
                 const apiName = goal.player.name.toLowerCase()

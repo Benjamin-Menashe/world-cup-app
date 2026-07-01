@@ -130,7 +130,7 @@ export default async function Home() {
   });
 
   const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-  const matchDurationMs = 105 * 60 * 1000; // ~105 min per match
+  const matchDurationMs = 130 * 60 * 1000; // ~130 min per match
 
   const gamesForClient = matchCenterGames
     .filter(g => {
