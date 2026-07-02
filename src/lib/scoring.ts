@@ -97,7 +97,7 @@ export async function calculateUserPoints(
       const pts = bet.player.goalsScored + bonus
       totalPoints += pts
       const suffix = isTopScorer ? 'bonus' : ''
-      const detailsName = playersDict[bet.player.name] || bet.player.name
+      const detailsName = playersDict[bet.player?.name || ''] || bet.player?.name || 'Unknown'
       breakdown.push({
         group: 'golden_boot',
         category: 'golden_boot',
@@ -242,7 +242,7 @@ export async function calculateUserPoints(
     const bet = user.championBets[0]
     const isChampSet = !!resultMap["Champion"]
     const pts = isChampSet && resultMap["Champion"] === bet.teamId ? 10 : 0
-    const champName = teamsDict[bet.team.name] || bet.team.name
+    const champName = teamsDict[bet.team?.name || ''] || bet.team?.name || 'Unknown'
     const suffix = isChampSet ? (pts > 0 ? 'ok' : 'no') : 'tbd'
     breakdown.push({ 
       group: 'specials', 
@@ -262,7 +262,7 @@ export async function calculateUserPoints(
     else if (isTeamEliminatedFromUndefeated(bet.winnerTeamId)) suffix = 'elim'
     else suffix = 'tbd'
     if (undefeatedTeamIds.has(bet.winnerTeamId)) totalPoints += pts
-    const detailsName = teamsDict[bet.winnerTeam.name] || bet.winnerTeam.name
+    const detailsName = teamsDict[bet.winnerTeam?.name || ''] || bet.winnerTeam?.name || 'Unknown'
     breakdown.push({ 
       group: 'specials', 
       category: 'undefeated', 
@@ -281,7 +281,7 @@ export async function calculateUserPoints(
     else if (isTeamEliminatedFromWinless(bet.loserTeamId)) suffix = 'elim'
     else suffix = 'tbd'
     if (winlessTeamIds.has(bet.loserTeamId)) totalPoints += pts
-    const detailsName = teamsDict[bet.loserTeam.name] || bet.loserTeam.name
+    const detailsName = teamsDict[bet.loserTeam?.name || ''] || bet.loserTeam?.name || 'Unknown'
     breakdown.push({ 
       group: 'specials', 
       category: 'winless', 
@@ -437,8 +437,8 @@ export async function getUserRankingsInGroup(
       userId: m.userId,
       name: m.user.name,
       points: result.total,
-      championName: canViewSpecials ? (m.user.championBets[0]?.team.name ?? null) : 'Hidden',
-      goldenBootName: canViewSpecials ? (m.user.topScorerBets[0]?.player.name ?? null) : 'Hidden',
+      championName: canViewSpecials ? (m.user.championBets[0]?.team?.name ?? null) : 'Hidden',
+      goldenBootName: canViewSpecials ? (m.user.topScorerBets[0]?.player?.name ?? null) : 'Hidden',
     }
   }))
 

@@ -76,10 +76,10 @@ export default async function Home() {
 
     // Exact Scores in Knockout
     exactScoresCount = user.gameBets.filter(bet => 
-      bet.game.stage !== 'Group' && 
-      bet.game.isFinished && 
-      Number(bet.homeScore) === Number(bet.game.homeScore) && 
-      Number(bet.awayScore) === Number(bet.game.awayScore)
+      bet.game?.stage !== 'Group' && 
+      bet.game?.isFinished && 
+      Number(bet.homeScore) === Number(bet.game?.homeScore) && 
+      Number(bet.awayScore) === Number(bet.game?.awayScore)
     ).length;
   }
 
@@ -266,10 +266,10 @@ export default async function Home() {
                 color: 'var(--text-secondary)'
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  🏆 <strong style={{ color: 'var(--text-primary)' }}>{user.championBets[0]?.team.name ?? dict.home.none}</strong>
+                  🏆 <strong style={{ color: 'var(--text-primary)' }}>{user.championBets[0]?.team?.name ?? dict.home.none}</strong>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  👟 <strong style={{ color: 'var(--text-primary)' }}>{user.topScorerBets[0]?.player.name ?? dict.home.none}</strong>
+                  👟 <strong style={{ color: 'var(--text-primary)' }}>{user.topScorerBets[0]?.player?.name ?? dict.home.none}</strong>
                 </span>
                 {isLocked && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
