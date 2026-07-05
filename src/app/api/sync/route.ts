@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { deriveGroupStandingsFromGames } from "@/lib/lockTime"
-import { teamNamesMatch } from "@/lib/teams"
+import { teamNamesMatch, playerNamesMatch } from "@/lib/teams"
 
 const API_KEY = process.env.API_FOOTBALL_KEY || ""
 const SYNC_SECRET = process.env.SYNC_SECRET || "wc2026-sync-secret"
@@ -158,8 +158,8 @@ async function runSync(force: boolean = false) {
               const goals = events.filter((e: any) => e.type === 'Goal' && (e.detail === 'Normal Goal' || e.detail === 'Penalty') && e.comments !== 'Penalty Shootout')
               
               for (const goal of goals) {
-                const apiName = goal.player.name.toLowerCase()
-                const match = dbPlayers.find(p => p.name.toLowerCase().includes(apiName) || apiName.includes(p.name.toLowerCase()))
+                const apiName = goal.player.name
+                const match = dbPlayers.find(p => playerNamesMatch(p.name, apiName))
                 
                 if (match) {
                   await prisma.player.update({
@@ -215,7 +215,33 @@ async function runSync(force: boolean = false) {
       if (groupsFinalized > 0) summary.errors.push(`ℹ️ Auto-stored standings for ${groupsFinalized} completed group(s)`)
     }
 
-    // Old player topscorers logic removed as we now use event-based matching above
+    // ── 1c. Sync Top Scorers from API (to correct discrepancies and backfill) ──
+    try {
+      const scorersRes = await fetch(`${API_BASE}/players/topscorers?league=${LEAGUE_ID}&season=${SEASON}`, { headers })
+      if (scorersRes.ok) {
+        const scorersData = await scorersRes.json()
+        const scorers: ApiScorer[] = scorersData.response || []
+        const currentDbPlayers = await prisma.player.findMany()
+
+        for (const scorer of scorers) {
+          const apiGoals = scorer.statistics[0]?.goals?.total ?? 0
+          const apiName = scorer.player.name
+
+          const match = currentDbPlayers.find(p => playerNamesMatch(p.name, apiName))
+          if (match && match.goalsScored !== apiGoals) {
+            await prisma.player.update({
+              where: { id: match.id },
+              data: { goalsScored: apiGoals }
+            })
+            summary.playersUpdated++
+          }
+        }
+      } else {
+        summary.errors.push(`Top scorers API returned ${scorersRes.status}`)
+      }
+    } catch (scorersErr) {
+      summary.errors.push(`Failed to sync top scorers: ${(scorersErr as Error).message}`)
+    }
   } catch (err) {
     summary.errors.push((err as Error)?.message ?? "Unknown error")
   }

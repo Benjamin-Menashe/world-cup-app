@@ -54,3 +54,57 @@ export function teamNamesMatch(nameA: string | null | undefined, nameB: string |
 
   return false;
 }
+
+export function normalizePlayerName(name: string | null | undefined): string {
+  if (!name) return "";
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[^a-z0-9\s]/g, "") // remove punctuation like periods/dashes
+    .trim();
+}
+
+export function playerNamesMatch(dbName: string | null | undefined, apiName: string | null | undefined): boolean {
+  const normDb = normalizePlayerName(dbName);
+  const normApi = normalizePlayerName(apiName);
+
+  if (!normDb || !normApi) return false;
+  if (normDb === normApi) return true;
+
+  const dbParts = normDb.split(/\s+/).filter(Boolean);
+  const apiParts = normApi.split(/\s+/).filter(Boolean);
+
+  if (dbParts.length === 0 || apiParts.length === 0) return false;
+
+  if (dbParts.length === 1) {
+    return apiParts.includes(dbParts[0]);
+  }
+  if (apiParts.length === 1) {
+    return dbParts.includes(apiParts[0]);
+  }
+
+  const lastApiWord = apiParts[apiParts.length - 1];
+  const lastDbWord = dbParts[dbParts.length - 1];
+
+  if (lastApiWord === lastDbWord) {
+    const firstApi = apiParts[0];
+    const firstDb = dbParts[0];
+    if (firstApi === firstDb) return true;
+    if (firstApi.length === 1 && firstDb.startsWith(firstApi)) return true;
+    if (firstDb.length === 1 && firstApi.startsWith(firstDb)) return true;
+  }
+
+  const allApiInDb = apiParts.every(part => 
+    dbParts.some(dbPart => dbPart === part || (part.length === 1 && dbPart.startsWith(part)))
+  );
+  if (allApiInDb) return true;
+
+  const allDbInApi = dbParts.every(part => 
+    apiParts.some(apiPart => apiPart === part || (part.length === 1 && apiPart.startsWith(part)))
+  );
+  if (allDbInApi) return true;
+
+  return false;
+}
+

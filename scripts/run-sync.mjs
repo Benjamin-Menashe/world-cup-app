@@ -35,6 +35,59 @@ function teamNamesMatch(dbName, apiName) {
   return a.includes(b) || b.includes(a);
 }
 
+function normalizePlayerName(name) {
+  if (!name) return "";
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[^a-z0-9\s]/g, "") // remove punctuation like periods/dashes
+    .trim();
+}
+
+function playerNamesMatch(dbName, apiName) {
+  const normDb = normalizePlayerName(dbName);
+  const normApi = normalizePlayerName(apiName);
+
+  if (!normDb || !normApi) return false;
+  if (normDb === normApi) return true;
+
+  const dbParts = normDb.split(/\s+/).filter(Boolean);
+  const apiParts = normApi.split(/\s+/).filter(Boolean);
+
+  if (dbParts.length === 0 || apiParts.length === 0) return false;
+
+  if (dbParts.length === 1) {
+    return apiParts.includes(dbParts[0]);
+  }
+  if (apiParts.length === 1) {
+    return dbParts.includes(apiParts[0]);
+  }
+
+  const lastApiWord = apiParts[apiParts.length - 1];
+  const lastDbWord = dbParts[dbParts.length - 1];
+
+  if (lastApiWord === lastDbWord) {
+    const firstApi = apiParts[0];
+    const firstDb = dbParts[0];
+    if (firstApi === firstDb) return true;
+    if (firstApi.length === 1 && firstDb.startsWith(firstApi)) return true;
+    if (firstDb.length === 1 && firstApi.startsWith(firstDb)) return true;
+  }
+
+  const allApiInDb = apiParts.every(part => 
+    dbParts.some(dbPart => dbPart === part || (part.length === 1 && dbPart.startsWith(part)))
+  );
+  if (allApiInDb) return true;
+
+  const allDbInApi = dbParts.every(part => 
+    apiParts.some(apiPart => apiPart === part || (part.length === 1 && apiPart.startsWith(part)))
+  );
+  if (allDbInApi) return true;
+
+  return false;
+}
+
 async function main() {
   const { PrismaClient } = await import('@prisma/client');
   const prisma = new PrismaClient();
@@ -105,12 +158,9 @@ async function main() {
 
   for (const scorer of scorers) {
     const apiGoals = scorer.statistics[0]?.goals?.total ?? 0;
-    const apiName = scorer.player.name.toLowerCase();
+    const apiName = scorer.player.name;
 
-    const match = dbPlayers.find((p) =>
-      p.name.toLowerCase().includes(apiName) ||
-      apiName.includes(p.name.toLowerCase())
-    );
+    const match = dbPlayers.find((p) => playerNamesMatch(p.name, apiName));
 
     if (match && match.goalsScored !== apiGoals) {
       await prisma.player.update({
