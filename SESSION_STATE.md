@@ -1,71 +1,74 @@
-# ⚽ World Cup 2026 Betting App — Distilled Session State
+# ⚽ World Cup 2026 Betting App — Session State
 
-> **Purpose:** Everything a future AI conversation needs to understand this codebase instantly.  
-> **Last updated:** 2026-06-17
-> **Status:** Production on Vercel, live at a `.vercel.app` domain
-
----
-
-## 1. What This App Does
-
-A social World Cup betting app where friends create private groups, predict match outcomes and tournament results, and compete on leaderboards. Two main betting phases:
-
-1. **Group Stage Bets** (locked 1h before first match): Rank all 12 groups A–L, pick champion, top scorer, undefeated team, winless team.
-2. **Knockout Bets** (each locks 1h before its kickoff): Predict exact 90-minute scorelines for every knockout match.
+> **Purpose:** Quick-reference snapshot of the app's current state. Updated periodically.
+> **Last updated:** 2026-07-06
+> **Status:** Production on Vercel, live during FIFA World Cup 2026
 
 ---
 
-## 2. Tech Stack
+## 1. What This App Does (One-liner)
+
+A social World Cup betting app where friends create private groups, predict match outcomes and tournament results, and compete on leaderboards.
+
+**For full details see:** [AGENTS.md](./.agents/AGENTS.md) | [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+---
+
+## 2. Tech Stack (Quick Ref)
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
 | Framework | Next.js (App Router, Server Components) | 16.1.7 |
 | Database | PostgreSQL via Prisma ORM | Prisma 6.4.1 |
 | Auth | JWT + bcrypt + Google OAuth (HTTP-only cookies, 7-day expiry) | jsonwebtoken 9.x |
-| Styling | Vanilla CSS + CSS custom properties + Outfit font | — |
+| Styling | Vanilla CSS + CSS custom properties + Inter font | — |
 | Icons | Lucide React | 0.577.0 |
 | Dropdowns | React Select | 5.10.2 |
 | External API | API-Football (api-sports.io) | v3 |
-| Hosting | Vercel (Pro plan needed for cron) | — |
+| Hosting | Vercel (Pro plan for cron) | — |
 | Language | TypeScript, React 19 | — |
 
 ---
 
-## 3. Core Architecture Decisions
+## 3. Current Functional State
 
-### Database Schema (Prisma)
-- **TournamentResult** is a flexible key-value store. Keys include: `Champion`, `Group_A`..`Group_L`, `Undefeated`, `Winless`, `TimeOverride`, `KnockoutLockOverride`, `BaseSnapshot`, and `ProcessedGames` (for sync deduplication).
-- **Game.stage** values: `Group`, `R32`, `R16`, `QF`, `SF`, `3rd`, `Final`
-- **Team.group** stores the group letter (A–L). WC 2026 has 12 groups of 4 (48 teams).
+### ✅ Working
+- **User Bets**: Group stage and knockout betting fully working
+- **Scoring**: Point calculations for all categories are accurate
+- **Automated Sync**: Cron job runs every 5 min, fetches scores, counts player goals via events, crosschecks with top scorers API
+- **Live Scores**: Sync updates scores for in-progress games (using `fixture.goals`)
+- **Admin Panel**: Full control over tournament data, time overrides, user bet overrides
+- **Google OAuth**: Published to production, anyone can sign in
+- **Internationalization**: English and Hebrew supported with RTL layout
+- **Friend Groups**: Create, join (invite codes), leaderboards with tied-rank support
 
-### Scoring System
-- **Golden Boot**: 1 pt per goal scored + 1 bonus if top overall. Goals are tracked via `Player.goalsScored`.
-- **Performance Optimization**: `fetchGlobalScoringData()` runs all shared DB queries in a single `Promise.all`. Group standings are derived on-the-fly.
+### ⚠️ Known Issues
+1. **No client-side auto-refresh** — Match Center only updates on page reload
+2. **Admin page is huge** — `admin/page.tsx` is ~42K, single server component
 
-### Data Sync Pipeline (Automated via Cron)
-- Runs every 5 minutes (`/api/sync`).
-- **Game Scores**: Updates kickoff times and fulltime scores only when finished.
-- **Player Goals**: Uses an **event-based backfill**. When a game flips from "live" to "finished", it fetches match events exactly once (`fixtures/events`), counts "Normal Goal" and "Penalty" events, and increments player goals. Deduplicated via `ProcessedGames` in `TournamentResult`.
-
----
-
-## 4. Current State
-
-### Functional State
-- ✅ **User Bets**: Group stage and knockout betting fully working.
-- ✅ **Scoring**: Point calculations for all categories are accurate.
-- ✅ **Automated Sync**: The cron job successfully fetches scores and deduplicates event-based player goals.
-- ✅ **Admin Panel**: "Step 4" button is mapped to `/api/sync?force=true` and can reliably backfill player goals for already-finished games.
-
-### Known Issues / Broken States
-1. **Live scores during matches** — Sync API only writes scores after match ends. Fix: use `fixture.goals` for in-progress games.
-2. **game-predictions lock check** — Uses `new Date()` instead of `getEffectiveNow()`. Inconsistent with rest of codebase.
-3. **No client-side auto-refresh** — Match Center only updates on page reload.
+### 📝 Past Issues (Resolved)
+- Player goal deduplication — Solved via `ProcessedGames` key in `TournamentResult`
+- Kane penalty not counted — Was a player name matching issue, resolved by improving `playerNamesMatch()`
+- Live scores not showing during matches — Fixed: sync now uses `fixture.goals` for in-progress games
 
 ---
 
-## 5. Next Immediate Steps
+## 4. Important Context for Debugging
 
-1. **[Backfill]**: The user needs to click the "Step 4" sync button in the admin panel to backfill the player goals for the 20 games that finished prior to the event-based sync implementation.
-2. **[Fix Live Scores]**: Update the sync API and UI to display `fixture.goals.home/away` for in-progress games so users can see live updates.
-3. **[Standardize Time]**: Refactor `game-predictions` to use `getEffectiveNow()` instead of `new Date()` for correct lock checking during time-override testing.
+### Data Sync
+- API-Football league ID = **1**, season = **2026**
+- Sync early-exits if no games are active/recent (saves API quota)
+- Use `?force=true` to bypass early-exit
+- Player goals are counted via **match events** (not the top scorers endpoint alone)
+- The top scorers endpoint is used as a **crosscheck** — it only corrects upward
+
+### Scoring Gotchas
+- `WinnerLoserBet.winnerTeamId` = undefeated pick (not "winner")
+- `WinnerLoserBet.loserTeamId` = winless pick (not "loser")
+- Undefeated = 3W-0L in group stage (draws are allowed? No — code checks `r.wins === 3 && r.losses === 0`)
+- Actually: Undefeated means 3 wins, 0 losses. Draws make a team NOT undefeated in this implementation.
+- Final match scores are doubled (×2 multiplier)
+
+### Time
+- Admin timezone is **IDT (UTC+3)** — hardcoded in kickoff time input handling
+- `getEffectiveNow()` is the canonical time function — always use it

@@ -101,14 +101,24 @@ src/
 
 | Category | Points |
 |----------|--------|
-| Group ranking (per group) | 0–6 (Kendall-Tau) |
-| Tournament Champion | 8 |
-| Golden Boot | 1 per goal + 1 bonus |
+| Group ranking (per group) | 0–6 (Kendall-Tau distance) |
+| Tournament Champion | 10 |
+| Golden Boot | 1 per goal + 1 bonus if top scorer |
 | Undefeated Team | 3 |
 | Winless Team | 3 |
 | Knockout match direction | 2 |
 | Exact team score | 1 per team |
 | Final match multiplier | ×2 |
+
+## Documentation
+
+| Document | Purpose |
+|----------|--------|
+| [`.agents/AGENTS.md`](./.agents/AGENTS.md) | **Start here.** Complete agent onboarding guide — architecture, gotchas, conventions |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Deep technical dive — data flow, scoring engine, sync pipeline, auth |
+| [`SESSION_STATE.md`](./SESSION_STATE.md) | Current app state snapshot — what's working, what's broken |
+| [`DEPLOYMENT.md`](./DEPLOYMENT.md) | Step-by-step Vercel deployment guide |
+| [`LAUNCH_GUIDE.md`](./LAUNCH_GUIDE.md) | Go-live checklist (Vercel Pro, Google OAuth, data reset) |
 
 ## Deployment
 
