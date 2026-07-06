@@ -228,7 +228,7 @@ async function runSync(force: boolean = false) {
           const apiName = scorer.player.name
 
           const match = currentDbPlayers.find(p => playerNamesMatch(p.name, apiName))
-          if (match && match.goalsScored !== apiGoals) {
+          if (match && match.goalsScored < apiGoals) {
             await prisma.player.update({
               where: { id: match.id },
               data: { goalsScored: apiGoals }
