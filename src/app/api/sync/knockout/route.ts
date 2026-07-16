@@ -41,8 +41,6 @@ async function runSync() {
         r.includes("32") ||
         r.includes("quarter") ||
         r.includes("semi") ||
-        r.includes("3rd") ||
-        r.includes("third") ||
         r.includes("final")
       )
     })
@@ -66,7 +64,6 @@ async function runSync() {
       else if (r.includes("16")) stage = "R16"
       else if (r.includes("quarter")) stage = "QF"
       else if (r.includes("semi")) stage = "SF"
-      else if (r.includes("3rd") || r.includes("third")) stage = "3rd"
       else if (r.includes("final")) stage = "Final"
 
       const kickoffTime = new Date(f.fixture.date)

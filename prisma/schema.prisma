@@ -76,7 +76,7 @@ model Player {
 
 model Game {
   id          String   @id @default(uuid())
-  stage       String // Group, R32, R16, QF, SF, 3rd, Final
+  stage       String // Group, R32, R16, QF, SF, Final
   kickoffTime DateTime
   homeTeamId  String?
   awayTeamId  String?

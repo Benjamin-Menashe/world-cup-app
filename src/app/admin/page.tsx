@@ -40,10 +40,10 @@ import {
 } from "@/app/actions/admin"
 
 const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-const STAGES = ['Group', 'R32', 'R16', 'QF', 'SF', '3rd', 'Final']
+const STAGES = ['Group', 'R32', 'R16', 'QF', 'SF', 'Final']
 const STAGE_LABELS: Record<string, string> = {
   Group: 'Group Stage', R32: 'Round of 32', R16: 'Round of 16',
-  QF: 'Quarter-Finals', SF: 'Semi-Finals', '3rd': '3rd Place', Final: 'Final',
+  QF: 'Quarter-Finals', SF: 'Semi-Finals', Final: 'Final',
 }
 
 function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {

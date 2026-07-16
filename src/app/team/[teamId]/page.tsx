@@ -41,7 +41,6 @@ export default async function TeamPage({ params }: { params: { teamId: string } 
     R16: 'Round of 16',
     QF: 'Quarter Finals',
     SF: 'Semi Finals',
-    '3rd': 'Third Place Playoff',
     Final: 'Final',
   }
 

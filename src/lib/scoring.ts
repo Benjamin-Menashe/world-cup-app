@@ -123,6 +123,9 @@ export async function calculateUserPoints(
   for (const game of allKnockouts) {
     // Skip TBD games — no teams, no scoring
     if (!game.homeTeam || !game.awayTeam) continue
+    
+    // Ignore 3rd place game
+    if (game.stage === '3rd') continue
 
     const bet = user.gameBets.find(b => b.gameId === game.id)
     const betHome = bet ? bet.homeScore : 0

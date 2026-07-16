@@ -20,7 +20,6 @@ function getSections(dict: any): SectionConfig[] {
     { key: 'R16',      label: dict?.knockout?.stages?.R16 || 'Round of 16',      icon: '⚔️',  color: '#8b5cf6' },
     { key: 'QF',       label: dict?.knockout?.stages?.QF  || 'Quarter Finals',   icon: '⚔️',  color: '#eab308' },
     { key: 'SF',       label: dict?.knockout?.stages?.SF  || 'Semi Finals',      icon: '⚔️',  color: '#ef4444' },
-    { key: '3rd',      label: dict?.knockout?.stages?.['3rd'] || 'Third Place',   icon: '⚔️',  color: '#64748b' },
     { key: 'Final',    label: dict?.knockout?.stages?.Final || 'Final',          icon: '⚽',  color: '#10b981' },
   ]
 }

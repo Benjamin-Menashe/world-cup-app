@@ -102,11 +102,11 @@ export async function POST(req: NextRequest) {
         let stage = "Group"
         if (f.league.round) {
           const r = f.league.round.toLowerCase()
+          if (r.includes("3rd") || r.includes("third")) continue
           if (r.includes("16")) stage = "R16"
           else if (r.includes("32")) stage = "R32" // World cup 2026 introduces R32
           else if (r.includes("quarter")) stage = "QF"
           else if (r.includes("semi")) stage = "SF"
-          else if (r.includes("3rd") || r.includes("third")) stage = "3rd"
           else if (r.includes("final")) stage = "Final"
         }
 

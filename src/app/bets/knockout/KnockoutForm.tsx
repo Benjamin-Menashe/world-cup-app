@@ -15,13 +15,12 @@ type Game = {
   isTbd: boolean
 }
 
-const STAGE_ORDER = ['R32', 'R16', 'QF', 'SF', '3rd', 'Final']
+const STAGE_ORDER = ['R32', 'R16', 'QF', 'SF', 'Final']
 const STAGE_LABELS: Record<string, string> = {
   R32: 'R32',
   R16: 'R16',
   QF: 'QF',
   SF: 'SF',
-  '3rd': '3rd',
   Final: 'Final',
 }
 
