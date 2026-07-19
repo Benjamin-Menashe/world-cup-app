@@ -254,6 +254,7 @@ export async function calculateUserPoints(
     const bet = user.championBets[0]
     const isChampSet = !!resultMap["Champion"]
     const pts = isChampSet && resultMap["Champion"] === bet.teamId ? 10 : 0
+    totalPoints += pts
     const champName = teamsDict[bet.team?.name || ''] || bet.team?.name || 'Unknown'
     const suffix = isChampSet ? (pts > 0 ? 'ok' : 'no') : 'tbd'
     breakdown.push({ 
