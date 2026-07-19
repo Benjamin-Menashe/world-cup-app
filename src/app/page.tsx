@@ -134,6 +134,16 @@ export default async function Home() {
 
   const gamesForClient = matchCenterGames
     .filter(g => {
+      // Hard filter the 3rd place match
+      const hTeam = g.homeTeam?.name?.toLowerCase() || ''
+      const aTeam = g.awayTeam?.name?.toLowerCase() || ''
+      if (
+        g.stage.toLowerCase().includes('3rd') || 
+        g.stage.toLowerCase().includes('third') ||
+        (hTeam === 'france' && aTeam === 'england') ||
+        (hTeam === 'england' && aTeam === 'france')
+      ) return false;
+
       if (!g.isFinished) return true; // always include live/upcoming
       // Only show finished games whose estimated end time (kickoff + 105 min) is within the last 24 hours
       const estimatedEndTime = g.kickoffTime.getTime() + matchDurationMs;

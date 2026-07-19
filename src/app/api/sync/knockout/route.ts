@@ -36,6 +36,7 @@ async function runSync() {
     const knockoutFixtures = fixtures.filter(f => {
       if (!f.league?.round) return false
       const r = f.league.round.toLowerCase()
+      if (r.includes("3rd") || r.includes("third")) return false
       return (
         r.includes("16") ||
         r.includes("32") ||

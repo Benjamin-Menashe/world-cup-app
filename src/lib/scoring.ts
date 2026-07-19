@@ -124,8 +124,17 @@ export async function calculateUserPoints(
     // Skip TBD games — no teams, no scoring
     if (!game.homeTeam || !game.awayTeam) continue
     
-    // Ignore 3rd place game
-    if (game.stage === '3rd') continue
+    // Ignore 3rd place game explicitly, and also manually filter France vs England just in case it got synced as Final
+    const hTeam = game.homeTeam.name.toLowerCase()
+    const aTeam = game.awayTeam.name.toLowerCase()
+    if (
+      game.stage.toLowerCase().includes('3rd') || 
+      game.stage.toLowerCase().includes('third') ||
+      (hTeam === 'france' && aTeam === 'england') ||
+      (hTeam === 'england' && aTeam === 'france')
+    ) {
+      continue
+    }
 
     const bet = user.gameBets.find(b => b.gameId === game.id)
     const betHome = bet ? bet.homeScore : 0
